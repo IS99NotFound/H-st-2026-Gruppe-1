@@ -1,0 +1,59 @@
+﻿<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+@{
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+}
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Resq</title>
+    <script type="importmap"></script>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Resq.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+    <header class="topbar">
+        <!-- Topp del venstre, logo og tekst -->
+        <div class="topbar-brand">
+            <a class="brand-name" asp-controller="Home" asp-action="Index">RESQ</a>
+            <div class="brand-tagline">
+            </div>
+        </div>
+
+        <!-- Topp del midten, faner -->
+        <nav class="topbar-nav">
+            <a asp-controller="Home" asp-action="Index"
+               class="topbar-link @(controller == "Home" ? "active" : "")">Map</a>
+            <a asp-controller="Incidents" asp-action="Index"
+               class="topbar-link @(controller == "Incidents" ? "active" : "")">Incidents</a>
+            <a asp-controller="Resources" asp-action="Index"
+               class="topbar-link @(controller == "Resources" ? "active" : "")">Resources</a>
+            <a asp-controller="Reports" asp-action="Index"
+               class="topbar-link @(controller == "Reports" ? "active" : "")">Reports</a>
+        </nav>
+
+        <!-- Topp del høyre, bruker -->
+        <div class="topbar-user">
+            Resource provider
+        </div>
+    </header>
+    <div class="container">
+        <main role="main">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="footer"> @* // Endrer bunnen av nettsiden til å se lik ut som resten *@
+        <div class="container">
+            &copy; 2026 - Resq - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        </div>
+    </footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
