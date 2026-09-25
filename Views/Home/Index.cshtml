@@ -1,8 +1,54 @@
 ﻿@{
     ViewData["Title"] = "Home Page";
 }
+<div class="main-layout">
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    <!-- Område designert for annet, f.eks. skjema -->
+    <aside class="side-panel">
+        <p class="placeholder-text">Skjema</p>
+    </aside>
+
+    <!-- Område designert kart (2/3) -->
+    <section class="map-area">
+        <div id="map"></div>
+    </section>
+
 </div>
+
+<script>
+    var map = L.map('map').setView([58.4614, 8.7683], 13); // Fallback mens vi venter
+    // Funksjon for å kjøre leaflet script for å hente kart
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    if (navigator.geolocation) //Henter koordinater for kart
+    {navigator.geolocation.getCurrentPosition(function (position) {
+            var lat = position.coords.latitude;
+            var lng = position.coords.longitude;
+
+            map.setView([lat, lng], 13); // Melding til bruker avhengig av om det gikk å hente lokasjon eller ikke
+            L.marker([lat, lng]).addTo(map).bindPopup('Du er her').openPopup();
+        }, function (error) {
+            console.log('Klarte ikke hente posisjon:', error.message);
+        });
+    } else {
+        console.log('Nettleseren støtter ikke geolokasjon');
+    }
+
+    var valgtMarkør = null; // Markør holder seg der den skal
+
+    map.on('click', function (e) {
+        var lat = e.latlng.lat;
+        var lng = e.latlng.lng;
+
+        if (valgtMarkør) {
+            map.removeLayer(valgtMarkør); // Fjern gammel markør så du ikke har flere markører samtidig
+        }
+
+        valgtMarkør = L.marker([lat, lng]).addTo(map)
+            .bindPopup('Valgt posisjon: ' + lat.toFixed(5) + ', ' + lng.toFixed(5))
+            .openPopup();
+    });
+</script>
+
