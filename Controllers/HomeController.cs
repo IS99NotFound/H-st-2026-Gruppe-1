@@ -11,6 +11,14 @@ public class HomeController : Controller
         return View();
     }
 
+    // Kjøres når skjemaet sendes inn, lagrer ressursen og sender videre til Resources siden
+    [HttpPost]
+    public IActionResult RegisterResource(ResourceEntry resource)
+    {
+        ResourceStore.Add(resource);
+        return RedirectToAction("Index", "Resources");
+    }
+
     public IActionResult Privacy()
     {
         return View();
