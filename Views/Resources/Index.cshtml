@@ -1,0 +1,48 @@
+@model List<H_st_2026_Gruppe_1.Models.ResourceEntry>
+@{
+    ViewData["Title"] = "My Resources";
+}
+
+<h2>Registrerte ressurser</h2>
+
+@if (!Model.Any())
+{
+    <p>Ingen ressurser er registrert enda.</p>
+}
+else
+{
+    <table class="table table-dark table-striped">
+        <thead>
+            <tr>
+                <th>Navn</th>
+                <th>Telefon</th>
+                <th>Type</th>
+                <th>Beskrivelse</th>
+                <th>Posisjon</th>
+                <th>Registrert</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var r in Model)
+            {
+                <tr>
+                    <td>@r.Name</td>
+                    <td>@r.Phone</td>
+                    <td>@r.ResourceType</td>
+                    <td>@r.Description</td>
+                    <td>
+                        @if (r.Latitude != null && r.Longitude != null)
+                        {
+                            @($"{r.Latitude:F5}, {r.Longitude:F5}")
+                        }
+                        else
+                        {
+                            <span>Ingen posisjon valgt</span>
+                        }
+                    </td>
+                    <td>@r.RegisteredAt.ToString("dd.MM.yyyy HH:mm")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

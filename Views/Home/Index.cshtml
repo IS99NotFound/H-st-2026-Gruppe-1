@@ -6,6 +6,39 @@
     <!-- Område designert for annet, f.eks. skjema -->
     <aside class="side-panel">
         <p class="placeholder-text">Skjema</p>
+
+        <!-- Skjema for å registrere en ressurs -->
+        <form asp-controller="Home" asp-action="RegisterResource" method="post">
+            <div class="mb-2">
+                <label>Navn</label>
+                <input type="text" name="Name" class="form-control" required />
+            </div>
+            <div class="mb-2">
+                <label>Telefon</label>
+                <input type="text" name="Phone" class="form-control" required />
+            </div>
+            <div class="mb-2">
+                <label>Type ressurs</label>
+                <select name="ResourceType" class="form-control">
+                    <option value="Shelter">Shelter</option>
+                    <option value="Mat">Mat</option>
+                    <option value="Transport">Transport</option>
+                    <option value="Medisinsk">Medisinsk</option>
+                    <option value="Annet">Annet</option>
+                </select>
+            </div>
+            <div class="mb-2">
+                <label>Beskrivelse</label>
+                <textarea name="Description" class="form-control"></textarea>
+            </div>
+
+            <!-- Fylles ut av JS når man klikker i kartet -->
+            <input type="hidden" name="Latitude" id="latInput" />
+            <input type="hidden" name="Longitude" id="lngInput" />
+            <p id="posText" class="placeholder-text">Ingen posisjon valgt i kartet enda</p>
+
+            <button type="submit" class="btn btn-primary">Registrer ressurs</button>
+        </form>
     </aside>
 
     <!-- Område designert kart (2/3) -->
@@ -49,6 +82,10 @@
         valgtMarkør = L.marker([lat, lng]).addTo(map)
             .bindPopup('Valgt posisjon: ' + lat.toFixed(5) + ', ' + lng.toFixed(5))
             .openPopup();
+
+        // Sender posisjonen inn i skjemaet så den blir med når man trykker registrer
+        document.getElementById('latInput').value = lat;
+        document.getElementById('lngInput').value = lng;
+        document.getElementById('posText').innerText = 'Valgt posisjon: ' + lat.toFixed(5) + ', ' + lng.toFixed(5);
     });
 </script>
-
