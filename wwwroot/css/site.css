@@ -101,6 +101,11 @@ body {
     transition: background-color 0.15s, color 0.15s;
 }
 
+.topbar-link-icon {
+    margin-right: 6px;
+    font-size: 1rem;
+}
+
     .topbar-link:hover {
         background-color: var(--bg-hover);
         color: var(--text);
