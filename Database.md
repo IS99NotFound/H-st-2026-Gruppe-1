@@ -42,5 +42,4 @@ Status
 
 
 
-Førsteutkast av databaseskjema. Se database/schema.sql. 
-
+Førsteutkast av databaseskjema. Se database/schema.sql.
