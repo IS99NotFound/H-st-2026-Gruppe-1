@@ -16,41 +16,41 @@
             </button>
         </div>
 
-        <!-- Skjema for å registrere en ressurs -->
+        <!-- Form for registering a resource -->
         <form asp-controller="Home" asp-action="RegisterResource" method="post">
             <div class="mb-2">
-                <label>Navn</label>
+                <label>Full name</label>
                 <input type="text" name="Name" class="form-control" required />
             </div>
             <div class="mb-2">
-                <label>Telefon</label>
-                <input type="text" name="Phone" class="form-control" required />
+                <label>Contact information</label>
+                <input type="text" name="Phone" class="form-control" placeholder="Phone number or email" required />
             </div>
             <div class="mb-2">
-                <label>Type ressurs</label>
+                <label>Resource type</label>
                 <select name="ResourceType" class="form-control">
                     <option value="Shelter">Shelter</option>
-                    <option value="Mat">Mat</option>
+                    <option value="Mat">Food</option>
                     <option value="Transport">Transport</option>
-                    <option value="Medisinsk">Medisinsk</option>
-                    <option value="Annet">Annet</option>
+                    <option value="Medisinsk">Medical</option>
+                    <option value="Annet">Other</option>
                 </select>
             </div>
             <div class="mb-2">
-                <label>Beskrivelse</label>
+                <label>Description</label>
                 <textarea name="Description" class="form-control"></textarea>
             </div>
 
-            <!-- Fylles ut av JS når man klikker i kartet -->
+            <!-- Filled by JavaScript when the user clicks the map -->
             <input type="hidden" name="Latitude" id="latInput" />
             <input type="hidden" name="Longitude" id="lngInput" />
-            <p id="posText" class="placeholder-text">Ingen posisjon valgt i kartet enda</p>
+            <p id="posText" class="placeholder-text">No position marked on the map</p>
 
-            <button type="submit" class="btn btn-primary">Registrer ressurs</button>
+            <button type="submit" class="btn btn-primary">Register resource</button>
         </form>
     </aside>
 
-    <!-- Område designert kart (2/3) -->
+    <!-- Map area (2/3) -->
     <section class="map-area">
         <div id="map" role="application" aria-label="Interactive map"></div>
         <p id="map-status" class="map-status" role="status" aria-live="polite">Loading map ...</p>
@@ -60,7 +60,7 @@
 
 <script>
     const map = L.map('map').setView([58.4614, 8.7683], 13);
-    // Mobilpanelet bruker denne referansen når kartets synlige størrelse endres.
+    // The mobile panel uses this reference when the map's visible size changes.
     window.resqMap = map;
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -79,17 +79,17 @@
             L.marker([lat, lng]).addTo(map).bindPopup('You are here').openPopup();
             mapStatus.textContent = 'The map is showing your current location.';
         }, function (error) {
-            console.log('Klarte ikke hente posisjon:', error.message);
+            console.log('Could not get position:', error.message);
             mapStatus.textContent = 'Your location could not be found. You can still select a position on the map.';
         });
     } else {
-        console.log('Nettleseren støtter ikke geolokasjon');
+        console.log('This browser does not support geolocation');
         mapStatus.textContent = 'This browser does not support geolocation. Select a position on the map.';
     }
 
     let selectedMarker = null;
 
-    // Kartklikk plasserer markøren og fyller koordinatene inn i ressurskjemaet.
+    // A map click places the marker and fills the coordinates into the resource form.
     map.on('click', function (e) {
         const lat = e.latlng.lat;
         const lng = e.latlng.lng;

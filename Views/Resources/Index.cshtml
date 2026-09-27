@@ -8,28 +8,6 @@
 <div class="d-flex justify-content-end align-items-end mb-3">
     <a asp-controller="Home" asp-action="Index" class="btn btn-custom">Register a new resource</a>
 </div>
- 
-<!-- oversikt over ressurser som utløper, oppdatere når vi har lagt til 
-attributtene i modell klassen og har en aktiv databse -->
-
-<div class="row my-4">
-    <div class="col-md-4">
-        <div class="card text-white bg-utløper-card mb-3">
-            <div class="card-body">
-                <h5 class="card-title">Expiring in 5 days</h5>
-                <p class="card-text display-4">@Model.</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card text-white bg-utløpt-card mb-3">
-            <div class="card-body">
-                <h5 class="card-title">Expired resources</h5>
-                <p class="card-text display-4">@Model.</p>
-            </div>
-        </div>
-    </div>
-</div>
 
 @if (!Model.Any())
 {
@@ -63,7 +41,7 @@ else
                         }
                         else
                         {
-                            <span>Ingen posisjon valgt</span>
+                            <span>No position selected</span>
                         }
                     </td>
                     <td>@r.RegisteredAt.ToString("dd.MM.yyyy HH:mm")</td>
