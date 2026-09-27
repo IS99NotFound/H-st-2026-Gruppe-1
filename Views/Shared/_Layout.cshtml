@@ -10,11 +10,11 @@
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/Resq.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/H-st-2026-Gruppe-1.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
-<body>
+<body class="@(ViewData["FullWidth"] is true ? "full-width-page" : "")">
     <header class="topbar">
         <!-- Topp del venstre, logo og tekst -->
         <div class="topbar-brand">
@@ -24,15 +24,18 @@
         </div>
 
         <!-- Topp del midten, faner -->
-        <nav class="topbar-nav">
+        <nav id="main-navigation" class="topbar-nav" aria-label="Hovednavigasjon">
             <a asp-controller="Home" asp-action="Index"
                class="topbar-link @(controller == "Home" ? "active" : "")">Map</a>
             <a asp-controller="Incidents" asp-action="Index"
                class="topbar-link @(controller == "Incidents" ? "active" : "")">Incidents</a>
             <a asp-controller="Resources" asp-action="Index"
-               class="topbar-link @(controller == "Resources" ? "active" : "")">My resources</a>
+               class="topbar-link @(controller == "Resources" ? "active" : "")">Resources</a>
             <a asp-controller="Reports" asp-action="Index"
                class="topbar-link @(controller == "Reports" ? "active" : "")">Reports</a>
+            <button id="panel-open-button" class="topbar-link panel-toggle mobile-panel-button"
+                    data-panel-toggle data-home-url="@Url.Action("Index", "Home")" type="button"
+                    aria-controls="side-panel" aria-expanded="false">Add resource</button>
         </nav>
 
         <!-- Topp del høyre, bruker -->
@@ -40,7 +43,7 @@
             Resource provider
         </div>
     </header>
-    <div class="container">
+    <div class="container @(ViewData["FullWidth"] is true ? "container-full-width" : "")">
         <main role="main">
             @RenderBody()
         </main>
