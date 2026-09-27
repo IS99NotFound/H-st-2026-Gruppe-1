@@ -1,11 +1,20 @@
 ﻿@{
     ViewData["Title"] = "Home Page";
+    ViewData["FullWidth"] = true;
 }
 <div class="main-layout">
 
-    <!-- Område designert for annet, f.eks. skjema -->
-    <aside class="side-panel">
-        <p class="placeholder-text">Skjema</p>
+    <aside id="side-panel" class="side-panel" aria-label="Resource registration">
+        <div class="side-panel-header">
+            <div>
+                <p class="section-label">Map tools</p>
+                <h1>Register resource</h1>
+            </div>
+            <button class="panel-toggle panel-close" type="button" aria-controls="side-panel" aria-expanded="false">
+                <span class="visually-hidden">Close resource panel</span>
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
 
         <!-- Skjema for å registrere en ressurs -->
         <form asp-controller="Home" asp-action="RegisterResource" method="post">
@@ -43,49 +52,58 @@
 
     <!-- Område designert kart (2/3) -->
     <section class="map-area">
-        <div id="map"></div>
+        <div id="map" role="application" aria-label="Interactive map"></div>
+        <p id="map-status" class="map-status" role="status" aria-live="polite">Loading map ...</p>
     </section>
 
 </div>
 
 <script>
-    var map = L.map('map').setView([58.4614, 8.7683], 13); // Fallback mens vi venter
-    // Funksjon for å kjøre leaflet script for å hente kart
+    const map = L.map('map').setView([58.4614, 8.7683], 13);
+    // Mobilpanelet bruker denne referansen når kartets synlige størrelse endres.
+    window.resqMap = map;
+
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    if (navigator.geolocation) //Henter koordinater for kart
-    {navigator.geolocation.getCurrentPosition(function (position) {
-            var lat = position.coords.latitude;
-            var lng = position.coords.longitude;
+    const mapStatus = document.getElementById('map-status');
+    mapStatus.textContent = 'The map is ready. Select a position or use your current location.';
 
-            map.setView([lat, lng], 13); // Melding til bruker avhengig av om det gikk å hente lokasjon eller ikke
-            L.marker([lat, lng]).addTo(map).bindPopup('Du er her').openPopup();
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function (position) {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+
+            map.setView([lat, lng], 13);
+            L.marker([lat, lng]).addTo(map).bindPopup('You are here').openPopup();
+            mapStatus.textContent = 'The map is showing your current location.';
         }, function (error) {
             console.log('Klarte ikke hente posisjon:', error.message);
+            mapStatus.textContent = 'Your location could not be found. You can still select a position on the map.';
         });
     } else {
         console.log('Nettleseren støtter ikke geolokasjon');
+        mapStatus.textContent = 'This browser does not support geolocation. Select a position on the map.';
     }
 
-    var valgtMarkør = null; // Markør holder seg der den skal
+    let selectedMarker = null;
 
+    // Kartklikk plasserer markøren og fyller koordinatene inn i ressurskjemaet.
     map.on('click', function (e) {
-        var lat = e.latlng.lat;
-        var lng = e.latlng.lng;
+        const lat = e.latlng.lat;
+        const lng = e.latlng.lng;
 
-        if (valgtMarkør) {
-            map.removeLayer(valgtMarkør); // Fjern gammel markør så du ikke har flere markører samtidig
+        if (selectedMarker) {
+            map.removeLayer(selectedMarker);
         }
 
-        valgtMarkør = L.marker([lat, lng]).addTo(map)
-            .bindPopup('Valgt posisjon: ' + lat.toFixed(5) + ', ' + lng.toFixed(5))
+        selectedMarker = L.marker([lat, lng]).addTo(map)
+            .bindPopup('Selected position: ' + lat.toFixed(5) + ', ' + lng.toFixed(5))
             .openPopup();
 
-        // Sender posisjonen inn i skjemaet så den blir med når man trykker registrer
         document.getElementById('latInput').value = lat;
         document.getElementById('lngInput').value = lng;
-        document.getElementById('posText').innerText = 'Valgt posisjon: ' + lat.toFixed(5) + ', ' + lng.toFixed(5);
+        document.getElementById('posText').innerText = 'Selected position: ' + lat.toFixed(5) + ', ' + lng.toFixed(5);
     });
 </script>
