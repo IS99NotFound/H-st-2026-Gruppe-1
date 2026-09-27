@@ -3,23 +3,46 @@
     ViewData["Title"] = "My Resources";
 }
 
-<h2>Registrerte ressurser</h2>
+<h2>Registered resources</h2>
+
+<div class="d-flex justify-content-end align-items-end mb-3">
+    <a asp-controller="Home" asp-action="Index" class="btn btn-custom">Register a new resource</a>
+</div>
+
+<div class="row my-4">
+    <div class="col-md-4">
+        <div class="card text-white bg-utløper-card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Expiring in 5 days</h5>
+                <p class="card-text display-4">@Model.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-utløpt-card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Expired resources</h5>
+                <p class="card-text display-4">@Model.</p>
+            </div>
+        </div>
+    </div>
+</div>
 
 @if (!Model.Any())
 {
-    <p>Ingen ressurser er registrert enda.</p>
+    <p>No resources are registered right now</p>
 }
 else
 {
     <table class="table table-dark table-striped">
         <thead>
             <tr>
-                <th>Navn</th>
-                <th>Telefon</th>
+                <th>Name</th>
+                <th>Telephone</th>
                 <th>Type</th>
-                <th>Beskrivelse</th>
-                <th>Posisjon</th>
-                <th>Registrert</th>
+                <th>Description</th>
+                <th>Position</th>
+                <th>Registered</th>
             </tr>
         </thead>
         <tbody>

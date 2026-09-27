@@ -1,4 +1,5 @@
 services:
+  # MariaDB Database Service
   db:
     image: mariadb:11
     container_name: hv-mariadb
@@ -7,11 +8,16 @@ services:
       MARIADB_ROOT_PASSWORD: root
       MARIADB_DATABASE: heimevernet
     ports:
-      - "3306:3306"
+      # Maps host port 3307 to container port 3306 (default MariaDB port)
+      # This allows database clients (Rider, DBeaver) to connect via localhost:3307
+      - "3307:3306"
     volumes:
+      # Automatically initializes the schema on first startup
       - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+      # Persists database data across container restarts
       - mariadb_data:/var/lib/mysql
 
+  # ASP.NET Core Web Application Service
   web:
     build:
       context: .
@@ -19,13 +25,18 @@ services:
     container_name: hv-webapp
     restart: always
     ports:
-      - "8080:8080"
+      # Maps host port 8081 to container port 8080 (avoids port 8080 conflicts on the host)
+      - "8081:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      # Tells the application inside the container to listen on port 8080
       - ASPNETCORE_HTTP_PORTS=8080
+      # Connects to the database service container ('db') over the internal Docker network on port 3306
       - ConnectionStrings__DefaultConnection=Server=db;Port=3306;Database=heimevernet;User=root;Password=root;
     depends_on:
+      # Ensures the database container starts before the web application
       - db
 
+# Named volumes for data storage
 volumes:
   mariadb_data:

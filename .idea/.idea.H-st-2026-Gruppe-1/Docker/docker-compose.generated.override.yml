@@ -1,0 +1,20 @@
+# This is a generated file. Not intended for manual editing.
+services:
+  web:
+    build:
+      context: "/Users/rohabprivat/H-st-2026-Gruppe-1"
+      dockerfile: "Dockerfile"
+      target: "build"
+    command: []
+    entrypoint:
+    - "dotnet"
+    - "/app/bin/Debug/net10.0/H-st-2026-Gruppe-1.dll"
+    environment:
+      ASPNETCORE_STATICWEBASSETS: "/app/bin/Debug/net10.0/H-st-2026-Gruppe-1.staticwebassets.runtime.CT.json"
+    image: "h-st-2026-gruppe-1:dev"
+    ports: []
+    volumes:
+    - "/Users/rohabprivat/H-st-2026-Gruppe-1:/app:rw"
+    - "/Users/rohabprivat/H-st-2026-Gruppe-1:/src:rw"
+    - "/Users/rohabprivat/.nuget/packages:/root/.nuget/packages"
+    working_dir: "/app"
