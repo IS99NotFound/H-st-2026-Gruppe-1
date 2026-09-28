@@ -1,4 +1,5 @@
-﻿@{
+﻿@model H_st_2026_Gruppe_1.Models.ResourceEntry
+@{
     ViewData["Title"] = "Home Page";
     ViewData["FullWidth"] = true;
 }
@@ -17,33 +18,42 @@
         </div>
 
         <!-- Form for registering a resource -->
-        <form asp-controller="Home" asp-action="RegisterResource" method="post">
+        <form id="resourceForm" asp-controller="Home" asp-action="RegisterResource" method="post" novalidate>
             <div class="mb-2">
-                <label>Full name</label>
-                <input type="text" name="Name" class="form-control" required />
+                <label for="nameInput">Full name</label>
+                <input type="text" name="Name" id="nameInput" value="@Model.Name" class="form-control" required />
+                <small id="nameError" class="text-danger"></small>
             </div>
             <div class="mb-2">
-                <label>Contact information</label>
-                <input type="text" name="Phone" class="form-control" placeholder="Phone number or email" required />
+                <label for="contactInput">Contact information</label>
+                <input type="text" name="Phone" id="contactInput" value="@Model.Phone" class="form-control" placeholder="Phone number or email" required />
+                <small id="contactError" class="text-danger"></small>
             </div>
             <div class="mb-2">
-                <label>Resource type</label>
-                <select name="ResourceType" class="form-control">
-                    <option value="Shelter">Shelter</option>
-                    <option value="Mat">Food</option>
-                    <option value="Transport">Transport</option>
-                    <option value="Medisinsk">Medical</option>
-                    <option value="Annet">Other</option>
+                <label for="resourceType">Resource type</label>
+                <select name="ResourceType" id="resourceType" class="form-control" required>
+                    <option value="">Select an option</option>
+                    <option value="Shelter" selected="@(Model.ResourceType == "Shelter" ? "selected" : null)">Shelter</option>
+                    <option value="Mat" selected="@(Model.ResourceType == "Mat" ? "selected" : null)">Food</option>
+                    <option value="Transport" selected="@(Model.ResourceType == "Transport" ? "selected" : null)">Transport</option>
+                    <option value="Medisinsk" selected="@(Model.ResourceType == "Medisinsk" ? "selected" : null)">Medical</option>
+                    <option value="Materialer" selected="@(Model.ResourceType == "Materialer" ? "selected" : null)">Materialer</option>
+                    <option value="Annet" selected="@(Model.ResourceType == "Annet" ? "selected" : null)">Other</option>
                 </select>
+                <small id="resourceTypeError" class="text-danger"></small>
             </div>
             <div class="mb-2">
-                <label>Description</label>
-                <textarea name="Description" class="form-control"></textarea>
+                <label for="descriptionInput">Description</label>
+                <textarea name="Description" id="descriptionInput" class="form-control">@Model.Description</textarea>
+            </div>
+            <div class="mb-2">
+                <label for="expiryDate">Expiry date</label>
+                <input type="date" name="ExpiryDate" id="expiryDate" value="@Model.ExpiryDate?.ToString("yyyy-MM-dd")" class="form-control" readonly />
             </div>
 
             <!-- Filled by JavaScript when the user clicks the map -->
-            <input type="hidden" name="Latitude" id="latInput" />
-            <input type="hidden" name="Longitude" id="lngInput" />
+            <input type="hidden" name="Latitude" id="latInput" value="@Model.Latitude" />
+            <input type="hidden" name="Longitude" id="lngInput" value="@Model.Longitude" />
             <p id="posText" class="placeholder-text">No position marked on the map</p>
 
             <button type="submit" class="btn btn-primary">Register resource</button>
@@ -86,6 +96,81 @@
         console.log('This browser does not support geolocation');
         mapStatus.textContent = 'This browser does not support geolocation. Select a position on the map.';
     }
+
+    const resourceType = document.getElementById('resourceType');
+    const expiryDate = document.getElementById('expiryDate');
+    const resourceForm = document.getElementById('resourceForm');
+    const nameInput = document.getElementById('nameInput');
+    const nameError = document.getElementById('nameError');
+    const resourceTypeError = document.getElementById('resourceTypeError');
+    const contactInput = document.getElementById('contactInput');
+    const contactError = document.getElementById('contactError');
+
+    // Shows a simple error message and prevents submission if a required field is empty.
+    resourceForm.addEventListener('submit', function (event) {
+        let hasErrors = false;
+
+        if (!nameInput.value.trim()) {
+            nameError.textContent = 'Name is required.';
+            nameError.hidden = false;
+            hasErrors = true;
+        }
+
+        if (!contactInput.value.trim()) {
+            contactError.textContent = 'A phone number or email address is required.';
+            contactError.hidden = false;
+            hasErrors = true;
+        }
+
+        if (!resourceType.value) {
+            resourceTypeError.textContent = 'Select a resource type.';
+            resourceTypeError.hidden = false;
+            hasErrors = true;
+        }
+
+        if (hasErrors) {
+            event.preventDefault();
+        }
+    });
+
+    nameInput.addEventListener('input', function () {
+        nameError.hidden = nameInput.value.trim() === '';
+    });
+
+    contactInput.addEventListener('input', function () {
+        contactError.hidden = contactInput.value.trim() === '';
+    });
+
+    // Shows the expiry date when the user selects a resource category.
+    resourceType.addEventListener('change', function () {
+        resourceTypeError.hidden = resourceType.value === '';
+        const renewalDate = new Date();
+
+        switch (resourceType.value) {
+            case 'Mat':
+                renewalDate.setDate(renewalDate.getDate() + 14);
+                break;
+            case 'Medisinsk':
+                renewalDate.setMonth(renewalDate.getMonth() + 1);
+                break;
+            case 'Materialer':
+                renewalDate.setMonth(renewalDate.getMonth() + 6);
+                break;
+            case 'Shelter':
+            case 'Transport':
+            case 'Annet':
+                renewalDate.setFullYear(renewalDate.getFullYear() + 1);
+                break;
+            default:
+                expiryDate.value = '';
+                return;
+        }
+
+const year = renewalDate.getFullYear();
+        const month = String(renewalDate.getMonth() + 1).padStart(2, '0');
+        const day = String(renewalDate.getDate()).padStart(2, '0');
+        expiryDate.value = `${year}-${month}-${day}`;
+    });
 
     let selectedMarker = null;
 
