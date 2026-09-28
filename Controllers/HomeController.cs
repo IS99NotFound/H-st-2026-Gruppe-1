@@ -17,7 +17,11 @@ public class HomeController : Controller
     public IActionResult RegisterResource(ResourceEntry resource)
     {
         // Calculates the date before the resource is saved.
-        resource.ExpiryDate = GetExpiryDate(resource.ResourceType);
+resource.ExpiryDate = GetExpiryDate(resource.ResourceType);
+        if (!string.IsNullOrWhiteSpace(resource.ResourceType) && resource.ExpiryDate is null)
+        {
+            ModelState.AddModelError(nameof(resource.ResourceType), "Select a resource type.");
+        }
 
         if (!ModelState.IsValid)
         {
