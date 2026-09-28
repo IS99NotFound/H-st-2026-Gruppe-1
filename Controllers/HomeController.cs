@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using H_st_2026_Gruppe_1.Models;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace H_st_2026_Gruppe_1.Controllers;
 
@@ -15,9 +16,14 @@ public class HomeController : Controller
     [HttpPost]
     public IActionResult RegisterResource(ResourceEntry resource)
     {
+        if (!ModelState.IsValid)
+        {
+            return View("index", resource);
+        }
         ResourceStore.Add(resource);
         return RedirectToAction("Index", "Resources");
     }
+    
 
     public IActionResult Privacy()
     {
