@@ -166,7 +166,10 @@
                 return;
         }
 
-        expiryDate.value = renewalDate.toISOString().split('T')[0];
+const year = renewalDate.getFullYear();
+        const month = String(renewalDate.getMonth() + 1).padStart(2, '0');
+        const day = String(renewalDate.getDate()).padStart(2, '0');
+        expiryDate.value = `${year}-${month}-${day}`;
     });
 
     let selectedMarker = null;
