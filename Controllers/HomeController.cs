@@ -9,10 +9,11 @@ public class HomeController : Controller
 {
     public IActionResult Index()
     {
-        return View();
+        // Sends an empty model to the form the first time the page is opened.
+        return View(new ResourceEntry());
     }
 
-    // Kjøres når skjemaet sendes inn, lagrer ressursen og sender videre til Resources siden
+    // Runs when the form is submitted, saves the resource, and redirects to the Resources page.
     [HttpPost]
     public IActionResult RegisterResource(ResourceEntry resource)
     {
@@ -20,10 +21,36 @@ public class HomeController : Controller
         {
             return View("index", resource);
         }
+        // Calculates the date before the resource is saved.
+resource.ExpiryDate = GetExpiryDate(resource.ResourceType);
+        if (!string.IsNullOrWhiteSpace(resource.ResourceType) && resource.ExpiryDate is null)
+        {
+            ModelState.AddModelError(nameof(resource.ResourceType), "Select a resource type.");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            // Sends the model back so the entered values are retained in the form.
+            return View("Index", resource);
+        }
+
         ResourceStore.Add(resource);
         return RedirectToAction("Index", "Resources");
     }
     
+
+    // Calculates the expiry date based on the resource category.
+    private static DateTime? GetExpiryDate(string resourceType)
+    {
+        return resourceType switch
+        {
+            "Shelter" or "Transport" or "Annet" => DateTime.Today.AddYears(1),
+            "Mat" => DateTime.Today.AddDays(14),
+            "Medisinsk" => DateTime.Today.AddMonths(1),
+            "Materialer" => DateTime.Today.AddMonths(6),
+            _ => null
+        };
+    }
 
     public IActionResult Privacy()
     {

@@ -22,6 +22,7 @@ else
                 <th>Telephone</th>
                 <th>Type</th>
                 <th>Description</th>
+                <th>Expiry date</th>
                 <th>Position</th>
                 <th>Registered</th>
             </tr>
@@ -34,6 +35,7 @@ else
                     <td>@r.Phone</td>
                     <td>@r.ResourceType</td>
                     <td>@r.Description</td>
+                    <td>@r.ExpiryDate?.ToString("dd.MM.yyyy")</td>
                     <td>
                         @if (r.Latitude != null && r.Longitude != null)
                         {
