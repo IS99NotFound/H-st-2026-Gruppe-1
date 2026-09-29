@@ -27,10 +27,11 @@ public class ResourceViewModel
     [Required(ErrorMessage = "Select a resource type.")]
     public string ResourceType { get; set; } = "";
 
-    // Utløpsdato er valgfri
+    // Utløpsdato er valgfri, den regnes ut av HomeController ut fra ressurstypen
     public DateTime? ExpiryDate { get; set; }
 
-    // Latitude er valgfri i seg selv
+    // Latitude er påkrevd, så brukeren må klikke i kartet
+    [Required(ErrorMessage = "Position on the map must be filled out")]
     public double? Latitude { get; set; }
 
     // Longitude er påkrevd, så brukeren må klikke i kartet
