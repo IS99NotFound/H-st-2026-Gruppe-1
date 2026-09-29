@@ -9,20 +9,22 @@ public class HomeController : Controller
 {
     public IActionResult Index()
     {
-        // Sends an empty model to the form the first time the page is opened.
-        return View(new ResourceEntry());
+        // Sender en tom modell til skjemaet første gang siden åpnes
+        return View(new ResourceViewModel());
     }
 
-    // Runs when the form is submitted, saves the resource, and redirects to the Resources page.
+    // Kjører når skjemaet sendes inn, lagrer ressursen og sender brukeren til Resources-siden
     [HttpPost]
-    public IActionResult RegisterResource(ResourceEntry resource)
+    public IActionResult RegisterResource(ResourceViewModel resource)
     {
+        // Sjekker valideringsreglene i ResourceViewModel
         if (!ModelState.IsValid)
         {
-            return View("index", resource);
+            return View("Index", resource);
         }
-        // Calculates the date before the resource is saved.
-resource.ExpiryDate = GetExpiryDate(resource.ResourceType);
+
+        // Regner ut utløpsdatoen før ressursen lagres
+        resource.ExpiryDate = GetExpiryDate(resource.ResourceType);
         if (!string.IsNullOrWhiteSpace(resource.ResourceType) && resource.ExpiryDate is null)
         {
             ModelState.AddModelError(nameof(resource.ResourceType), "Select a resource type.");
@@ -30,16 +32,28 @@ resource.ExpiryDate = GetExpiryDate(resource.ResourceType);
 
         if (!ModelState.IsValid)
         {
-            // Sends the model back so the entered values are retained in the form.
+            // Sender modellen tilbake slik at det brukeren skrev inn beholdes i skjemaet
             return View("Index", resource);
         }
 
-        ResourceStore.Add(resource);
+        // Flytter verdiene fra skjemamodellen over i ResourceEntry, som er det som lagres
+        var entry = new ResourceEntry
+        {
+            Name = resource.Name,
+            Phone = resource.Phone,
+            Description = resource.Description,
+            ResourceType = resource.ResourceType,
+            ExpiryDate = resource.ExpiryDate,
+            Latitude = resource.Latitude,
+            Longitude = resource.Longitude
+        };
+
+        ResourceStore.Add(entry);
         return RedirectToAction("Index", "Resources");
     }
-    
 
-    // Calculates the expiry date based on the resource category.
+
+    // Regner ut utløpsdato ut fra ressurstypen
     private static DateTime? GetExpiryDate(string resourceType)
     {
         return resourceType switch
@@ -52,11 +66,13 @@ resource.ExpiryDate = GetExpiryDate(resource.ResourceType);
         };
     }
 
+    // Viser personvernsiden
     public IActionResult Privacy()
     {
         return View();
     }
 
+    // Viser feilsiden
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
     {
