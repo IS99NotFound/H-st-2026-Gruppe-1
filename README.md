@@ -25,7 +25,7 @@ Når containerne er startet, er webapplikasjonen tilgjengelig på:
 
 `http://localhost:8081`
 
-Ressurser lagres midlertidig i minnet gjennom `ResourceStore` og går tapt når
+Ressurser lagres midlertidig i minnet gjennom `ResourceStore` og er tapt når
 webcontaineren starter på nytt.
 
 ### Stoppe applikasjonen
@@ -48,11 +48,7 @@ docker compose logs web
 Dersom port `8081` allerede er i bruk, må portmappingen i `docker-compose.yml`
 endres.
 
-Ved endringer i kildekoden bør applikasjonen bygges på nytt:
-
-```bash
-docker compose up --build
-```
+Ved endringer i koden bør applikasjonen bygges på nytt.
 
 ## MVC rammeverket og hvordan det henger sammen
 
