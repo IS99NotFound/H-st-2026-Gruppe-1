@@ -83,9 +83,8 @@
             .bindPopup('Valgt posisjon: ' + lat.toFixed(5) + ', ' + lng.toFixed(5))
             .openPopup();
 
-        // Sender posisjonen inn i skjemaet så den blir med når man trykker registrer
-        document.getElementById('latInput').value = lat;
-        document.getElementById('lngInput').value = lng;
-        document.getElementById('posText').innerText = 'Valgt posisjon: ' + lat.toFixed(5) + ', ' + lng.toFixed(5);
+        document.getElementById('latInput').value = lat.toString().replace('.', ',');
+        document.getElementById('lngInput').value = lng.toString().replace('.', ',');
+        document.getElementById('posText').innerText = 'Selected position: ' + lat.toFixed(5) + ', ' + lng.toFixed(5);
     });
 </script>
