@@ -1,4 +1,4 @@
-﻿@model H_st_2026_Gruppe_1.Models.ResourceEntry
+﻿@model H_st_2026_Gruppe_1.Models.ResourceViewModel
 @{
     ViewData["Title"] = "Home Page";
     ViewData["FullWidth"] = true;
@@ -16,41 +16,9 @@
             </button>
         </div>
 
-        <!-- Form for registering a resource -->
+        <!-- Skjema for å registrere en ressurs -->
         <form id="resourceForm" asp-controller="Home" asp-action="RegisterResource" method="post" novalidate>
             <div class="mb-2">
-                <label>Full name</label>
-                <input type="text" name="Name" class="form-control" required />
-                <span asp-validation-for="Name" class="text-danger"></span>
-            </div>
-            <div class="mb-2">
-                <label>Contact information</label>
-                <input type="text" name="Phone" class="form-control" placeholder="Phone number or email" required />
-                <span asp-validation-for="Phone" class="text-danger"></span>
-
-            </div>
-            <div class="mb-2">
-                <label>Resource type</label>
-                <select name="ResourceType" class="form-control" required>
-                    <option value="" selected disabled hidden>-- Select a resource type --</option>
-                    <option value="Shelter">Shelter</option>
-                    <option value="Mat">Food</option>
-                    <option value="Transport">Transport</option>
-                    <option value="Medisinsk">Medical</option>
-                    <option value="Annet">Other</option>
-                </select>
-                <span asp-validation-for="ResourceType" class="text-danger"></span>
-            </div>
-            <div class="mb-2">
-                <label>Description</label>
-                <textarea name="Description" class="form-control"></textarea>
-                <span asp-validation-for="Description" class="text-danger"></span>
-            </div>
-
-            <!-- Filled by JavaScript when the user clicks the map -->
-            <!-- Corrected inputs ensuring both coordinates are sent -->
-            <input type="hidden" name="Latitude" id="latInput" />
-            <input type="hidden" name="Longitude" id="lngInput" />
                 <label for="nameInput">Full name</label>
                 <input type="text" name="Name" id="nameInput" value="@Model.Name" class="form-control" required />
                 <small id="nameError" class="text-danger"></small>
@@ -82,7 +50,7 @@
                 <input type="date" name="ExpiryDate" id="expiryDate" value="@Model.ExpiryDate?.ToString("yyyy-MM-dd")" class="form-control" readonly />
             </div>
 
-            <!-- Filled by JavaScript when the user clicks the map -->
+            <!-- Skjulte felt som fylles ut av JavaScript når brukeren klikker i kartet -->
             <input type="hidden" name="Latitude" id="latInput" value="@Model.Latitude" />
             <input type="hidden" name="Longitude" id="lngInput" value="@Model.Longitude" />
             <p id="posText" class="placeholder-text">No position marked on the map</p>
@@ -92,7 +60,7 @@
         </form>
     </aside>
 
-    <!-- Map area (2/3) -->
+    <!-- Kartområdet (2/3 av bredden) -->
     <section class="map-area">
         <div id="map" role="application" aria-label="Interactive map"></div>
         <p id="map-status" class="map-status" role="status" aria-live="polite">Loading map ...</p>
@@ -104,11 +72,13 @@
     <partial name="_ValidationScriptsPartial" />
 }
 <script>
-    
+
+    // Oppretter kartet og starter i Grimstad
     const map = L.map('map').setView([58.4614, 8.7683], 13);
-    // The mobile panel uses this reference when the map's visible size changes.
+    // Mobilpanelet bruker denne referansen når kartets synlige størrelse endres
     window.resqMap = map;
 
+    // Legger på kartfliser fra OpenStreetMap
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
@@ -116,6 +86,7 @@
     const mapStatus = document.getElementById('map-status');
     mapStatus.textContent = 'The map is ready. Select a position or use your current location.';
 
+    // Prøver å finne brukerens posisjon og flytte kartet dit
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function (position) {
             const lat = position.coords.latitude;
@@ -133,6 +104,7 @@
         mapStatus.textContent = 'This browser does not support geolocation. Select a position on the map.';
     }
 
+    // Henter elementene i skjemaet som JavaScript trenger
     const resourceType = document.getElementById('resourceType');
     const expiryDate = document.getElementById('expiryDate');
     const resourceForm = document.getElementById('resourceForm');
@@ -142,7 +114,7 @@
     const contactInput = document.getElementById('contactInput');
     const contactError = document.getElementById('contactError');
 
-    // Shows a simple error message and prevents submission if a required field is empty.
+    // Viser en enkel feilmelding og stopper innsendingen hvis et påkrevd felt er tomt
     resourceForm.addEventListener('submit', function (event) {
         let hasErrors = false;
 
@@ -169,6 +141,7 @@
         }
     });
 
+    // Skjuler feilmeldingen når brukeren begynner å skrive
     nameInput.addEventListener('input', function () {
         nameError.hidden = nameInput.value.trim() === '';
     });
@@ -177,7 +150,7 @@
         contactError.hidden = contactInput.value.trim() === '';
     });
 
-    // Shows the expiry date when the user selects a resource category.
+    // Viser utløpsdatoen når brukeren velger en ressurstype
     resourceType.addEventListener('change', function () {
         resourceTypeError.hidden = resourceType.value === '';
         const renewalDate = new Date();
@@ -202,14 +175,17 @@
                 return;
         }
 
-const year = renewalDate.getFullYear();
+        // Gjør om datoen til formatet åååå-mm-dd
+        const year = renewalDate.getFullYear();
         const month = String(renewalDate.getMonth() + 1).padStart(2, '0');
         const day = String(renewalDate.getDate()).padStart(2, '0');
         expiryDate.value = `${year}-${month}-${day}`;
     });
 
+    // Husker markøren brukeren har valgt, slik at den kan fjernes ved nytt klikk
     let selectedMarker = null;
-    
+
+    // Stopper innsendingen hvis brukeren ikke har valgt en posisjon i kartet
     document.querySelector('form').addEventListener('submit', function (e) {
         const lat = document.getElementById('latInput').value;
         const posError = document.getElementById('posError');
@@ -222,15 +198,15 @@ const year = renewalDate.getFullYear();
         }
     });
 
-    // Fjern eventuell feilmelding når brukeren klikker på kartet
+    // Fjerner eventuell feilmelding når brukeren klikker på kartet
     map.on('click', function (e) {
         const posError = document.getElementById('posError');
         if (posError) {
             posError.textContent = '';
         }
     });
-    
-    // A map click places the marker and fills the coordinates into the resource form.
+
+    // Et klikk i kartet plasserer markøren og fyller koordinatene inn i skjemaet
     map.on('click', function (e) {
         const lat = e.latlng.lat;
         const lng = e.latlng.lng;
