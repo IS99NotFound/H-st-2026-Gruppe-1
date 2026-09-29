@@ -219,8 +219,8 @@
             .bindPopup('Selected position: ' + lat.toFixed(5) + ', ' + lng.toFixed(5))
             .openPopup();
 
-        document.getElementById('latInput').value = lat;
-        document.getElementById('lngInput').value = lng;
+        document.getElementById('latInput').value = lat.toString().replace('.', ',');
+        document.getElementById('lngInput').value = lng.toString().replace('.', ',');
         document.getElementById('posText').innerText = 'Selected position: ' + lat.toFixed(5) + ', ' + lng.toFixed(5);
     });
 </script>
