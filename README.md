@@ -2,6 +2,58 @@
 
 For denne webapplikasjonen har vi tatt i bruk MVC rammeverket (Model, View og Controllers). Webapplikasjonen er bygget som en monolittisk løsning, hvor kjernefunksjonaliteten er samlet i en webapplikasjon og kjører som en enhet. Dette gjør at de ulike delene av systemet er samlet i samme prosess, samtidig som webapplikasjonen kan kommunisere med og benytte eksterne tjenester ved behov (Microsoft Learn, 2023).
 
+## Drift og Kjøring
+
+Webapplikasjonen er en ASP.NET Core MVC-applikasjon som kjøres i en Docker-container.
+
+### Forutsetninger
+
+- Docker Desktop må være installert og kjøre.
+- Maskinen må ha tilgang til internett første gang prosjektet bygges, fordi Docker
+    henter .NET-images og NuGet-pakker.
+- Nettleseren må ha internettilgang for å laste kartdata fra Leaflet/OpenStreetMap.
+
+### Starte applikasjonen
+
+Kjør følgende kommando fra prosjektmappen:
+
+```bash
+docker compose up --build
+```
+
+Når containerne er startet, er webapplikasjonen tilgjengelig på:
+
+`http://localhost:8081`
+
+Ressurser lagres midlertidig i minnet gjennom `ResourceStore` og går tapt når
+webcontaineren starter på nytt.
+
+### Stoppe applikasjonen
+
+For å stoppe containerne:
+
+```bash
+docker compose down
+```
+
+### Feilsøking
+
+Se status og logger med:
+
+```bash
+docker compose ps
+docker compose logs web
+```
+
+Dersom port `8081` allerede er i bruk, må portmappingen i `docker-compose.yml`
+endres.
+
+Ved endringer i kildekoden bør applikasjonen bygges på nytt:
+
+```bash
+docker compose up --build
+```
+
 ## MVC rammeverket og hvordan det henger sammen
 
 MVC rammeverket bestå+r av Models, Views og Controllers, hvor hver del har sitt eget ansvarsområde. Controller fungerer som et bindeledd mellom brukeren og webapplikasjonen. Den mottar forespørsler fra nettleseren, behandler forespørselen og bestemmer hva som skal returneres tilbake til brukeren. Controlleren kan hente eller lagre data gjennom webapplikasjonens datakomponenter før den returnerer et View.
@@ -14,8 +66,8 @@ Data flyter gjennom systemet ved at brukeren sender en forespørsel fra nettlese
 Ved innsending av et skjema vil dataen sendes til serveren gjennom en POST forespørsel. Controlleren mottar dataene, behandler og validerer dem før resultatet kan vises til brukeren gjennom et nytt view. Når brukeren fyller ut ResourceEntry og trykker på registrer ressurs knappen, sendes dataene til HomeController gjennom en POST forespørsel. Controlleren mottar dataene gjennom RegisterResource metoden som et ResourceEntry objekt, lagrer ressursen i ResourceStore via ResourceStore.Add(resource), og videresender til index handlingen i ResourceController, som viser listen over ressurser i Resource/index.cshtml.
 
 ## Hvordan bruker, webapplikasjon og eventuelle andre komponenter henger sammen
-Systemet består av en bruker som kommuniserer med webapplikasjonen gjennom en nettleser. Webapplikasjonen er utviklet med ASP.NET Core og MVC og håndterer forespørsler, data og visning. Webapplikasjonen har også mulighet til å kommunisere med andre komponenter, som karttjenesten, for å hente og lagre nødvendig informasjon. I den nåværende versjonen lagres data gjennom ResourceStore. En database er planlagt å bli implementert i sprint 2, og vil bli en egen komponent webapplikasjonen kan kommunisere med.
-Webapplikasjonen kjøres i en Docker container. Docker brukes til å pakke webapplikasjonen og dens avhengigheter inn i et isolert miljø, dette gjør at webapplikasjonen kan kjøres på samme måte på ulike maskiner og miljøer (dockerdocs, u.d.). I prosjektet bruker vi Docker til å kjøre webapplikasjonen i containere, og ASP.NET core webapplikasjonen bygges ved hjelp av en Dockerfile. Vi bruker .NET aspire til å starte og administrere webapplikasjonen, dette gjør det enklere å kjøre hele løsningen lokalt.
+Systemet består av en bruker som kommuniserer med webapplikasjonen gjennom en nettleser. Webapplikasjonen er utviklet med ASP.NET Core og MVC og håndterer forespørsler, data og visning. Webapplikasjonen har også mulighet til å kommunisere med andre komponenter, som karttjenesten, for å hente og lagre nødvendig informasjon. I den nåværende versjonen lagres ressursdata midlertidig gjennom ResourceStore i minnet.
+Webapplikasjonen kjøres i en Docker-container. Docker brukes til å pakke webapplikasjonen og dens avhengigheter inn i et isolert miljø, dette gjør at webapplikasjonen kan kjøres på samme måte på ulike maskiner og miljøer (dockerdocs, u.d.). I prosjektet bruker vi Docker Compose til å starte og administrere webapplikasjonen lokalt. ASP.NET Core-webapplikasjonen bygges ved hjelp av en Dockerfile.
 
 Slik henger komponentene sammen illustrert med et diagram:
 ### Systemarkitektur
@@ -35,12 +87,9 @@ flowchart TD
             View["View"]
         end
 
-        Database["Database (planlagt)"]
-
         App --> Controller
         Controller --> Model
         Controller --> View
-        Model -.-> Database
     end
 
     Nettleser --> App
