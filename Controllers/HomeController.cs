@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using H_st_2026_Gruppe_1.Models;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace H_st_2026_Gruppe_1.Controllers;
 
@@ -16,6 +17,10 @@ public class HomeController : Controller
     [HttpPost]
     public IActionResult RegisterResource(ResourceEntry resource)
     {
+        if (!ModelState.IsValid)
+        {
+            return View("index", resource);
+        }
         // Calculates the date before the resource is saved.
 resource.ExpiryDate = GetExpiryDate(resource.ResourceType);
         if (!string.IsNullOrWhiteSpace(resource.ResourceType) && resource.ExpiryDate is null)
@@ -32,6 +37,7 @@ resource.ExpiryDate = GetExpiryDate(resource.ResourceType);
         ResourceStore.Add(resource);
         return RedirectToAction("Index", "Resources");
     }
+    
 
     // Calculates the expiry date based on the resource category.
     private static DateTime? GetExpiryDate(string resourceType)

@@ -8,8 +8,7 @@
     <aside id="side-panel" class="side-panel" aria-label="Resource registration">
         <div class="side-panel-header">
             <div>
-                <p class="section-label">Map tools</p>
-                <h1>Register resource</h1>
+                <h1>Register a resource</h1>
             </div>
             <button class="panel-toggle panel-close" type="button" aria-controls="side-panel" aria-expanded="false">
                 <span class="visually-hidden">Close resource panel</span>
@@ -20,6 +19,38 @@
         <!-- Form for registering a resource -->
         <form id="resourceForm" asp-controller="Home" asp-action="RegisterResource" method="post" novalidate>
             <div class="mb-2">
+                <label>Full name</label>
+                <input type="text" name="Name" class="form-control" required />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="mb-2">
+                <label>Contact information</label>
+                <input type="text" name="Phone" class="form-control" placeholder="Phone number or email" required />
+                <span asp-validation-for="Phone" class="text-danger"></span>
+
+            </div>
+            <div class="mb-2">
+                <label>Resource type</label>
+                <select name="ResourceType" class="form-control" required>
+                    <option value="" selected disabled hidden>-- Select a resource type --</option>
+                    <option value="Shelter">Shelter</option>
+                    <option value="Mat">Food</option>
+                    <option value="Transport">Transport</option>
+                    <option value="Medisinsk">Medical</option>
+                    <option value="Annet">Other</option>
+                </select>
+                <span asp-validation-for="ResourceType" class="text-danger"></span>
+            </div>
+            <div class="mb-2">
+                <label>Description</label>
+                <textarea name="Description" class="form-control"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+
+            <!-- Filled by JavaScript when the user clicks the map -->
+            <!-- Corrected inputs ensuring both coordinates are sent -->
+            <input type="hidden" name="Latitude" id="latInput" />
+            <input type="hidden" name="Longitude" id="lngInput" />
                 <label for="nameInput">Full name</label>
                 <input type="text" name="Name" id="nameInput" value="@Model.Name" class="form-control" required />
                 <small id="nameError" class="text-danger"></small>
@@ -55,6 +86,7 @@
             <input type="hidden" name="Latitude" id="latInput" value="@Model.Latitude" />
             <input type="hidden" name="Longitude" id="lngInput" value="@Model.Longitude" />
             <p id="posText" class="placeholder-text">No position marked on the map</p>
+            <span asp-validation-for="Latitude" class="text-danger d-block mb-2" id="posError"></span>
 
             <button type="submit" class="btn btn-primary">Register resource</button>
         </form>
@@ -68,7 +100,11 @@
 
 </div>
 
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
 <script>
+    
     const map = L.map('map').setView([58.4614, 8.7683], 13);
     // The mobile panel uses this reference when the map's visible size changes.
     window.resqMap = map;
@@ -173,7 +209,27 @@ const year = renewalDate.getFullYear();
     });
 
     let selectedMarker = null;
+    
+    document.querySelector('form').addEventListener('submit', function (e) {
+        const lat = document.getElementById('latInput').value;
+        const posError = document.getElementById('posError');
 
+        if (!lat) {
+            e.preventDefault(); // Stopper innsendingen av skjemaet
+            if (posError) {
+                posError.textContent = 'Du må velge en posisjon på kartet før du kan registrere.';
+            }
+        }
+    });
+
+    // Fjern eventuell feilmelding når brukeren klikker på kartet
+    map.on('click', function (e) {
+        const posError = document.getElementById('posError');
+        if (posError) {
+            posError.textContent = '';
+        }
+    });
+    
     // A map click places the marker and fills the coordinates into the resource form.
     map.on('click', function (e) {
         const lat = e.latlng.lat;
