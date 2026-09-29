@@ -87,9 +87,12 @@ flowchart TD
             View["View"]
         end
 
+        Database["Database (planlagt)"]
+
         App --> Controller
         Controller --> Model
         Controller --> View
+        Model -.-> Database
     end
 
     Nettleser --> App
