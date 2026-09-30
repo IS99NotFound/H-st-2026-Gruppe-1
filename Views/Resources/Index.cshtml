@@ -1,0 +1,54 @@
+@model List<H_st_2026_Gruppe_1.Models.ResourceEntry>
+@{
+    ViewData["Title"] = "My Resources";
+}
+
+<h2>Registered resources</h2>
+
+<div class="d-flex justify-content-end align-items-end mb-3">
+    <a asp-controller="Home" asp-action="Index" class="btn btn-custom">Register a new resource</a>
+</div>
+
+@if (!Model.Any())
+{
+    <p>No resources are registered right now</p>
+}
+else
+{
+    <table class="table table-dark table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Telephone</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Expiry date</th>
+                <th>Position</th>
+                <th>Registered</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var r in Model)
+            {
+                <tr>
+                    <td>@r.Name</td>
+                    <td>@r.Phone</td>
+                    <td>@r.ResourceType</td>
+                    <td>@r.Description</td>
+                    <td>@r.ExpiryDate?.ToString("dd.MM.yyyy")</td>
+                    <td>
+                        @if (r.Latitude != null && r.Longitude != null)
+                        {
+                            @($"{r.Latitude:F5}, {r.Longitude:F5}")
+                        }
+                        else
+                        {
+                            <span>No position selected</span>
+                        }
+                    </td>
+                    <td>@r.RegisteredAt.ToString("dd.MM.yyyy HH:mm")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
