@@ -50,7 +50,20 @@ endres.
 
 Ved endringer i koden bør applikasjonen bygges på nytt.
 
-## MVC rammeverket og hvordan det henger sammen
+# Test scenarioer
+En essensiell del av utviklingsprosessen er å teste produktet både underveis og etterpå. Det er viktig at en både avgrenser hva en skal teste, samtidig som at det holdes relevant til hva brukerne skal gjøre i applikasjonen. Ved å lage test scenarier kan en sette spesifikke deler av applikasjonen i rampelyset og fokusere på det som fungerer eller ikke fungerer. Det er også mulig at en avslører flere problemstillinger enn en originalt hadde forestilt seg, noe som kan være enklere å fikse i de tidligere fasene enn ved slutten av produksjonen. Hvis en kun tester avsluttende kan konsekvensene bli mye større da det kan oppstå en domino-effekt der en feil leder til flere feil videre i systemet.
+
+##	Scenario - Forventninger - Resultat - Status
+| # |	Scenario | Forventet resultat | Faktisk resultat | Status |
+|---|------------|--------------------|------------------|--------|
+| 1	| Opp en ressurs og finn den igjen | Ressurs blir opprettet og er synlig i "My resources" | Feil med desimaltegn (komma/punktum), løst. Ingen error melding når en har gitt ugyldig input på kontakt informasjon - uløst | Delvis løst |
+| 2	| Sjekk alle koblinger | Alle lenker skal føre til riktig side eller gi en error beskjed | "Privacy" går til feil sted, mangler egen side eller error. "Resource provider" aka bruker er ikke klikkbar | Planlegger å fikse neste sprint |
+| 3	| Kart oppdaterer skjema | Skjema blir oppdatert når en klikker på kartet | Fungerer slik det skal | Ok |
+| 4	| GET og POST-håndtering | POST-håndtering når skjema sendes inn, og GET-håndtering på redirect til "My resources" | Virker som det skal | Ok |
+| 5	| Responsivt | Webapplikasjon tilpasser seg andre skjermer - som mobil og nettbrett - og ingenting er forsvunnet ut av skjermen | Bunn-meny forsvinner på mobil når en havner på "My resources" og tabellen går ut av skjermen mens top og bottom header stopper tidligere. Resten, inkludert nettbrett fungerer | Delvis løst |
+
+
+# MVC rammeverket og hvordan det henger sammen
 
 MVC rammeverket bestå+r av Models, Views og Controllers, hvor hver del har sitt eget ansvarsområde. Controller fungerer som et bindeledd mellom brukeren og webapplikasjonen. Den mottar forespørsler fra nettleseren, behandler forespørselen og bestemmer hva som skal returneres tilbake til brukeren. Controlleren kan hente eller lagre data gjennom webapplikasjonens datakomponenter før den returnerer et View.
 Et view er det brukeren ser og samhandler med i nettleseren. Det består av HTML markup og dynamisk innhold som sendes til nettleseren. En controller kan returnere en view som viser informasjon til brukeren.
@@ -115,6 +128,8 @@ I prosjektet har vi brukt KI som et hjelpemiddel gjennom ulike deler av utviklin
 •	Hva er MVC komponenter?
 
 •	Hvorfor vil ikke webapplikasjonen kjøre?
+
+•   Gi meg tilbakemelding på besvarelse ifht. oppgavetekst
 
 
 
