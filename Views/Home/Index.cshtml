@@ -1,4 +1,4 @@
-﻿@model H_st_2026_Gruppe_1.Models.ResourceEntry
+@model H_st_2026_Gruppe_1.Models.ResourceEntry
 @{
     ViewData["Title"] = "Home Page";
     ViewData["FullWidth"] = true;
@@ -17,75 +17,54 @@
         </div>
 
         <!-- Form for registering a resource -->
-        <form id="resourceForm" asp-controller="Home" asp-action="RegisterResource" method="post" novalidate>
+        <form id="resourceForm" asp-controller="Home" asp-action="RegisterResource" method="post">
             <div class="mb-2">
-                <label>Full name</label>
-                <input type="text" name="Name" class="form-control" required />
+                <label asp-for="Name">Full name</label>
+                <input asp-for="Name" id="nameInput" class="form-control" />
                 <span asp-validation-for="Name" class="text-danger"></span>
             </div>
-            <div class="mb-2">
-                <label>Contact information</label>
-                <input type="text" name="Phone" class="form-control" placeholder="Phone number or email" required />
-                <span asp-validation-for="Phone" class="text-danger"></span>
 
-            </div>
             <div class="mb-2">
-                <label>Resource type</label>
-                <select name="ResourceType" class="form-control" required>
+                <label asp-for="Phone">Contact information</label>
+                <input asp-for="Phone" id="contactInput" class="form-control" placeholder="Phone number or email" />
+                <span asp-validation-for="Phone" class="text-danger"></span>
+            </div>
+
+            <div class="mb-2">
+                <label asp-for="ResourceType">Resource type</label>
+                <select asp-for="ResourceType" id="resourceType" class="form-control">
                     <option value="" selected disabled hidden>-- Select a resource type --</option>
                     <option value="Shelter">Shelter</option>
                     <option value="Mat">Food</option>
                     <option value="Transport">Transport</option>
                     <option value="Medisinsk">Medical</option>
+                    <option value="Materialer">Materialer</option>
                     <option value="Annet">Other</option>
                 </select>
                 <span asp-validation-for="ResourceType" class="text-danger"></span>
             </div>
+
             <div class="mb-2">
-                <label>Description</label>
-                <textarea name="Description" class="form-control"></textarea>
+                <label asp-for="Description">Description</label>
+                <textarea asp-for="Description" id="descriptionInput" class="form-control"></textarea>
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
 
-            <!-- Filled by JavaScript when the user clicks the map -->
-            <!-- Corrected inputs ensuring both coordinates are sent -->
-            <input type="hidden" name="Latitude" id="latInput" />
-            <input type="hidden" name="Longitude" id="lngInput" />
-                <label for="nameInput">Full name</label>
-                <input type="text" name="Name" id="nameInput" value="@Model.Name" class="form-control" required />
-                <small id="nameError" class="text-danger"></small>
-            </div>
             <div class="mb-2">
-                <label for="contactInput">Contact information</label>
-                <input type="text" name="Phone" id="contactInput" value="@Model.Phone" class="form-control" placeholder="Phone number or email" required />
-                <small id="contactError" class="text-danger"></small>
-            </div>
-            <div class="mb-2">
-                <label for="resourceType">Resource type</label>
-                <select name="ResourceType" id="resourceType" class="form-control" required>
-                    <option value="">Select an option</option>
-                    <option value="Shelter" selected="@(Model.ResourceType == "Shelter" ? "selected" : null)">Shelter</option>
-                    <option value="Mat" selected="@(Model.ResourceType == "Mat" ? "selected" : null)">Food</option>
-                    <option value="Transport" selected="@(Model.ResourceType == "Transport" ? "selected" : null)">Transport</option>
-                    <option value="Medisinsk" selected="@(Model.ResourceType == "Medisinsk" ? "selected" : null)">Medical</option>
-                    <option value="Materialer" selected="@(Model.ResourceType == "Materialer" ? "selected" : null)">Materialer</option>
-                    <option value="Annet" selected="@(Model.ResourceType == "Annet" ? "selected" : null)">Other</option>
-                </select>
-                <small id="resourceTypeError" class="text-danger"></small>
-            </div>
-            <div class="mb-2">
-                <label for="descriptionInput">Description</label>
-                <textarea name="Description" id="descriptionInput" class="form-control">@Model.Description</textarea>
-            </div>
-            <div class="mb-2">
-                <label for="expiryDate">Expiry date</label>
-                <input type="date" name="ExpiryDate" id="expiryDate" value="@Model.ExpiryDate?.ToString("yyyy-MM-dd")" class="form-control" readonly />
+                <label asp-for="ExpirationDate">Expiration date</label>
+                <input type="date" asp-for="ExpirationDate" id="expiryDate" class="form-control" />
+                <span asp-validation-for="ExpirationDate" class="text-danger"></span>
+
             </div>
 
             <!-- Filled by JavaScript when the user clicks the map -->
-            <input type="hidden" name="Latitude" id="latInput" value="@Model.Latitude" />
-            <input type="hidden" name="Longitude" id="lngInput" value="@Model.Longitude" />
-            <p id="posText" class="placeholder-text">No position marked on the map</p>
+            <input type="hidden" asp-for="Latitude" id="latInput" />
+            <input type="hidden" asp-for="Longitude" id="lngInput" />
+            <p id="posText" class="placeholder-text">
+                @(Model.Latitude != null && Model.Longitude != null 
+                    ? $"Selected position: {Model.Latitude:F5}, {Model.Longitude:F5}" 
+                    : "No position marked on the map")
+            </p>
             <span asp-validation-for="Latitude" class="text-danger d-block mb-2" id="posError"></span>
 
             <button type="submit" class="btn btn-primary">Register resource</button>
@@ -102,149 +81,121 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-}
-<script>
-    
-    const map = L.map('map').setView([58.4614, 8.7683], 13);
-    // The mobile panel uses this reference when the map's visible size changes.
-    window.resqMap = map;
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
+    <script>
+        const map = L.map('map').setView([58.4614, 8.7683], 13);
+        // The mobile panel uses this reference when the map's visible size changes.
+        window.resqMap = map;
 
-    const mapStatus = document.getElementById('map-status');
-    mapStatus.textContent = 'The map is ready. Select a position or use your current location.';
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
 
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function (position) {
-            const lat = position.coords.latitude;
-            const lng = position.coords.longitude;
+        const mapStatus = document.getElementById('map-status');
+        mapStatus.textContent = 'The map is ready. Select a position or use your current location.';
 
-            map.setView([lat, lng], 13);
-            L.marker([lat, lng]).addTo(map).bindPopup('You are here').openPopup();
-            mapStatus.textContent = 'The map is showing your current location.';
-        }, function (error) {
-            console.log('Could not get position:', error.message);
-            mapStatus.textContent = 'Your location could not be found. You can still select a position on the map.';
-        });
-    } else {
-        console.log('This browser does not support geolocation');
-        mapStatus.textContent = 'This browser does not support geolocation. Select a position on the map.';
-    }
+        let selectedMarker = null;
 
-    const resourceType = document.getElementById('resourceType');
-    const expiryDate = document.getElementById('expiryDate');
-    const resourceForm = document.getElementById('resourceForm');
-    const nameInput = document.getElementById('nameInput');
-    const nameError = document.getElementById('nameError');
-    const resourceTypeError = document.getElementById('resourceTypeError');
-    const contactInput = document.getElementById('contactInput');
-    const contactError = document.getElementById('contactError');
+        // If coordinates already exist (e.g. returning after server validation error), place the marker
+        const initialLat = parseFloat(document.getElementById('latInput').value);
+        const initialLng = parseFloat(document.getElementById('lngInput').value);
+        if (!isNaN(initialLat) && !isNaN(initialLng)) {
+            map.setView([initialLat, initialLng], 13);
+            selectedMarker = L.marker([initialLat, initialLng]).addTo(map)
+                .bindPopup('Selected position: ' + initialLat.toFixed(5) + ', ' + initialLng.toFixed(5))
+                .openPopup();
+        } else if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function (position) {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
 
-    // Shows a simple error message and prevents submission if a required field is empty.
-    resourceForm.addEventListener('submit', function (event) {
-        let hasErrors = false;
-
-        if (!nameInput.value.trim()) {
-            nameError.textContent = 'Name is required.';
-            nameError.hidden = false;
-            hasErrors = true;
+                map.setView([lat, lng], 13);
+                L.marker([lat, lng]).addTo(map).bindPopup('You are here').openPopup();
+                mapStatus.textContent = 'The map is showing your current location.';
+            }, function (error) {
+                console.log('Could not get position:', error.message);
+                mapStatus.textContent = 'Your location could not be found. You can still select a position on the map.';
+            });
+        } else {
+            console.log('This browser does not support geolocation');
+            mapStatus.textContent = 'This browser does not support geolocation. Select a position on the map.';
         }
 
-        if (!contactInput.value.trim()) {
-            contactError.textContent = 'A phone number or email address is required.';
-            contactError.hidden = false;
-            hasErrors = true;
-        }
+        const resourceType = document.getElementById('resourceType');
+        const expiryDate = document.getElementById('expiryDate');
+        const resourceForm = document.getElementById('resourceForm');
 
-        if (!resourceType.value) {
-            resourceTypeError.textContent = 'Select a resource type.';
-            resourceTypeError.hidden = false;
-            hasErrors = true;
-        }
-
-        if (hasErrors) {
-            event.preventDefault();
-        }
-    });
-
-    nameInput.addEventListener('input', function () {
-        nameError.hidden = nameInput.value.trim() === '';
-    });
-
-    contactInput.addEventListener('input', function () {
-        contactError.hidden = contactInput.value.trim() === '';
-    });
-
-    // Shows the expiry date when the user selects a resource category.
-    resourceType.addEventListener('change', function () {
-        resourceTypeError.hidden = resourceType.value === '';
-        const renewalDate = new Date();
-
-        switch (resourceType.value) {
-            case 'Mat':
-                renewalDate.setDate(renewalDate.getDate() + 14);
-                break;
-            case 'Medisinsk':
-                renewalDate.setMonth(renewalDate.getMonth() + 1);
-                break;
-            case 'Materialer':
-                renewalDate.setMonth(renewalDate.getMonth() + 6);
-                break;
-            case 'Shelter':
-            case 'Transport':
-            case 'Annet':
-                renewalDate.setFullYear(renewalDate.getFullYear() + 1);
-                break;
-            default:
+        function updateExpiryDate() {
+            if (!resourceType.value) {
                 expiryDate.value = '';
                 return;
-        }
-
-const year = renewalDate.getFullYear();
-        const month = String(renewalDate.getMonth() + 1).padStart(2, '0');
-        const day = String(renewalDate.getDate()).padStart(2, '0');
-        expiryDate.value = `${year}-${month}-${day}`;
-    });
-
-    let selectedMarker = null;
-    
-    document.querySelector('form').addEventListener('submit', function (e) {
-        const lat = document.getElementById('latInput').value;
-        const posError = document.getElementById('posError');
-
-        if (!lat) {
-            e.preventDefault(); // Stopper innsendingen av skjemaet
-            if (posError) {
-                posError.textContent = 'Du må velge en posisjon på kartet før du kan registrere.';
             }
+
+            const renewalDate = new Date();
+
+            switch (resourceType.value) {
+                case 'Mat':
+                    renewalDate.setDate(renewalDate.getDate() + 14);
+                    break;
+                case 'Medisinsk':
+                    renewalDate.setMonth(renewalDate.getMonth() + 1);
+                    break;
+                case 'Materialer':
+                    renewalDate.setMonth(renewalDate.getMonth() + 6);
+                    break;
+                case 'Shelter':
+                case 'Transport':
+                case 'Annet':
+                    renewalDate.setFullYear(renewalDate.getFullYear() + 1);
+                    break;
+                default:
+                    expiryDate.value = '';
+                    return;
+            }
+
+            const year = renewalDate.getFullYear();
+            const month = String(renewalDate.getMonth() + 1).padStart(2, '0');
+            const day = String(renewalDate.getDate()).padStart(2, '0');
+            expiryDate.value = `${year}-${month}-${day}`;
         }
-    });
 
-    // Fjern eventuell feilmelding når brukeren klikker på kartet
-    map.on('click', function (e) {
-        const posError = document.getElementById('posError');
-        if (posError) {
-            posError.textContent = '';
-        }
-    });
-    
-    // A map click places the marker and fills the coordinates into the resource form.
-    map.on('click', function (e) {
-        const lat = e.latlng.lat;
-        const lng = e.latlng.lng;
+        // Calculate expiry date on resource category change
+        resourceType.addEventListener('change', updateExpiryDate);
 
-        if (selectedMarker) {
-            map.removeLayer(selectedMarker);
-        }
+        // Map click event
+        map.on('click', function (e) {
+            const lat = e.latlng.lat;
+            const lng = e.latlng.lng;
 
-        selectedMarker = L.marker([lat, lng]).addTo(map)
-            .bindPopup('Selected position: ' + lat.toFixed(5) + ', ' + lng.toFixed(5))
-            .openPopup();
+            if (selectedMarker) {
+                map.removeLayer(selectedMarker);
+            }
 
-        document.getElementById('latInput').value = lat;
-        document.getElementById('lngInput').value = lng;
-        document.getElementById('posText').innerText = 'Selected position: ' + lat.toFixed(5) + ', ' + lng.toFixed(5);
-    });
-</script>
+            selectedMarker = L.marker([lat, lng]).addTo(map)
+                .bindPopup('Selected position: ' + lat.toFixed(5) + ', ' + lng.toFixed(5))
+                .openPopup();
+
+            document.getElementById('latInput').value = lat;
+            document.getElementById('lngInput').value = lng;
+            document.getElementById('posText').innerText = 'Selected position: ' + lat.toFixed(5) + ', ' + lng.toFixed(5);
+
+            const posError = document.getElementById('posError');
+            if (posError) {
+                posError.textContent = '';
+            }
+        });
+
+        // Form submit check for map selection
+        resourceForm.addEventListener('submit', function (e) {
+            const lat = document.getElementById('latInput').value;
+            const posError = document.getElementById('posError');
+
+            if (!lat) {
+                e.preventDefault();
+                if (posError) {
+                    posError.textContent = 'Position on the map must be filled out';
+                }
+            }
+        });
+    </script>
+}

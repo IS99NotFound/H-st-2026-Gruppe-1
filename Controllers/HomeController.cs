@@ -17,20 +17,16 @@ public class HomeController : Controller
     [HttpPost]
     public IActionResult RegisterResource(ResourceEntry resource)
     {
-        if (!ModelState.IsValid)
+        resource.ExpirationDate = GetExpiryDate(resource.ResourceType);
+
+        if (resource.ExpirationDate is null && !string.IsNullOrWhiteSpace(resource.ResourceType))
         {
-            return View("index", resource);
+            resource.ExpirationDate = GetExpiryDate(resource.ResourceType);
         }
-        // Calculates the date before the resource is saved.
-resource.ExpiryDate = GetExpiryDate(resource.ResourceType);
-        if (!string.IsNullOrWhiteSpace(resource.ResourceType) && resource.ExpiryDate is null)
-        {
-            ModelState.AddModelError(nameof(resource.ResourceType), "Select a resource type.");
-        }
+
 
         if (!ModelState.IsValid)
         {
-            // Sends the model back so the entered values are retained in the form.
             return View("Index", resource);
         }
 
