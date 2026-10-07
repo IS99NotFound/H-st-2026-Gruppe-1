@@ -1,42 +1,15 @@
-@model H_st_2026_Gruppe_1.Models.ResourceDashboard
-
+@model List<H_st_2026_Gruppe_1.Models.ResourceEntry>
 @{
     ViewData["Title"] = "My Resources";
 }
 
 <h2>Registered resources</h2>
-<div class="row my-4">
-    <div class="col-md-4">
-        <div class="card text-white bg-total-card mb-3">
-            <div class="card-body">
-                <h5 class="card-title">Total resources registered</h5>
-                <p class="card-text display-4">@Model.TotalResources</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card text-white bg-utløper-card mb-3">
-            <div class="card-body">
-                <h5 class="card-title">Expiring in 5 days</h5>
-                <p class="card-text display-4">@Model.ExpiringSoonCount</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card text-white bg-utløpt-card mb-3">
-            <div class="card-body">
-                <h5 class="card-title">Expired resources</h5>
-                <p class="card-text display-4">@Model.ExpiredCount</p>
-            </div>
-        </div>
-    </div>
-</div>
 
 <div class="d-flex justify-content-end align-items-end mb-3">
     <a asp-controller="Home" asp-action="Index" class="btn btn-custom">Register a new resource</a>
 </div>
 
-@if (!Model.Resources.Any())
+@if (!Model.Any())
 {
     <p>No resources are registered right now</p>
 }
@@ -55,14 +28,14 @@ else
             </tr>
         </thead>
         <tbody>
-            @foreach (var r in Model.Resources)
+            @foreach (var r in Model)
             {
                 <tr>
                     <td>@r.Name</td>
                     <td>@r.Phone</td>
                     <td>@r.ResourceType</td>
                     <td>@r.Description</td>
-                    <td>@r.ExpirationDate?.ToString("dd.MM.yyyy")</td>
+                    <td>@r.ExpiryDate?.ToString("dd.MM.yyyy")</td>
                     <td>
                         @if (r.Latitude != null && r.Longitude != null)
                         {

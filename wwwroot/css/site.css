@@ -397,14 +397,3 @@ body {
     border-top: 1px solid var(--border);
     color: var(--text-muted);
 }
-.bg-total-card {
-    background-color: #5192f3 !important; /* Blå */
-}
-
-.bg-utløper-card {
-    background-color: #ff9a48 !important; /* Oransje */
-}
-
-.bg-utløpt-card {
-    background-color: #f45461 !important; /* Rød */
-}
