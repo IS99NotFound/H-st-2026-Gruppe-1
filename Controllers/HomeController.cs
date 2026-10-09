@@ -26,19 +26,6 @@ public class HomeController : Controller
     [HttpPost]
     public IActionResult RegisterResource(ResourceEntry resource)
     {
-        // 1. Beregn utløpsdato dersom den ikke er satt manuelt
-        if (resource.ExpirationDate == null && !string.IsNullOrWhiteSpace(resource.ResourceType))
-        {
-            resource.ExpirationDate = GetExpiryDate(resource.ResourceType);
-        }
-
-        // 2. Sjekk om skjemaet er gyldig FØR vi lagrer
-        if (!ModelState.IsValid)
-        {
-            return View("Index", resource);
-        }
-
-        // 3. Lagre eller oppdater
         if (resource.Id > 0)
         {
             ResourceStore.Update(resource);
@@ -47,9 +34,23 @@ public class HomeController : Controller
         {
             ResourceStore.Add(resource);
         }
+        
+        resource.ExpirationDate = GetExpiryDate(resource.ResourceType);
+
+        if (resource.ExpirationDate is null && !string.IsNullOrWhiteSpace(resource.ResourceType))
+        {
+            resource.ExpirationDate = GetExpiryDate(resource.ResourceType);
+        }
+
+
+        if (!ModelState.IsValid)
+        {
+            return View("Index", resource);
+        }
 
         return RedirectToAction("Index", "Resources");
     }
+    
 
     // Calculates the expiry date based on the resource category.
     private static DateTime? GetExpiryDate(string resourceType)
@@ -59,11 +60,10 @@ public class HomeController : Controller
             "Shelter" or "Transport" or "Other" => DateTime.Today.AddYears(1),
             "Food" => DateTime.Today.AddDays(14),
             "Medical" => DateTime.Today.AddMonths(1),
-            "Materials" => DateTime.Today.AddMonths(6), // Fikset skrivefeil
+            "Materials" => DateTime.Today.AddMonths(6),
             _ => null
         };
     }
-    
 
     public IActionResult Privacy()
     {
