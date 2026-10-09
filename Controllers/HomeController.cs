@@ -26,6 +26,18 @@ public class HomeController : Controller
     [HttpPost]
     public IActionResult RegisterResource(ResourceEntry resource)
     {
+        if (resource.ExpirationDate is null && !string.IsNullOrWhiteSpace(resource.ResourceType))
+        {
+            resource.ExpirationDate = GetExpiryDate(resource.ResourceType);
+        }
+
+        if (!ModelState.IsValid)
+        {
+            // sends the user to form with attributes and error messages filled out
+            return View("Index", resource);
+        }
+
+        //save and update only when evrything is valid
         if (resource.Id > 0)
         {
             ResourceStore.Update(resource);
@@ -34,20 +46,6 @@ public class HomeController : Controller
         {
             ResourceStore.Add(resource);
         }
-        
-        resource.ExpirationDate = GetExpiryDate(resource.ResourceType);
-
-        if (resource.ExpirationDate is null && !string.IsNullOrWhiteSpace(resource.ResourceType))
-        {
-            resource.ExpirationDate = GetExpiryDate(resource.ResourceType);
-        }
-
-
-        if (!ModelState.IsValid)
-        {
-            return View("Index", resource);
-        }
-
         return RedirectToAction("Index", "Resources");
     }
     
