@@ -31,6 +31,7 @@ public class HomeController : Controller
             resource.ExpirationDate = GetExpiryDate(resource.ResourceType);
         }
 
+
         if (!ModelState.IsValid)
         {
             // sends the user to form with attributes and error messages filled out
@@ -55,10 +56,10 @@ public class HomeController : Controller
     {
         return resourceType switch
         {
-            "Shelter" or "Transport" or "Other" => DateTime.Today.AddYears(1),
-            "Food" => DateTime.Today.AddDays(14),
-            "Medical" => DateTime.Today.AddMonths(1),
-            "Materials" => DateTime.Today.AddMonths(6),
+            "Shelter" or "Transport" or "Annet" => DateTime.Today.AddYears(1),
+            "Mat" => DateTime.Today.AddDays(14),
+            "Medisinsk" => DateTime.Today.AddMonths(1),
+            "Materialer" => DateTime.Today.AddMonths(6),
             _ => null
         };
     }
