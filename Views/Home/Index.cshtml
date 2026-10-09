@@ -1,4 +1,4 @@
-﻿@model H_st_2026_Gruppe_1.Models.ResourceViewModel
+﻿@model H_st_2026_Gruppe_1.Models.ResourceEntry
 @{
     ViewData["Title"] = "Home Page";
     ViewData["FullWidth"] = true;
@@ -16,8 +16,9 @@
             </button>
         </div>
 
-        <!-- Skjema for å registrere en ressurs -->
-        <form id="resourceForm" asp-controller="Home" asp-action="RegisterResource" method="post" novalidate>
+        <!-- Form for registering a resource -->
+        <form id="resourceForm" asp-controller="Home" asp-action="RegisterResource" method="post">
+            <input type="hidden" asp-for="Id" />
             <div class="mb-2">
                 <label for="nameInput">Full name</label>
                 <input type="text" name="Name" id="nameInput" value="@Model.Name" class="form-control" required />
@@ -44,32 +45,37 @@
                     <option value="Materials" selected="@(Model.ResourceType == "Materials" ? "selected" : null)">Materials</option>
                     <option value="Other" selected="@(Model.ResourceType == "Other" ? "selected" : null)">Other</option>
                 </select>
-                <small id="resourceTypeError" class="text-danger"></small>
-                <span asp-validation-for="ResourceType" class="text-warning"></span>
+                <span asp-validation-for="ResourceType" class="text-danger"></span>
             </div>
 
             <div class="mb-2">
-                <label for="descriptionInput">Description</label>
-                <textarea name="Description" id="descriptionInput" class="form-control">@Model.Description</textarea>
-                <span asp-validation-for="Description" class="text-warning"></span>
+                <label asp-for="Description">Description</label>
+                <textarea asp-for="Description" id="descriptionInput" class="form-control"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
             </div>
 
             <div class="mb-2">
-                <label for="expiryDate">Expiry date</label>
-                <input type="date" name="ExpiryDate" id="expiryDate" value="@Model.ExpiryDate?.ToString("yyyy-MM-dd")" class="form-control" readonly />
+                <label asp-for="ExpirationDate">Expiration date</label>
+                <input type="date" asp-for="ExpirationDate" id="expiryDate" class="form-control" />
+                <span asp-validation-for="ExpirationDate" class="text-danger"></span>
+
             </div>
 
-            <!-- Skjulte felt som fylles ut av JavaScript når brukeren klikker i kartet -->
-            <input type="hidden" name="Latitude" id="latInput" value="@Model.Latitude" />
-            <input type="hidden" name="Longitude" id="lngInput" value="@Model.Longitude" />
-            <p id="posText" class="placeholder-text">No position marked on the map</p>
+            <!-- Filled by JavaScript when the user clicks the map -->
+            <input type="hidden" asp-for="Latitude" id="latInput"/>
+            <input type="hidden" asp-for="Longitude" id="lngInput"/>
+            <p id="posText" class="placeholder-text">
+                @(Model.Latitude != null && Model.Longitude != null
+                    ? $"Selected position: {Model.Latitude:F5}, {Model.Longitude:F5}"
+                    : "No position marked on the map")
+            </p>
             <span asp-validation-for="Latitude" class="text-danger d-block mb-2" id="posError"></span>
 
             <button type="submit" class="btn btn-primary">Register resource</button>
         </form>
     </aside>
 
-    <!-- Kartområdet (2/3 av bredden) -->
+    <!-- Map area (2/3) -->
     <section class="map-area">
         <div id="map" role="application" aria-label="Interactive map"></div>
         <p id="map-status" class="map-status" role="status" aria-live="polite">Loading map ...</p>
@@ -80,27 +86,31 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 }
-<script>
+    <script>
+        const map = L.map('map').setView([58.4614, 8.7683], 13);
+        window.resqMap = map;
 
-    // Oppretter kartet og starter i Grimstad
-    const map = L.map('map').setView([58.4614, 8.7683], 13);
-    // Mobilpanelet bruker denne referansen når kartets synlige størrelse endres
-    window.resqMap = map;
-
-    // Legger på kartfliser fra OpenStreetMap
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    const mapStatus = document.getElementById('map-status');
-    mapStatus.textContent = 'The map is ready. Select a position or use your current location.';
+        const mapStatus = document.getElementById('map-status');
+        mapStatus.textContent = 'The map is ready. Select a position or use your current location.';
 
-    // Prøver å finne brukerens posisjon og flytte kartet dit
-    if (navigator.geolocation) {
+        let selectedMarker = null;
+
+        // Sjekk om posisjon allerede finnes (f.eks. ved redigering)
+        const initialLat = parseFloat(document.getElementById('latInput').value);
+        const initialLng = parseFloat(document.getElementById('lngInput').value);
+        if (!isNaN(initialLat) && !isNaN(initialLng)) {
+        map.setView([initialLat, initialLng], 13);
+        selectedMarker = L.marker([initialLat, initialLng]).addTo(map)
+        .bindPopup('Selected position: ' + initialLat.toFixed(5) + ', ' + initialLng.toFixed(5))
+        .openPopup();
+    } else if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function (position) {
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
-
             map.setView([lat, lng], 13);
             L.marker([lat, lng]).addTo(map).bindPopup('You are here').openPopup();
             mapStatus.textContent = 'The map is showing your current location.';
@@ -108,128 +118,124 @@
             console.log('Could not get position:', error.message);
             mapStatus.textContent = 'Your location could not be found. You can still select a position on the map.';
         });
-    } else {
-        console.log('This browser does not support geolocation');
-        mapStatus.textContent = 'This browser does not support geolocation. Select a position on the map.';
     }
 
-    // Henter elementene i skjemaet som JavaScript trenger
-    const resourceType = document.getElementById('resourceType');
-    const expiryDate = document.getElementById('expiryDate');
-    const resourceForm = document.getElementById('resourceForm');
-    const nameInput = document.getElementById('nameInput');
-    const nameError = document.getElementById('nameError');
-    const resourceTypeError = document.getElementById('resourceTypeError');
-    const contactInput = document.getElementById('contactInput');
-    const contactError = document.getElementById('contactError');
+        const resourceType = document.getElementById('resourceType');
+        const expiryDate = document.getElementById('expiryDate');
+        const resourceForm = document.getElementById('resourceForm');
+        const nameInput = document.getElementById('nameInput');
+        const contactInput = document.getElementById('contactInput');
+        const nameError = document.getElementById('nameError');
+        const contactError = document.getElementById('contactError');
 
-    // Viser en enkel feilmelding og stopper innsendingen hvis et påkrevd felt er tomt
-    resourceForm.addEventListener('submit', function (event) {
+        // SKJEMA-VALIDERING VED SUBMIT
+        resourceForm.addEventListener('submit', function (e) {
         let hasErrors = false;
 
-        if (!nameInput.value.trim()) {
-            nameError.textContent = 'Name is required.';
-            nameError.hidden = false;
-            hasErrors = true;
-        }
+        if (nameInput && !nameInput.value.trim()) {
+        if (nameError) {
+        nameError.textContent = 'Name is required.';
+        nameError.hidden = false;
+    }
+        hasErrors = true;
+    }
 
-        if (!contactInput.value.trim()) {
-            contactError.textContent = 'A phone number or email address is required.';
-            contactError.hidden = false;
-            hasErrors = true;
-        }
+        if (contactInput && !contactInput.value.trim()) {
+        if (contactError) {
+        contactError.textContent = 'A phone number or email address is required.';
+        contactError.hidden = false;
+    }
+        hasErrors = true;
+    }
 
-        if (!resourceType.value) {
-            resourceTypeError.textContent = 'Select a resource type.';
-            resourceTypeError.hidden = false;
-            hasErrors = true;
-        }
-
-        if (hasErrors) {
-            event.preventDefault();
-        }
-    });
-
-    // Skjuler feilmeldingen når brukeren begynner å skrive
-    nameInput.addEventListener('input', function () {
-        nameError.hidden = nameInput.value.trim() === '';
-    });
-
-    contactInput.addEventListener('input', function () {
-        contactError.hidden = contactInput.value.trim() === '';
-    });
-
-    // Viser utløpsdatoen når brukeren velger en ressurstype
-    resourceType.addEventListener('change', function () {
-        resourceTypeError.hidden = resourceType.value === '';
-        const renewalDate = new Date();
-
-        switch (resourceType.value) {
-            case 'Food':
-                renewalDate.setDate(renewalDate.getDate() + 14);
-                break;
-            case 'Medical':
-                renewalDate.setMonth(renewalDate.getMonth() + 1);
-                break;
-            case 'Materials':
-                renewalDate.setMonth(renewalDate.getMonth() + 6);
-                break;
-            case 'Shelter':
-            case 'Transport':
-            case 'Other':
-                renewalDate.setFullYear(renewalDate.getFullYear() + 1);
-                break;
-            default:
-                expiryDate.value = '';
-                return;
-        }
-
-        // Gjør om datoen til formatet åååå-mm-dd
-        const year = renewalDate.getFullYear();
-        const month = String(renewalDate.getMonth() + 1).padStart(2, '0');
-        const day = String(renewalDate.getDate()).padStart(2, '0');
-        expiryDate.value = `${year}-${month}-${day}`;
-    });
-
-    // Husker markøren brukeren har valgt, slik at den kan fjernes ved nytt klikk
-    let selectedMarker = null;
-
-    // Stopper innsendingen hvis brukeren ikke har valgt en posisjon i kartet
-    document.querySelector('form').addEventListener('submit', function (e) {
         const lat = document.getElementById('latInput').value;
         const posError = document.getElementById('posError');
-
         if (!lat) {
-            e.preventDefault(); // Stopper innsendingen av skjemaet
-            if (posError) {
-                posError.textContent = 'Du må velge en posisjon på kartet før du kan registrere.';
-            }
-        }
-    });
-
-    // Fjerner eventuell feilmelding når brukeren klikker på kartet
-    map.on('click', function (e) {
-        const posError = document.getElementById('posError');
         if (posError) {
-            posError.textContent = '';
-        }
+        posError.textContent = 'Position on the map must be filled out';
+    }
+        hasErrors = true;
+    }
+
+        // Hvis det er feil, avbryt innsendingen!
+        if (hasErrors) {
+        e.preventDefault();
+    }
     });
 
-    // Et klikk i kartet plasserer markøren og fyller koordinatene inn i skjemaet
-    map.on('click', function (e) {
+        // Skjuler feilmeldinger fortløpende når brukeren skrivers
+        if (nameInput) {
+        nameInput.addEventListener('input', function () {
+            if (nameError) nameError.hidden = nameInput.value.trim() !== '';
+        });
+    }
+
+        if (contactInput) {
+        contactInput.addEventListener('input', function () {
+            if (contactError) contactError.hidden = contactInput.value.trim() !== '';
+        });
+    }
+
+        // Regner ut utløpsdato ved endring i ressurstype
+        if (resourceType) {
+        resourceType.addEventListener('change', function () {
+            const renewalDate = new Date();
+            switch (resourceType.value) {
+                case 'Food':
+                    renewalDate.setDate(renewalDate.getDate() + 14);
+                    break;
+                case 'Medical':
+                    renewalDate.setMonth(renewalDate.getMonth() + 1);
+                    break;
+                case 'Materials':
+                    renewalDate.setMonth(renewalDate.getMonth() + 6);
+                    break;
+                case 'Shelter':
+                case 'Transport':
+                case 'Other':
+                    renewalDate.setFullYear(renewalDate.getFullYear() + 1);
+                    break;
+                default:
+                    expiryDate.value = '';
+                    return;
+            }
+
+            const year = renewalDate.getFullYear();
+            const month = String(renewalDate.getMonth() + 1).padStart(2, '0');
+            const day = String(renewalDate.getDate()).padStart(2, '0');
+            expiryDate.value = `${year}-${month}-${day}`;
+        });
+    }
+
+        // Klikk på kartet for å velge posisjon
+        map.on('click', function (e) {
         const lat = e.latlng.lat;
         const lng = e.latlng.lng;
 
         if (selectedMarker) {
-            map.removeLayer(selectedMarker);
-        }
+        map.removeLayer(selectedMarker);
+    }
 
         selectedMarker = L.marker([lat, lng]).addTo(map)
-            .bindPopup('Selected position: ' + lat.toFixed(5) + ', ' + lng.toFixed(5))
-            .openPopup();
+        .bindPopup('Selected position: ' + lat.toFixed(5) + ', ' + lng.toFixed(5))
+        .openPopup();
 
         document.getElementById('latInput').value = lat;
         document.getElementById('lngInput').value = lng;
         document.getElementById('posText').innerText = 'Selected position: ' + lat.toFixed(5) + ', ' + lng.toFixed(5);
+
+        const posError = document.getElementById('posError');
+        if (posError) {
+        posError.textContent = '';
+    }
     });
+
+        // Åpne sidepanelet automatisk ved redigering
+        const resourceId = parseInt(document.getElementById('Id')?.value || '0');
+        const sidePanel = document.getElementById('side-panel');
+
+        if (resourceId > 0 && sidePanel) {
+        sidePanel.classList.add('open');
+    }
 </script>
+}

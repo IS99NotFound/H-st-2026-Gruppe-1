@@ -7,18 +7,25 @@ namespace H_st_2026_Gruppe_1.Controllers;
 
 public class HomeController : Controller
 {
-    public IActionResult Index()
+    public IActionResult Index(int? id)
     {
+        if (id.HasValue)
+        {
+            var existingResource = ResourceStore.GetById(id.Value);
+            if (existingResource != null)
+            {
+                return View(existingResource);
+            }
+        }
+        
         // Sends an empty model to the form the first time the page is opened.
-        return View(new ResourceEntry());
+        return View(new ResourceEntry());     
     }
 
     // Runs when the form is submitted, saves the resource, and redirects to the Resources page.
     [HttpPost]
     public IActionResult RegisterResource(ResourceEntry resource)
     {
-        resource.ExpirationDate = GetExpiryDate(resource.ResourceType);
-
         if (resource.ExpirationDate is null && !string.IsNullOrWhiteSpace(resource.ResourceType))
         {
             resource.ExpirationDate = GetExpiryDate(resource.ResourceType);
@@ -27,10 +34,19 @@ public class HomeController : Controller
 
         if (!ModelState.IsValid)
         {
+            // sends the user to form with attributes and error messages filled out
             return View("Index", resource);
         }
 
-        ResourceStore.Add(resource);
+        //save and update only when evrything is valid
+        if (resource.Id > 0)
+        {
+            ResourceStore.Update(resource);
+        }
+        else
+        {
+            ResourceStore.Add(resource);
+        }
         return RedirectToAction("Index", "Resources");
     }
     
@@ -57,5 +73,12 @@ public class HomeController : Controller
     public IActionResult Error()
     {
         return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+    }
+
+    [HttpPost]
+    public IActionResult DeleteResource(int id)
+    {
+        ResourceStore.Remove(id);
+        return RedirectToAction("index", "Resources");
     }
 }
