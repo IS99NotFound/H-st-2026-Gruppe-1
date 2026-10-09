@@ -17,4 +17,35 @@ public static class ResourceStore
         resource.RegisteredAt = DateTime.Now;
         Resources.Add(resource);
     }
+    
+    public static void Remove( int Id)
+    {
+        Resources.RemoveAll(x => x.Id == Id);
+        
+    }
+
+    public static ResourceEntry? GetById(int Id)
+    {
+        return Resources.FirstOrDefault(x => x.Id == Id);
+    }
+
+    public static void Update(ResourceEntry UpdatedResource)
+    {
+        //finne feltene 
+        var existingResource = Resources.FirstOrDefault(x => x.Id == UpdatedResource.Id);
+        
+        //hvis feltene eksisterer overskrive dem
+        if (existingResource != null)
+        {
+            existingResource.Name = UpdatedResource.Name;
+            existingResource.Description = UpdatedResource.Description;
+            existingResource.ResourceType = UpdatedResource.ResourceType;
+            existingResource.Latitude = UpdatedResource.Latitude;
+            existingResource.Longitude = UpdatedResource.Longitude;
+            existingResource.RegisteredAt = DateTime.Now;
+            existingResource.Phone = UpdatedResource.Phone;
+            existingResource.ExpirationDate =  UpdatedResource.ExpirationDate;
+        }
+        
+    }
 }
