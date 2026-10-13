@@ -25,7 +25,7 @@ public class ResourceEntry
 	public string Description { get; set; } = "";
 	
 	[Required(ErrorMessage = "Expiry date is required.")]
-	public DateTime? ExpirationDate { get; set; }
+	public DateTime? ExpiryDate { get; set; }
 
 	[Required(ErrorMessage = "Position on the map must be filled out")]
 	public double? Latitude { get; set; }

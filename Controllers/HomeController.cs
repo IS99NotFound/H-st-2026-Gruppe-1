@@ -17,11 +17,11 @@ public class HomeController : Controller
     [HttpPost]
     public IActionResult RegisterResource(ResourceEntry resource)
     {
-        resource.ExpirationDate = GetExpiryDate(resource.ResourceType);
+        resource.ExpiryDate = GetExpiryDate(resource.ResourceType);
 
-        if (resource.ExpirationDate is null && !string.IsNullOrWhiteSpace(resource.ResourceType))
+        if (resource.ExpiryDate is null && !string.IsNullOrWhiteSpace(resource.ResourceType))
         {
-            resource.ExpirationDate = GetExpiryDate(resource.ResourceType);
+            resource.ExpiryDate = GetExpiryDate(resource.ResourceType);
         }
 
 
