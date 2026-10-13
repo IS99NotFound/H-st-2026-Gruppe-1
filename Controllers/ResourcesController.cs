@@ -30,7 +30,7 @@ public class ResourcesController : Controller
         };
 
         // 3. Send dashboard-modellen til Viewet
-        return View(dashboardModel.Resources);
+        return View(dashboardModel);
     }
 }
 
