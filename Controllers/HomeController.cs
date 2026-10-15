@@ -1,9 +1,34 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using H_st_2026_Gruppe_1.Models;
+using H_st_2026_Gruppe_1.Services;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace H_st_2026_Gruppe_1.Controllers;
+
+public class PublicActorController : Controller
+{
+    public IActionResult DashboardIndex()
+    {
+        var model = new ResourceNeed();
+        return View("DashboardIndex", model);
+    }
+    
+    
+    [HttpPost]
+    public IActionResult RegisterNeed(ResourceNeed need)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View("Dashboard", need);
+        }
+
+        // Lagre i minnet
+        NeedStore.AddOrUpdate(need);
+        return RedirectToAction("DashboardIndex");
+    }
+}
+
 
 public class HomeController : Controller
 {
@@ -21,6 +46,21 @@ public class HomeController : Controller
         // Sends an empty model to the form the first time the page is opened.
         return View(new ResourceEntry());     
     }
+    
+    [HttpPost]
+    public IActionResult SelectRole (string userType)
+    {
+        if (userType == "PublicActor")
+        {
+            // Sender brukeren til Public Actor Dashboard
+            return RedirectToAction("DashboardIndex", "PublicActor");
+        }
+
+        // Standard fallback: Sender til sivil/ressursleverandør sine sider
+        return RedirectToAction("Index", "Home");
+    }
+
+    
 
     // Runs when the form is submitted, saves the resource, and redirects to the Resources page.
     [HttpPost]

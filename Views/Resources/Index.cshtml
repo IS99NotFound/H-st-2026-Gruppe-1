@@ -23,10 +23,13 @@ else
             <th>Telephone</th>
             <th>Type</th>
             <th>Description</th>
+            <th>Effective date</th>
             <th>Expiry date</th>
             <th>Position</th>
             <th>Registered</th>
+            <th> Status </th>
             <th> Actions </th>
+            
         </tr>
         </thead>
         
@@ -38,6 +41,7 @@ else
                     <td>@r.Phone</td>
                     <td>@r.ResourceType</td>
                     <td>@r.Description</td>
+                    <td>@r.AvailableFrom.ToString("dd.MM.yyyy")</td>
                     <td>@r.ExpirationDate?.ToString("dd.MM.yyyy")</td>
                     <td>
                         @if (r.Latitude != null && r.Longitude != null)
@@ -50,6 +54,7 @@ else
                         }
                     </td>
                     <td>@r.RegisteredAt.ToString("dd.MM.yyyy HH:mm")</td>
+                    <td> <span class="badge bg-primary">@r.Status</span> </td>
                     <td> <form asp-controller="Home" asp-action="DeleteResource" asp-route-id="@r.Id" method="post"
                                onsubmit="return confirm('Are you sure you want to delete this resource?');">
                             <button type="submit" class="btn btn-sm btn-danger">Delete</button> 

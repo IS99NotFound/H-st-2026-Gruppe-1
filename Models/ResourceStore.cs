@@ -41,6 +41,7 @@ public static class ResourceStore
             existingResource.RegisteredAt = DateTime.Now;
             existingResource.Phone = UpdatedResource.Phone;
             existingResource.ExpirationDate =  UpdatedResource.ExpirationDate;
+            existingResource.AvailableFrom = UpdatedResource.AvailableFrom;
         }
         
     }

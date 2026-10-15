@@ -9,7 +9,6 @@ public class ResourcesController : Controller
     {
         var now = DateTime.Today;
         var fiveDaysAhead = now.AddDays(5);
-        
         var allResources = ResourceStore.Resources;
         var dashboardModel = new ResourceDashboard
         {

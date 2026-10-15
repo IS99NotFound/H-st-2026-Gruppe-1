@@ -1,0 +1,186 @@
+@model H_st_2026_Gruppe_1.Models.ResourceNeed
+@{
+    ViewData["Title"] = "Public Actor Dashboard";
+    ViewData["FullWidth"] = true;
+}
+<div class="main-layout">
+
+    <aside id="side-panel" class="side-panel" aria-label="Need registration">
+        <div class="side-panel-header">
+            <div>
+                <h1>Register Resource Need</h1>
+            </div>
+            <button class="panel-toggle panel-close" type="button" aria-controls="side-panel" aria-expanded="false">
+                <span class="visually-hidden">Close panel</span>
+                <i class="bi bi-x-lg" aria-hidden="true"></i>
+            </button>
+        </div>
+
+        <!-- Form for registering a resource need -->
+        <form id="needForm" asp-controller="PublicActor" asp-action="RegisterNeed" method="post">
+            <input type="hidden" asp-for="Id" />
+
+            <div class="mb-2">
+                <label asp-for="Title">Title </label>
+                <input type="text" asp-for="Title" id="titleInput" class="form-control" placeholder="Need excavators for landslide clearing" required />
+                <span asp-validation-for="Title" class="text-danger"></span>
+            </div>
+
+            <div class="mb-2">
+                <label asp-for="ContactInfo">Contact Person / Info</label>
+                <input type="text" asp-for="ContactInfo" id="contactInput" class="form-control" placeholder="command Center phone: +4732459844" required />
+                <span asp-validation-for="ContactInfo" class="text-danger"></span>
+            </div>
+
+            <div class="mb-2">
+                <label asp-for="CrisisEventId">Crisis Incident</label>
+                <input type="number" asp-for="CrisisEventId" id="crisisEventInput" class="form-control" placeholder="Enter Incident ID" required />
+                <span asp-validation-for="CrisisEventId" class="text-danger"></span>
+            </div>
+
+            <div class="mb-2">
+                <label asp-for="Category">Category</label>
+                <select asp-for="Category" id="categoryInput" class="form-select" required>
+                    <option value="">Select category</option>
+                    <option value="1">Transport / Logistics</option>
+                    <option value="2">Heavy Machinery (Excavator, Tractor)</option>
+                    <option value="3">Power Supply / Generator</option>
+                    <option value="4">Evacuation & Shelter</option>
+                    <option value="5">Plowing & Snow Clearing</option>
+                    <option value="6">Search & Rescue Crew</option>
+                    <option value="7">Medical Support</option>
+                    <option value="8">Other Emergency Support</option>
+                </select>
+                <span asp-validation-for="Category" class="text-danger"></span>
+            </div>
+
+            <div class="mb-2">
+                <label asp-for="Quantity">Quantity Needed</label>
+                <input type="number" asp-for="Quantity" id="quantityInput" class="form-control" min="1" value="1" required />
+                <span asp-validation-for="Quantity" class="text-danger"></span>
+            </div>
+
+            <div class="mb-2">
+                <label asp-for="Description">Detailed Description</label>
+                <textarea asp-for="Description" id="descriptionInput" class="form-control" rows="3" placeholder="Describe the situation and specific requirements..."></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+
+            <div class="mb-2">
+                <label asp-for="RequiredFrom">Needed From</label>
+                <input type="date" asp-for="RequiredFrom" class="form-control" />
+                <span asp-validation-for="RequiredFrom" class="text-danger"></span>
+            </div>
+
+            <div class="mb-2">
+                <label asp-for="Deadline">Needed Until</label>
+                <input type="date" asp-for="Deadline" id="deadlineDate" class="form-control" />
+                <span asp-validation-for="Deadline" class="text-danger"></span>
+            </div>
+
+            <!-- Position fields populated by Leaflet map -->
+            <input type="hidden" asp-for="Latitude" id="latInput"/>
+            <input type="hidden" asp-for="Longitude" id="lngInput"/>
+
+            <p id="posText" class="placeholder-text">
+                @if (Model != null && Model.Latitude != 0 && Model.Longitude != 0)
+                {
+                    @:Selected position: lat: @Model.Latitude.ToString("F5"), lng: @Model.Longitude.ToString("F5")
+                }
+                else
+                {
+                    @:No position marked on the map
+                }
+            </p>
+            
+            <span asp-validation-for="Latitude" class="text-danger d-block mb-2" id="posError"></span>
+
+            <button type="submit" class="btn btn-warning w-100" id="registerButtonPa">Register Need</button>
+        </form>
+    </aside>
+
+    <!-- Map area -->
+    <section class="map-area">
+        <div id="map" role="application" aria-label="Interactive map"></div>
+        <p id="map-status" class="map-status" role="status" aria-live="polite">Loading map ...</p>
+    </section>
+
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
+<script>
+    const map = L.map('map').setView([58.4614, 8.7683], 13);
+    window.resqMap = map;
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    const mapStatus = document.getElementById('map-status');
+    mapStatus.textContent = 'Map ready. Select position for the crisis need.';
+
+    let selectedMarker = null;
+
+    // Check initial position from model
+    const latElem = document.getElementById('latInput');
+    const lngElem = document.getElementById('lngInput');
+    const initialLat = latElem ? parseFloat(latElem.value) : NaN;
+    const initialLng = lngElem ? parseFloat(lngElem.value) : NaN;
+
+    if (!isNaN(initialLat) && !isNaN(initialLng) && initialLat !== 0) {
+        map.setView([initialLat, initialLng], 13);
+        selectedMarker = L.marker([initialLat, initialLng]).addTo(map)
+            .bindPopup('Need Location: ' + initialLat.toFixed(5) + ', ' + initialLng.toFixed(5))
+            .openPopup();
+    } else if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function (position) {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            map.setView([lat, lng], 13);
+            mapStatus.textContent = 'Map centered on current location.';
+        });
+    }
+
+    const needForm = document.getElementById('needForm');
+
+    // Frontend validation on submit
+    needForm?.addEventListener('submit', function (e) {
+        let hasErrors = false;
+
+        const lat = document.getElementById('latInput').value;
+        const posError = document.getElementById('posError');
+        
+        if (!lat || lat === "0") {
+            if (posError) posError.textContent = 'Position on map is required.';
+            hasErrors = true;
+        }
+
+        if (hasErrors) {
+            e.preventDefault();
+        }
+    });
+
+    // Map click handling
+    map.on('click', function (e) {
+        const lat = e.latlng.lat;
+        const lng = e.latlng.lng;
+
+        if (selectedMarker) {
+            map.removeLayer(selectedMarker);
+        }
+
+        selectedMarker = L.marker([lat, lng]).addTo(map)
+            .bindPopup('Need Location: ' + lat.toFixed(5) + ', ' + lng.toFixed(5))
+            .openPopup();
+
+        document.getElementById('latInput').value = lat;
+        document.getElementById('lngInput').value = lng;
+        document.getElementById('posText').innerText = 'Selected position: lat: ' + lat.toFixed(5) + ', lng: ' + lng.toFixed(5);
+
+        const posError = document.getElementById('posError');
+        if (posError) posError.textContent = '';
+    });
+</script>
