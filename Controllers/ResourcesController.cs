@@ -9,7 +9,6 @@ public class ResourcesController : Controller
     {
         var now = DateTime.Today;
         var fiveDaysAhead = now.AddDays(5);
-        
         var allResources = ResourceStore.Resources;
         var dashboardModel = new ResourceDashboard
         {
@@ -17,14 +16,14 @@ public class ResourcesController : Controller
 
             // Ressurser som utløper mellom i dag og 5 dager frem i tid
             ExpiringSoonCount = allResources.Count(r =>
-                r.ExpiryDate.HasValue &&
-                r.ExpiryDate.Value.Date >= now &&
-                r.ExpiryDate.Value.Date <= fiveDaysAhead),
+                r.ExpirationDate.HasValue &&
+                r.ExpirationDate.Value.Date >= now &&
+                r.ExpirationDate.Value.Date <= fiveDaysAhead),
 
             // Ressurser som allerede har utløpt (før i dag)
             ExpiredCount = allResources.Count(r =>
-                r.ExpiryDate.HasValue &&
-                r.ExpiryDate.Value.Date < now),
+                r.ExpirationDate.HasValue &&
+                r.ExpirationDate.Value.Date < now),
 
             Resources = allResources
         };

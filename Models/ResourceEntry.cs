@@ -25,7 +25,8 @@ public class ResourceEntry
 	public string Description { get; set; } = "";
 	
 	[Required(ErrorMessage = "Expiry date is required.")]
-	public DateTime? ExpiryDate { get; set; }
+	public DateTime? ExpirationDate { get; set; }
+	public DateTime AvailableFrom { get; set; } = DateTime.Now;
 
 	[Required(ErrorMessage = "Position on the map must be filled out")]
 	public double? Latitude { get; set; }
@@ -34,6 +35,7 @@ public class ResourceEntry
 	public double? Longitude { get; set; }
 
 	public DateTime RegisteredAt { get; set; }
+	public string Status { get; set; } = "Ny";
 }
 
 //attributter for å lagre resources og presentere de i dashboad view i MyResources

@@ -38,12 +38,19 @@
                 <label for="resourceType">Resource type</label>
                 <select name="ResourceType" id="resourceType" class="form-control" required>
                     <option value="">Select an option</option>
-                    <option value="Shelter" selected="@(Model.ResourceType == "Shelter" ? "selected" : null)">Shelter</option>
-                    <option value="Food" selected="@(Model.ResourceType == "Food" ? "selected" : null)">Food</option>
-                    <option value="Transport" selected="@(Model.ResourceType == "Transport" ? "selected" : null)">Transport</option>
-                    <option value="Medical" selected="@(Model.ResourceType == "Medical" ? "selected" : null)">Medical</option>
-                    <option value="Materials" selected="@(Model.ResourceType == "Materials" ? "selected" : null)">Materials</option>
-                    <option value="Other" selected="@(Model.ResourceType == "Other" ? "selected" : null)">Other</option>
+                    <option value="Drone" selected="@(Model.ResourceType == "Drone" ? "selected" : null)">Drone</option>
+                    <option value="ATV" selected="@(Model.ResourceType == "ATV" ? "selected" : null)">ATV</option>
+                    <option value="Tractor" selected="@(Model.ResourceType == "Tractor" ? "selected" : null)">Tractor</option>
+                    <option value="Generator" selected="@(Model.ResourceType == "Generator" ? "selected" : null)">Generator</option>
+                    <option value="Excavator" selected="@(Model.ResourceType == "Excavator" ? "selected" : null)">Excavator</option>
+                    <option value="Truck" selected="@(Model.ResourceType == "Truck" ? "selected" : null)">Truck</option>
+                    <option value="Boat" selected="@(Model.ResourceType == "Boat" ? "selected" : null)">Boat</option>
+                    <option value="Crew" selected="@(Model.ResourceType == "Crew" ? "selected" : null)">Cres</option>
+                    <option value="Sand/Gravel" selected="@(Model.ResourceType == "Sand/Gravel" ? "selected" : null)">Sand/Gravel</option>
+                    <option value="Other" selected="@(Model.ResourceType == "Otherl" ? "selected" : null)">Other</option>
+
+
+                    
                 </select>
                 <span asp-validation-for="ResourceType" class="text-danger"></span>
             </div>
@@ -53,11 +60,17 @@
                 <textarea asp-for="Description" id="descriptionInput" class="form-control"></textarea>
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
-
+            
             <div class="mb-2">
-                <label asp-for="ExpiryDate">Expiration date</label>
-                <input type="date" asp-for="ExpiryDate" id="expiryDate" class="form-control" />
-                <span asp-validation-for="ExpiryDate" class="text-danger"></span>
+                <label asp-for="AvailableFrom">Effective date</label>
+                <input type="date" asp-for="AvailableFrom" class="form-control" />
+                <span asp-validation-for="AvailableFrom" class="text-danger"></span>
+            </div>
+            
+            <div class="mb-2">
+                <label asp-for="ExpirationDate">Expiration date</label>
+                <input type="date" asp-for="ExpirationDate" id="expiryDate" class="form-control" />
+                <span asp-validation-for="ExpirationDate" class="text-danger"></span>
 
             </div>
 
@@ -66,7 +79,7 @@
             <input type="hidden" asp-for="Longitude" id="lngInput"/>
             <p id="posText" class="placeholder-text">
                 @(Model.Latitude != null && Model.Longitude != null
-                    ? $"Selected position: {Model.Latitude:F5}, {Model.Longitude:F5}"
+                    ? $"Selected position: lat:{Model.Latitude:F5}, lng: {Model.Longitude:F5}"
                     : "No position marked on the map")
             </p>
             <span asp-validation-for="Latitude" class="text-danger d-block mb-2" id="posError"></span>
