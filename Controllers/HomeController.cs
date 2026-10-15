@@ -71,6 +71,7 @@ public class HomeController : Controller
             resource.ExpirationDate = GetExpiryDate(resource.ResourceType);
         }
 
+
         if (!ModelState.IsValid)
         {
             // sends the user to form with attributes and error messages filled out
