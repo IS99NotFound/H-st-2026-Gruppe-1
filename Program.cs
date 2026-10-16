@@ -29,6 +29,11 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage(); // Viser gult/rødt feilskjermbilde med eksakt linjenummer ved krasj
+}
+
 // Sender http-forespørsler videre til https
 app.UseHttpsRedirection();
 app.UseRouting();

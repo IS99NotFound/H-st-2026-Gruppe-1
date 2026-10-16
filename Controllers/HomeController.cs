@@ -1,81 +1,124 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using H_st_2026_Gruppe_1.Models;
+using H_st_2026_Gruppe_1.Services;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace H_st_2026_Gruppe_1.Controllers;
 
+public class PublicActorController : Controller
+{
+    public IActionResult DashboardIndex()
+    {
+        var model = new ResourceNeed();
+        return View("DashboardIndex", model);
+    }
+    
+    
+    [HttpPost]
+    public IActionResult RegisterNeed(ResourceNeed need)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View("Dashboard", need);
+        }
+
+        // Lagre i minnet
+        NeedStore.AddOrUpdate(need);
+        return RedirectToAction("DashboardIndex");
+    }
+}
+
+
 public class HomeController : Controller
 {
-    public IActionResult Index()
+    public IActionResult Index(int? id)
     {
-        // Sender en tom modell til skjemaet første gang siden åpnes
-        return View(new ResourceViewModel());
+        if (id.HasValue)
+        {
+            var existingResource = ResourceStore.GetById(id.Value);
+            if (existingResource != null)
+            {
+                return View(existingResource);
+            }
+        }
+        
+        // Sends an empty model to the form the first time the page is opened.
+        return View(new ResourceEntry());     
+    }
+    
+    [HttpPost]
+    public IActionResult SelectRole (string userType)
+    {
+        if (userType == "PublicActor")
+        {
+            // Sender brukeren til Public Actor Dashboard
+            return RedirectToAction("DashboardIndex", "PublicActor");
+        }
+
+        // Standard fallback: Sender til sivil/ressursleverandør sine sider
+        return RedirectToAction("Index", "Home");
     }
 
-    // Kjører når skjemaet sendes inn, lagrer ressursen og sender brukeren til Resources-siden
+    
+
+    // Runs when the form is submitted, saves the resource, and redirects to the Resources page.
     [HttpPost]
-    public IActionResult RegisterResource(ResourceViewModel resource)
+    public IActionResult RegisterResource(ResourceEntry resource)
     {
-        // Sjekker valideringsreglene i ResourceViewModel
-        if (!ModelState.IsValid)
+        if (resource.ExpirationDate is null && !string.IsNullOrWhiteSpace(resource.ResourceType))
         {
-            return View("Index", resource);
+            resource.ExpirationDate = GetExpiryDate(resource.ResourceType);
         }
 
-        // Regner ut utløpsdatoen før ressursen lagres
-        resource.ExpiryDate = GetExpiryDate(resource.ResourceType);
-        if (!string.IsNullOrWhiteSpace(resource.ResourceType) && resource.ExpiryDate is null)
-        {
-            ModelState.AddModelError(nameof(resource.ResourceType), "Select a resource type.");
-        }
 
         if (!ModelState.IsValid)
         {
-            // Sender modellen tilbake slik at det brukeren skrev inn beholdes i skjemaet
+            // sends the user to form with attributes and error messages filled out
             return View("Index", resource);
         }
 
-        // Flytter verdiene fra skjemamodellen over i ResourceEntry, som er det som lagres
-        var entry = new ResourceEntry
+        //save and update only when evrything is valid
+        if (resource.Id > 0)
         {
-            Name = resource.Name,
-            Phone = resource.Phone,
-            Description = resource.Description,
-            ResourceType = resource.ResourceType,
-            ExpiryDate = resource.ExpiryDate,
-            Latitude = resource.Latitude,
-            Longitude = resource.Longitude
-        };
-
-        ResourceStore.Add(entry);
+            ResourceStore.Update(resource);
+        }
+        else
+        {
+            ResourceStore.Add(resource);
+        }
         return RedirectToAction("Index", "Resources");
     }
+    
 
-
-    // Regner ut utløpsdato ut fra ressurstypen
+    // Calculates the expiry date based on the resource category.
     private static DateTime? GetExpiryDate(string resourceType)
     {
         return resourceType switch
         {
-            "Shelter" or "Transport" or "Annet" => DateTime.Today.AddYears(1),
-            "Mat" => DateTime.Today.AddDays(14),
-            "Medisinsk" => DateTime.Today.AddMonths(1),
-            "Materialer" => DateTime.Today.AddMonths(6),
+            "Shelter" or "Transport" or "Other" => DateTime.Today.AddYears(1),
+            "Food" => DateTime.Today.AddDays(14),
+            "Medical" => DateTime.Today.AddMonths(1),
+            "Materials" => DateTime.Today.AddMonths(6),
             _ => null
         };
     }
 
-    // Viser personvernsiden
     public IActionResult Privacy()
     {
         return View();
     }
 
-    // Viser feilsiden
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
     {
         return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+    }
+
+    [HttpPost]
+    public IActionResult DeleteResource(int id)
+    {
+        ResourceStore.Remove(id);
+        return RedirectToAction("index", "Resources");
     }
 }

@@ -397,3 +397,7 @@ body {
     border-top: 1px solid var(--border);
     color: var(--text-muted);
 }
+
+.registerButtonPa{
+    colour: var(--accent);
+}
