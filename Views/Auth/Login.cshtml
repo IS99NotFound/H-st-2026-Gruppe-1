@@ -1,0 +1,36 @@
+@model H_st_2026_Gruppe_1.Models.LoginViewModel
+@{
+    ViewData["Title"] = "Sign in";
+}
+
+<div class="auth-page">
+    <section class="auth-brand-panel" aria-label="ResQ">
+        <a class="auth-brand-name" asp-controller="Home" asp-action="Index">ResQ</a>
+        <div class="auth-brand-message">
+            <span class="auth-accent-line" aria-hidden="true"></span>
+            <h1>Connecting<br />resources.</h1>
+        </div>
+        <i class="bi bi-shield-check auth-brand-icon" aria-hidden="true"></i>
+    </section>
+
+    <section class="auth-content">
+        <div class="auth-form-container">
+            <p class="auth-step-label">STEP 1 OF 2</p>
+            <h2>Welcome back</h2>
+            <p class="auth-description">Sign in to access ResQ.</p>
+
+            <form asp-controller="Auth" asp-action="Login" method="post">
+                <div class="auth-field">
+                    <label asp-for="UserType">User</label>
+                    <select asp-for="UserType" class="form-select">
+                        <option value="ResourceProvider">Resource Provider</option>
+                        <option value="PublicActor">Public Actor</option>
+                    </select>
+                    <span asp-validation-for="UserType" class="text-danger"></span>
+                </div>
+                <button type="submit" class="btn auth-submit">Sign in</button>
+            </form>
+            <p class="auth-demo-note">Demo sign-in: no password or account validation is used.</p>
+        </div>
+    </section>
+</div>
