@@ -1,4 +1,7 @@
 using System.Diagnostics;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using H_st_2026_Gruppe_1.Models;
 using H_st_2026_Gruppe_1.Services;
@@ -48,8 +51,30 @@ public class HomeController : Controller
     }
     
     [HttpPost]
-    public IActionResult SelectRole (string userType)
+    public async Task<IActionResult> SelectRole(string userType)
     {
+        if (userType is not ("ResourceProvider" or "PublicActor"))
+        {
+            userType = "ResourceProvider";
+        }
+
+        var displayName = userType == "PublicActor" ? "Public Actor" : "Resource Provider";
+        var claims = User.Claims
+            .Where(claim => claim.Type is not (ClaimTypes.Name or ClaimTypes.Role or "UserType"))
+            .ToList();
+        claims.Add(new Claim(ClaimTypes.Name, displayName));
+        claims.Add(new Claim(ClaimTypes.Role, userType));
+        claims.Add(new Claim("UserType", userType));
+
+        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        await HttpContext.SignInAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            new ClaimsPrincipal(identity),
+            new AuthenticationProperties
+            {
+                IsPersistent = true
+            });
+
         if (userType == "PublicActor")
         {
             // Sender brukeren til Public Actor Dashboard
