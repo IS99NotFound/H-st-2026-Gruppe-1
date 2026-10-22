@@ -9,7 +9,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Resq</title>
+    <title>@ViewData["Title"] - ResQ</title>
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
@@ -24,7 +24,7 @@
     <header class="topbar">
         <!-- Topp del venstre, logo og tekst -->
         <div class="topbar-brand">
-            <a class="brand-name" asp-controller="Home" asp-action="Index">RESQ</a>
+            <a class="brand-name" asp-controller="Home" asp-action="Index">ResQ</a>
             <div class="brand-tagline">
             </div>
         </div>
@@ -44,7 +44,7 @@
             <a asp-controller="Resources" asp-action="Index"
                class="topbar-link @(controller == "Resources" ? "active" : "")">
                 <i class="bi bi-box-seam topbar-link-icon" aria-hidden="true"></i>
-                <span>My resources</span>
+                <span>Resources</span>
             </a>
             <a asp-controller="Reports" asp-action="Index"
                class="topbar-link @(controller == "Reports" ? "active" : "")">
@@ -69,7 +69,7 @@
             </select>
         </form>
         <form asp-controller="Auth" asp-action="Logout" method="post">
-            <button type="submit" class="btn logout-button">Log out</button>
+            <button type="submit" class="btn btn-primary logout-button">Log out</button>
         </form>
         </div>
     </header>
@@ -84,7 +84,7 @@
     {
     <footer class="footer"> @* // Endrer bunnen av nettsiden til å se lik ut som resten *@
         <div class="container">
-            &copy; 2026 - Resq - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            &copy; 2026 - ResQ - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>
     }
