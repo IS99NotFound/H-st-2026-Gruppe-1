@@ -66,15 +66,15 @@ body {
 }
 
 .brand-name {
-    font-size: 1.8rem;
+    font-size: 2.2rem;
     font-weight: 800;
     letter-spacing: 1px;
-    color: var(--text);
+    color: var(--accent);
     text-decoration: none;
 }
 
     .brand-name:hover {
-        color: var(--text);
+        color: var(--accent);
     }
 
 .brand-tagline {
@@ -276,7 +276,7 @@ body {
     }
 
     .brand-name {
-        font-size: 1.45rem;
+        font-size: 1.8rem;
     }
 
     .brand-tagline {
@@ -378,17 +378,62 @@ body {
     .placeholder-page {
         padding: 32px 16px 100px;
     }
+
+    .subpage {
+        padding: 32px 16px 100px;
+    }
+
+    .subpage-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
 }
 
 .placeholder-page {
-    max-width: 960px;
+    max-width: 1200px;
     margin: 0 auto;
     padding: 48px 24px;
 }
 
 .placeholder-page h1 {
-    margin: 0 0 32px;
+    margin: 0 0 16px;
     font-size: 1.8rem;
+    font-weight: 700;
+}
+
+.subpage {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 48px 24px;
+    text-align: left;
+}
+
+.subpage h1 {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 700;
+}
+
+.subpage-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.btn-primary {
+    border: 0;
+    background-color: var(--accent);
+    color: #fff;
+    font-weight: 600;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    border-color: #3689e8;
+    background-color: #3689e8;
+    color: #fff;
 }
 
 .placeholder-copy {
@@ -398,8 +443,45 @@ body {
     color: var(--text-muted);
 }
 
-.registerButtonPa{
-    colour: var(--accent);
+.table-wrapper {
+    overflow-x: auto;
+}
+
+.resource-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.resource-actions .btn {
+    min-width: 64px;
+}
+
+.status-label {
+    display: inline-block;
+    padding: 3px 8px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+@media (min-width: 1200px) {
+    .container:not(.container-full-width) {
+        max-width: 1200px;
+    }
+}
+
+@media (max-width: 991px) {
+    .subpage {
+        width: 100%;
+        padding: 32px 16px 100px;
+    }
+
+    .subpage-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
 }
 
 /* Authentication pages and header controls */
@@ -414,13 +496,12 @@ body {
 }
 
 .logout-button {
-    border: 1px solid var(--border);
-    color: var(--text);
+    border: 0;
 }
 
 .logout-button:hover {
-    border-color: var(--accent);
-    color: var(--text);
+    border-color: #3689e8;
+    color: #fff;
 }
 
 .auth-container {

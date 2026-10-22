@@ -35,7 +35,7 @@ public class ResourceEntry
 	public double? Longitude { get; set; }
 
 	public DateTime RegisteredAt { get; set; }
-	public string Status { get; set; } = "Ny";
+	public string Status { get; set; } = "New";
 }
 
 //attributter for å lagre resources og presentere de i dashboad view i MyResources
