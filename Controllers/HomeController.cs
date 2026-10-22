@@ -28,7 +28,31 @@ public class PublicActorController : Controller
 
         // Lagre i minnet
         NeedStore.AddOrUpdate(need);
-        return RedirectToAction("DashboardIndex");
+        // Show the resources near the new need
+        return RedirectToAction("Matches", new { needId = need.Id });
+    }
+
+    // Shows the resources within radiusKm of a need, nearest first.
+    public IActionResult Matches(int needId, double radiusKm = 50)
+    {
+        var need = NeedStore.GetById(needId);
+        if (need == null)
+        {
+            return RedirectToAction("DashboardIndex");
+        }
+
+        if (radiusKm <= 0)
+        {
+            radiusKm = 50;
+        }
+
+        var model = new MatchViewModel
+        {
+            Need = need,
+            RadiusKm = radiusKm,
+            Matches = RadiusMatcher.FindResources(need, radiusKm)
+        };
+        return View(model);
     }
 }
 

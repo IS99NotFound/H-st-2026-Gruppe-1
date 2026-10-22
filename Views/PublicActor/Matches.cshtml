@@ -1,0 +1,52 @@
+@model H_st_2026_Gruppe_1.Models.MatchViewModel
+
+@{
+    ViewData["Title"] = "Matching resources";
+}
+
+<h2>Resources near: @Model.Need.Title</h2>
+
+<!-- Radius form, sends the need id and radius to the Matches action -->
+<form asp-controller="PublicActor" asp-action="Matches" method="get" class="d-flex align-items-end gap-2 mb-3">
+    <input type="hidden" name="needId" value="@Model.Need.Id" />
+    <div>
+        <label for="radiusKm">Radius (km)</label>
+        <input type="number" name="radiusKm" id="radiusKm" value="@Model.RadiusKm" min="1" class="form-control" />
+    </div>
+    <button type="submit" class="btn btn-warning">Search</button>
+    <a asp-controller="PublicActor" asp-action="DashboardIndex" class="btn btn-custom ms-auto">Register another need</a>
+</form>
+
+@if (!Model.Matches.Any())
+{
+    <p>No resources found within @Model.RadiusKm km</p>
+}
+else
+{
+    <table class="table table-dark table-striped">
+        <thead>
+        <tr>
+            <th>Distance (km)</th>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Contact</th>
+            <th>Description</th>
+            <th>Expiry date</th>
+        </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var match in Model.Matches)
+            {
+                <tr>
+                    <td>@match.DistanceKm.ToString("F1")</td>
+                    <td>@match.Resource.Name</td>
+                    <td>@match.Resource.ResourceType</td>
+                    <td>@match.Resource.Phone</td>
+                    <td>@match.Resource.Description</td>
+                    <td>@match.Resource.ExpirationDate?.ToString("dd.MM.yyyy")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
