@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using H_st_2026_Gruppe_1.Models;
 using H_st_2026_Gruppe_1.Services;
@@ -11,6 +12,19 @@ public class PublicActorController : Controller
     public IActionResult DashboardIndex()
     {
         var model = new ResourceNeed();
+        
+        ViewBag.ResourceMarkersJson = JsonSerializer.Serialize(
+            ResourceStore.Resources.Select(resource => new
+            {
+                name = resource.Name,
+                resourceType = resource.ResourceType,
+                description = resource.Description,
+                phone = resource.Phone,
+                latitute = resource.Latitude,
+                longitude = resource.Longitude
+            })
+        );
+
         return View("DashboardIndex", model);
     }
     

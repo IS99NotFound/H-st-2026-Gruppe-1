@@ -88,8 +88,35 @@
         </form>
     </aside>
 
-    <!-- Map area (2/3) -->
+    <!-- Map area (2/3), filtering meny (legg inn flere senere)-->
     <section class="map-area">
+        <div class="map-filtering">
+            <strong>Find survial locations</strong>
+
+            <div class ="map-filter-options">
+                <label>
+                    <input type="checkbox" class="survival-filter"
+                    value="hospital" checked />
+                    Hospitals
+                </label>
+
+                <label>
+                    <input type="checkbox" class="survival-filter"
+                    value="drinking_water" checked />
+                    Drinking water
+                </label>
+
+                <label>
+                    <input type="checkbox" class="survival-filter"
+                    value="shelter" checked />
+                    Shelters/bunkers
+                </label>
+            </div>
+
+            <p id="survival-filter-status" role="status">
+                Loading existing locations...
+            </p>
+        </div>
         <div id="map" role="application" aria-label="Interactive map"></div>
         <p id="map-status" class="map-status" role="status" aria-live="polite">Loading map ...</p>
     </section>
@@ -98,6 +125,8 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/survival-locatin-filters.js"
+        asp-append-version="true"></script>
 }
     <script>
         const map = L.map('map').setView([58.4614, 8.7683], 13);
