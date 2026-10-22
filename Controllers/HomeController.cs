@@ -1,5 +1,8 @@
 using System.Diagnostics;
 using System.Text.Json;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using H_st_2026_Gruppe_1.Models;
 using H_st_2026_Gruppe_1.Services;
@@ -20,7 +23,7 @@ public class PublicActorController : Controller
                 resourceType = resource.ResourceType,
                 description = resource.Description,
                 phone = resource.Phone,
-                latitute = resource.Latitude,
+                latitude= resource.Latitude,
                 longitude = resource.Longitude
             })
         );
@@ -39,7 +42,31 @@ public class PublicActorController : Controller
 
         // Lagre i minnet
         NeedStore.AddOrUpdate(need);
-        return RedirectToAction("DashboardIndex");
+        // Show the resources near the new need
+        return RedirectToAction("Matches", new { needId = need.Id });
+    }
+
+    // Shows the resources within radiusKm of a need, nearest first.
+    public IActionResult Matches(int needId, double radiusKm = 50)
+    {
+        var need = NeedStore.GetById(needId);
+        if (need == null)
+        {
+            return RedirectToAction("DashboardIndex");
+        }
+
+        if (radiusKm <= 0)
+        {
+            radiusKm = 50;
+        }
+
+        var model = new MatchViewModel
+        {
+            Need = need,
+            RadiusKm = radiusKm,
+            Matches = RadiusMatcher.FindResources(need, radiusKm)
+        };
+        return View(model);
     }
 }
 
@@ -62,8 +89,30 @@ public class HomeController : Controller
     }
     
     [HttpPost]
-    public IActionResult SelectRole (string userType)
+    public async Task<IActionResult> SelectRole(string userType)
     {
+        if (userType is not ("ResourceProvider" or "PublicActor"))
+        {
+            userType = "ResourceProvider";
+        }
+
+        var displayName = userType == "PublicActor" ? "Public Actor" : "Resource Provider";
+        var claims = User.Claims
+            .Where(claim => claim.Type is not (ClaimTypes.Name or ClaimTypes.Role or "UserType"))
+            .ToList();
+        claims.Add(new Claim(ClaimTypes.Name, displayName));
+        claims.Add(new Claim(ClaimTypes.Role, userType));
+        claims.Add(new Claim("UserType", userType));
+
+        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        await HttpContext.SignInAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            new ClaimsPrincipal(identity),
+            new AuthenticationProperties
+            {
+                IsPersistent = true
+            });
+
         if (userType == "PublicActor")
         {
             // Sender brukeren til Public Actor Dashboard

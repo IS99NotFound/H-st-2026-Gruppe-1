@@ -1,4 +1,4 @@
-namespace H_st_Gruppe_1.Models;
+namespace H_st_2026_Gruppe_1.Models;
 
 public static class SurvialLocationsStore
 {

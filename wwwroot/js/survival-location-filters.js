@@ -6,14 +6,11 @@
         return;
     }
 
-    const status = document.getElementById(
-        "survival-filter-status"
-    );
-
+    const status = document.getElementById("survival-filter-status");
     const markers = L.layerGroup().addTo(map);
 
     const categoryLabels = {
-        hospitals: "Hosptial",
+        hospital: "Hospital",
         drinking_water: "Drinking water",
         shelter: "Shelter / bunker"
     };
@@ -40,15 +37,67 @@
    
         return null;
     }
+   
+        function renderMarkers() {
+            markers.clearLayers();
+
+            const selectedCategories = Array.from(
+                document.querySelectorAll(".survival-filter:checked")
+            ).map(input => input.value);
+
+            let visibleCount = 0;
+
+            locations.forEach(place => {
+                if (!selectedCategories.includes(place.category)) {
+                    return;
+                }
+                
+                //Lager en popup for kart-markering, legger til location name og category
+                const popup= document.createElement('div');
+                const title = document.createElement("strong");
+
+                title.textContent = place.name;
+                popup.appendChild(title);
+                popup.appendChild(document.createElement("br"));
+
+                const category = document.createElement("span")
+                category.textContent =
+                    categoryLabels[place.category] || place.category;
+
+                popup.appendChild(category);
+             
+                if (place.address) {
+                    popup.appendChild(document.createElement("br"));
+
+                    const address = document.createElement("span");
+                    address.textContent = place.address;
+                    
+                    popup.appendChild(address);
+                }
+
+                L.marker([place.latitude, place.longitude])
+                .bindPopup(popup)
+                .addTo(markers);
+
+                visibleCount++;
+            });
+
+            if (status) {
+                status.textContent =
+                `${visibleCount} nearby locations shown on the map.`;
+            }
+        }
 
     async function loadLocations(){
         if (requestController) {
             requestController.abort();
         }
 
-        requestController = new AbortController();
+        const controller = new AbortController();
+        requestController = controller;
 
         const bounds = map.getBounds();
+
         const bbox = [
             bounds.getSouth(),
             bounds.getWest(),
@@ -69,7 +118,10 @@
             out center tags;
             `;
 
-            status.textContent = "Searching for existing locations...";
+            if (status) {
+                status.textContent = "Searching for nearby locations..."
+            }
+          
             //Website som allerede har survival locations//
             try {
                 const response = await fetch(
@@ -77,31 +129,40 @@
                     {
                         method: "POST",
                         body: new URLSearchParams({ data: query}),
-                        signal: requestController.signal
+                        signal: controller.signal
                     }
                 );
 
                 if (!response.ok) {
-                    throw new Error("The location service returned an error.");
+                    throw new Error(`Overpass returned HTTP ${response.status}`);
                 }
 
                 const data = await response.json();
 
+                if(!Array.isArray(data.elements)) {
+                    throw new Error("Unexpected response from application.");
+                }
+
+                //Linjer og relasjoner kan ha koordinater angitt som et senterpunkt.//
                 locations = data.elements.map(place => {
                     const tags =place.tags || {};
+
+                    const latitude = place.lat ?? place.center?.lat;
+                    const longitude = place.lon ?? place.center?.lon;
 
                     return{
                         name: tags.name || "Unnamed location",
                         category: getCategory(tags),
-                        latitude: place.lat ?? place.center?.lat,
-                        longitude: place.lon ?? place.center?.lon,
+                        latitude,
+                        longitude,
                         address: [
                             tags["addr:street"],
                             tags["addr:housenumber"],
                             tags["addr:city"]
-                        ].filter.[Boolean].json("")
+                        ].filter(Boolean).join("")
                     };
-                }).filter(place =>
+                })
+                .filter(place =>
                     place.category &&
                     Number.isFinite(place.latitude) &&
                     Number.isFinite(place.longitude)
@@ -109,27 +170,29 @@
 
                 renderMarkers();
 
-                status.textContent =
-                `${locations.length} existing locations found in this map area.`;
-            }catch (error) {
+            }  catch (error) {
                 if (error.name === "AbortError"){
                     return;
                 }
 
-                console.error(error);
-                status.textContent =
-                    "Could not load locations. Try again later.";
+                console.error("Could not load locations.", error);
+
+                if (status) {
+                    status.textContent = "Could not load nearby locations. Pleasy try again later";
+                }
             }
         }
 
-        function renderMarkers() {
-            markers.clearLayers();
+    document.querySelectorAll(".survival-filter")
+        .forEach(input => {
+            input.addEventListener("change", renderMarkers);
+        });
 
-            const selectedCategoriers = Array.from(
-                document.querySelectorAll(".survival-filter:checked")
-            )
-        }
-    }
-}
-}
-}
+    map.on("moveend", function (){
+        clearTimeout(moveTimer);
+        moveTimer = setTimeout(loadLocations, 500);  
+    });
+    
+    //Load locations for kartet
+    loadLocations();
+})();
