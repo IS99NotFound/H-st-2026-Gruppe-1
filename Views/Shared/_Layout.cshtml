@@ -2,11 +2,14 @@
 <html lang="en" data-bs-theme="dark">
 @{
     var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
+    var isAuthPage = controller == "Auth";
+    var userType = User.FindFirst("UserType")?.Value ?? "ResourceProvider";
 }
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Resq</title>
+    <title>@ViewData["Title"] - ResQ</title>
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
@@ -15,11 +18,13 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
-<body class="@(ViewData["FullWidth"] is true ? "full-width-page" : "")">
+<body class="@(ViewData["FullWidth"] is true ? "full-width-page" : "") @(isAuthPage ? "authentication-page" : "")">
+    @if (isAuthenticated)
+    {
     <header class="topbar">
         <!-- Topp del venstre, logo og tekst -->
         <div class="topbar-brand">
-            <a class="brand-name" asp-controller="Home" asp-action="Index">RESQ</a>
+            <a class="brand-name" asp-controller="Home" asp-action="Index">ResQ</a>
             <div class="brand-tagline">
             </div>
         </div>
@@ -39,7 +44,7 @@
             <a asp-controller="Resources" asp-action="Index"
                class="topbar-link @(controller == "Resources" ? "active" : "")">
                 <i class="bi bi-box-seam topbar-link-icon" aria-hidden="true"></i>
-                <span>My resources</span>
+                <span>Resources</span>
             </a>
             <a asp-controller="Reports" asp-action="Index"
                class="topbar-link @(controller == "Reports" ? "active" : "")">
@@ -55,26 +60,34 @@
         </nav>
 
         <!-- Topp del høyre, bruker -->
-        <form asp-controller="Home" asp-action="SelectRole"method="post" class="d-flex align-items-center gap-2">
-            <select name="UserType" id="UserType" class="form-select form-select-sm" onchange="this.form.submit()" >
-                <option value="ResourceProvider" selected="@(controller == "Index")"> Resource Provider </option>
-                <option value="PublicActor" selected="@(controller == "PublicActor")"> Public Actor </option>
+        <div class="topbar-user-controls">
+        <form asp-controller="Home" asp-action="SelectRole" method="post" class="d-flex align-items-center gap-2">
+            <label class="visually-hidden" for="UserType">Choose user</label>
+            <select name="UserType" id="UserType" class="form-select form-select-sm" onchange="this.form.submit()">
+                <option value="ResourceProvider" selected="@(userType == "ResourceProvider")">Resource Provider</option>
+                <option value="PublicActor" selected="@(userType == "PublicActor")">Public Actor</option>
             </select>
-            </form>
-       
-        
+        </form>
+        <form asp-controller="Auth" asp-action="Logout" method="post">
+            <button type="submit" class="btn btn-primary logout-button">Log out</button>
+        </form>
+        </div>
     </header>
-    <div class="container @(ViewData["FullWidth"] is true ? "container-full-width" : "")">
+    }
+    <div class="container @(ViewData["FullWidth"] is true ? "container-full-width" : "") @(isAuthPage ? "auth-container" : "")">
         <main role="main">
             @RenderBody()
         </main>
     </div>
 
+    @if (!isAuthPage)
+    {
     <footer class="footer"> @* // Endrer bunnen av nettsiden til å se lik ut som resten *@
         <div class="container">
-            &copy; 2026 - Resq - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            &copy; 2026 - ResQ - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>
+    }
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
