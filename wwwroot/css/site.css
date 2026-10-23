@@ -746,3 +746,49 @@ body {
         height: 48px;
     }
 }
+
+/* ==== A to B line function for map ==== */
+:root {
+    --ab-orange: #ff8c00;
+}
+
+.ab-button {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.ab-button svg {
+    width: 18px;
+    height: 18px;
+}
+
+.ab-button.active{
+    background-color: var(--ab-orange) !important;
+    color: #fff !important
+}
+
+.ab-marker {
+    width: 28px;
+    height: 28px;
+    background-color: var(--ab-orange);
+    border: 2px solid #fff;
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+.ab-marker span {
+    transform: rotate(45deg);
+    color: #fff;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+#map.placing {
+    cursor: crosshair;
+}
