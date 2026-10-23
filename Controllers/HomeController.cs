@@ -30,6 +30,11 @@ public class PublicActorController : Controller
 
         return View("DashboardIndex", model);
     }
+
+    public IActionResult NeedsIndex()
+    {
+        return View(NeedStore.Needs);
+    }
     
     
     [HttpPost]
@@ -37,11 +42,12 @@ public class PublicActorController : Controller
     {
         if (!ModelState.IsValid)
         {
-            return View("Dashboard", need);
+            return View("DashboardIndex", need);
         }
 
         // Lagre i minnet
         NeedStore.AddOrUpdate(need);
+        need.RegisteredAt = DateTime.Now;
         // Show the resources near the new need
         return RedirectToAction("Matches", new { needId = need.Id });
     }
@@ -72,7 +78,7 @@ public class PublicActorController : Controller
 
 
 public class HomeController : Controller
-{
+{            
     public IActionResult Index(int? id)
     {
         if (id.HasValue)
