@@ -112,7 +112,7 @@
 
         let selectedMarker = null;
 
-        // Sjekk om posisjon allerede finnes (f.eks. ved redigering)
+        // Check if position already exists (E.g. when editing)
         const initialLat = parseFloat(document.getElementById('latInput').value);
         const initialLng = parseFloat(document.getElementById('lngInput').value);
         if (!isNaN(initialLat) && !isNaN(initialLng)) {
@@ -170,13 +170,13 @@
         hasErrors = true;
     }
 
-        // Hvis det er feil, avbryt innsendingen!
+        // If error, cancel report
         if (hasErrors) {
         e.preventDefault();
     }
     });
 
-        // Skjuler feilmeldinger fortløpende når brukeren skrivers
+        // Hide error messages while user types 
         if (nameInput) {
         nameInput.addEventListener('input', function () {
             if (nameError) nameError.hidden = nameInput.value.trim() !== '';
@@ -189,7 +189,7 @@
         });
     }
 
-        // Regner ut utløpsdato ved endring i ressurstype
+        // Calculate expiration date when resource type changes 
         if (resourceType) {
         resourceType.addEventListener('change', function () {
             const renewalDate = new Date();
@@ -220,8 +220,100 @@
         });
     }
 
-        // Klikk på kartet for å velge posisjon
+    // A to B line
+    let abMode = null;
+    let markerA = null;
+    let markerB = null;
+    let abLine = null;
+    let abButton = null;
+
+    function createAbIcon(letter) {
+        return L.divIcon({
+            className: '',
+            html: '<div class="ab-marker"><span>' + letter + '</span></div>',
+            iconSize: [28, 28],
+            iconAnchor: [13, 34]
+        });
+    }
+
+    function resetAb() {
+        if (markerA) map.removeLayer(markerA);
+        if (markerB) map.removeLayer(markerB);
+        if (abLine) map.removeLayer(abLine);
+        markerA = markerB = abLine = null;
+    }
+
+    function setAbMode(mode) {
+        abMode = mode;
+        const active = mode !== null;
+    
+
+    map.getContainer().classList.toggle('placing', active);
+        abButton.classList.toggle('active', active);
+    }
+
+    function showBothPoints() {
+        const bounds = abLine.getBounds();
+        if (!map.getBounds().pad(-0.1).contains(bounds))
+        {
+            map.fitBounds(bounds, { padding: [60, 60] });
+        }
+    }
+
+    const AbControl = L.Control.extend({
+        options: { position: 'topleft' },
+
+        onAdd: function () {
+            const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+            abButton = L.DomUtil.create('a', 'ab-button', container);
+            abButton.href = '#';
+            abButton.title = 'Mark point A and B'
+            abButton.setAttribute('role', 'button');
+            abButton.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-line">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M4 18a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+        <path d="M16 6a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+        <path d="M7.5 16.5l9 -9" />
+    </svg>`;
+
+            L.DomEvent.disableClickPropagation(container);
+            L.DomEvent.on(abButton, 'click', function (e) {
+                L.DomEvent.preventDefault(e);
+                if (abMode) {
+                    setAbMode(null);
+                } else {
+                    resetAb();
+                    setAbMode('A');
+                }
+            });
+
+            return container;
+        }
+    });
+
+    new AbControl().addTo(map);
+
+        // Click on the map to choose a position
         map.on('click', function (e) {
+            if (abMode == 'A') {
+                markerA = L.marker(e.latlng, { icon: createAbIcon('A') }).addTo(map);
+                setAbMode('B');
+                return;
+            }
+
+            if (abMode == 'B') {
+                markerB = L.marker(e.latlng, { icon: createAbIcon('B') }).addTo(map);
+                abLine = L.polyline([markerA.getLatLng(), markerB.getLatLng()], {
+                    color: '#ff8c00',
+                    weight: 4,
+                    dashArray: '8 6'
+                }).addTo(map);
+                showBothPoints();
+                setAbMode(null);
+                return;
+            }
+
         const lat = e.latlng.lat;
         const lng = e.latlng.lng;
 
@@ -243,7 +335,7 @@
     }
     });
 
-        // Åpne sidepanelet automatisk ved redigering
+        // Open sidepanel automatically when editing
         const resourceId = parseInt(document.getElementById('Id')?.value || '0');
         const sidePanel = document.getElementById('side-panel');
 
