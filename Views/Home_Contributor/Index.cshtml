@@ -16,7 +16,7 @@
             </button>
         </div>
 
-        <!-- Skjema for å registrere en ressurs -->
+        <!-- Form for registering a resource -->
         <form id="resourceForm" asp-controller="Home" asp-action="RegisterResource" method="post" novalidate>
             <div class="mb-2">
                 <label for="nameInput">Full name</label>
@@ -50,7 +50,7 @@
                 <input type="date" name="ExpiryDate" id="expiryDate" value="@Model.ExpiryDate?.ToString("yyyy-MM-dd")" class="form-control" readonly />
             </div>
 
-            <!-- Skjulte felt som fylles ut av JavaScript når brukeren klikker i kartet -->
+            <!-- Hidden fields edited when user clicks on the map  -->
             <input type="hidden" name="Latitude" id="latInput" value="@Model.Latitude" />
             <input type="hidden" name="Longitude" id="lngInput" value="@Model.Longitude" />
             <p id="posText" class="placeholder-text">No position marked on the map</p>
@@ -60,7 +60,7 @@
         </form>
     </aside>
 
-    <!-- Kartområdet (2/3 av bredden) -->
+    <!-- Map size (2/3 of the width) -->
     <section class="map-area">
         <div id="map" role="application" aria-label="Interactive map"></div>
         <p id="map-status" class="map-status" role="status" aria-live="polite">Loading map ...</p>
@@ -73,12 +73,12 @@
 }
 <script>
 
-    // Oppretter kartet og starter i Grimstad
+    // Create map and start in Grimstad 
     const map = L.map('map').setView([58.4614, 8.7683], 13);
-    // Mobilpanelet bruker denne referansen når kartets synlige størrelse endres
+    // Mobilepanel uses this ref when the maps visible area decreases
     window.resqMap = map;
 
-    // Legger på kartfliser fra OpenStreetMap
+    // Add map tiles from openstreetmap 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
@@ -86,7 +86,7 @@
     const mapStatus = document.getElementById('map-status');
     mapStatus.textContent = 'The map is ready. Select a position or use your current location.';
 
-    // Prøver å finne brukerens posisjon og flytte kartet dit
+    // Find users position and move map to location 
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function (position) {
             const lat = position.coords.latitude;
@@ -104,7 +104,7 @@
         mapStatus.textContent = 'This browser does not support geolocation. Select a position on the map.';
     }
 
-    // Henter elementene i skjemaet som JavaScript trenger
+    // Retrieves elements for Javascript 
     const resourceType = document.getElementById('resourceType');
     const expiryDate = document.getElementById('expiryDate');
     const resourceForm = document.getElementById('resourceForm');
@@ -114,7 +114,7 @@
     const contactInput = document.getElementById('contactInput');
     const contactError = document.getElementById('contactError');
 
-    // Viser en enkel feilmelding og stopper innsendingen hvis et påkrevd felt er tomt
+    // Show error message if a required field is empty 
     resourceForm.addEventListener('submit', function (event) {
         let hasErrors = false;
 
@@ -141,7 +141,7 @@
         }
     });
 
-    // Skjuler feilmeldingen når brukeren begynner å skrive
+    // Hides error messages while user types 
     nameInput.addEventListener('input', function () {
         nameError.hidden = nameInput.value.trim() === '';
     });
@@ -150,7 +150,7 @@
         contactError.hidden = contactInput.value.trim() === '';
     });
 
-    // Viser utløpsdatoen når brukeren velger en ressurstype
+    // Shows expiration date after user picks a resource type
     resourceType.addEventListener('change', function () {
         resourceTypeError.hidden = resourceType.value === '';
         const renewalDate = new Date();
@@ -175,30 +175,30 @@
                 return;
         }
 
-        // Gjør om datoen til formatet åååå-mm-dd
+        // Convert date to format yyyy-mm-dd 
         const year = renewalDate.getFullYear();
         const month = String(renewalDate.getMonth() + 1).padStart(2, '0');
         const day = String(renewalDate.getDate()).padStart(2, '0');
         expiryDate.value = `${year}-${month}-${day}`;
     });
 
-    // Husker markøren brukeren har valgt, slik at den kan fjernes ved nytt klikk
+    // Remember users marker so that it can be removed next click 
     let selectedMarker = null;
 
-    // Stopper innsendingen hvis brukeren ikke har valgt en posisjon i kartet
+    // Stops form from being submittied if user hasn't picked a location on the map
     document.querySelector('form').addEventListener('submit', function (e) {
         const lat = document.getElementById('latInput').value;
         const posError = document.getElementById('posError');
 
         if (!lat) {
-            e.preventDefault(); // Stopper innsendingen av skjemaet
+            e.preventDefault(); // Stops form from submitting
             if (posError) {
-                posError.textContent = 'Du må velge en posisjon på kartet før du kan registrere.';
+                posError.textContent = 'You have to choose a location on the map before you can finish registration';
             }
         }
     });
 
-    // Fjerner eventuell feilmelding når brukeren klikker på kartet
+    // Remove error messages when user is clicking on the map 
     map.on('click', function (e) {
         const posError = document.getElementById('posError');
         if (posError) {
@@ -206,7 +206,7 @@
         }
     });
 
-    // Et klikk i kartet plasserer markøren og fyller koordinatene inn i skjemaet
+    // Clicking on the map places marker and sends coordinates to form 
     map.on('click', function (e) {
         const lat = e.latlng.lat;
         const lng = e.latlng.lng;

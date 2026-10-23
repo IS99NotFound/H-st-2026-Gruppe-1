@@ -4,7 +4,8 @@
     ViewData["Title"] = "Matching resources";
 }
 
-<h2>Resources near: @Model.Need.Title</h2>
+<section class="subpage">
+<h1>Resources near: @Model.Need.Title</h1>
 
 <!-- Radius form, sends the need id and radius to the Matches action -->
 <form asp-controller="PublicActor" asp-action="Matches" method="get" class="d-flex align-items-end gap-2 mb-3">
@@ -13,8 +14,8 @@
         <label for="radiusKm">Radius (km)</label>
         <input type="number" name="radiusKm" id="radiusKm" value="@Model.RadiusKm" min="1" class="form-control" />
     </div>
-    <button type="submit" class="btn btn-warning">Search</button>
-    <a asp-controller="PublicActor" asp-action="DashboardIndex" class="btn btn-custom ms-auto">Register another need</a>
+    <button type="submit" class="btn btn-primary">Search</button>
+    <a asp-controller="PublicActor" asp-action="DashboardIndex" class="btn btn-primary ms-auto">Register another need</a>
 </form>
 
 @if (!Model.Matches.Any())
@@ -50,3 +51,4 @@ else
         </tbody>
     </table>
 }
+</section>
