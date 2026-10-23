@@ -13,13 +13,40 @@ public class PublicActorController : Controller
 {
     public IActionResult DashboardIndex()
     {
-        var model = new ResourceNeed();
-        return View("DashboardIndex", model);
+        return View(new ResourceNeed());
     }
-
-    public IActionResult NeedsIndex()
+    
+    
+    public IActionResult NeedsIndex(NeedPriorityEnum? priority, int? category)
     {
-        return View(NeedStore.Needs);
+        var results = NeedStore.Needs.AsQueryable();
+
+        if (priority.HasValue)
+        {
+            results = results.Where(need => need.Priority == priority.Value);
+        }
+
+        if (category.HasValue)
+        {
+            results = results.Where(need => need.Category == category.Value);
+        }
+
+        var sortedResults = results
+            .OrderBy(need => GetPriorityOrder(need.Priority))
+            .ToList();
+
+        return View(sortedResults);
+    }
+    
+    private int GetPriorityOrder(NeedPriorityEnum priority)
+    {
+        return priority switch
+        {
+            NeedPriorityEnum.Critical => 1,
+            NeedPriorityEnum.Urgent => 2,
+            NeedPriorityEnum.Planned => 3,
+            _ => 4
+        };
     }
     
     
@@ -60,6 +87,7 @@ public class PublicActorController : Controller
         };
         return View(model);
     }
+    
 }
 
 
