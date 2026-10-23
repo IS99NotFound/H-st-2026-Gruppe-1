@@ -26,7 +26,7 @@ else
             <th>Description</th>
             <th>Effective date</th>
             <th>Expiry date</th>
-            <th>Position</th>
+            <th>Lat/Long</th>
             <th>Registered</th>
             <th> Status </th>
             <th> Actions </th>
@@ -44,6 +44,7 @@ else
                     <td>@r.Description</td>
                     <td>@r.AvailableFrom.ToString("dd.MM.yyyy")</td>
                     <td>@r.ExpirationDate?.ToString("dd.MM.yyyy")</td>
+                    
                     <td>
                         @if (r.Latitude != null && r.Longitude != null)
                         {

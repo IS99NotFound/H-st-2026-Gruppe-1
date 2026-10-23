@@ -39,6 +39,8 @@ namespace H_st_2026_Gruppe_1.Models
         [Required(ErrorMessage = "Map location is required.")]
         [Range(-90.0, 90.0, ErrorMessage = "Invalid latitude value.")]
         public double Latitude { get; set; }
+        
+        public DateTime RegisteredAt { get; set; }
 
         [Required(ErrorMessage = "Map location is required.")]
         [Range(-180.0, 180.0, ErrorMessage = "Invalid longitude value.")]
