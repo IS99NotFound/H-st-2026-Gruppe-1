@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 
+
 namespace H_st_2026_Gruppe_1.Models
 {
     public class ResourceNeed
@@ -12,6 +13,10 @@ namespace H_st_2026_Gruppe_1.Models
         public string Title { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Contact information is required.")]
+        [RegularExpression(
+            @"^([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|(\+?[0-9\s]{8,15}))$",
+            ErrorMessage = "Please provide a valid email address or a valid phone number (at least 8 digits)."
+        )]
         public string ContactInfo { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Please select a crisis incident.")]
@@ -33,9 +38,11 @@ namespace H_st_2026_Gruppe_1.Models
         [DataType(DataType.Date)]
         public DateTime? RequiredFrom { get; set; }
 
+        public NeedPriorityEnum Priority { get; set; } = NeedPriorityEnum.Planned;
+        
         [DataType(DataType.Date)]
         public DateTime? Deadline { get; set; }
-
+        
         [Required(ErrorMessage = "Map location is required.")]
         [Range(-90.0, 90.0, ErrorMessage = "Invalid latitude value.")]
         public double Latitude { get; set; }

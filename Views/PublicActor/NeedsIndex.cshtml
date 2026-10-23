@@ -1,5 +1,9 @@
 @model List<H_st_2026_Gruppe_1.Models.ResourceNeed>
 
+<<<<<<< HEAD
+
+=======
+>>>>>>> 0282a439a75c6a74fc293997a45797b32825feca
 @{
     ViewData["Title"] = "Needs";
 }
@@ -9,13 +13,49 @@
         <h1>Needs</h1>
         <a asp-controller="PublicActor" asp-action="DashboardIndex" class="btn btn-primary">Register need</a>
     </div>
-   
-@if (!Model.Any())
+   <form method="get" asp-controller="PublicActor" asp-action="NeedsIndex" class="row g-3 mb-4 align-items-end">
+    
+    <!-- Filter på Prioritet -->
+    <div class="col-md-4">
+        <label for="priorityFilter" class="form-label text-muted small fw-bold">Filter by Priority</label>
+        <select name="priority" id="priorityFilter" class="form-select">
+            <option value="">All Priorities</option>
+            <option value="Critical" selected="@(Context.Request.Query["priority"] == "Critical")">Critical</option>
+            <option value="Urgent" selected="@(Context.Request.Query["priority"] == "Urgent")">Urgent</option>
+            <option value="Planned" selected="@(Context.Request.Query["priority"] == "Planned")">Planned</option>
+        </select>
+    </div>
+
+    <!-- Filter på Kategori -->
+    <div class="col-md-4">
+        <label for="categoryFilter" class="form-label text-muted small fw-bold">Filter by Category</label>
+        <select name="category" id="categoryFilter" class="form-select">
+            <option value="">All Categories</option>
+            <option value="1" selected="@(Context.Request.Query["category"] == "1")">Transport / Logistics</option>
+            <option value="2" selected="@(Context.Request.Query["category"] == "2")">Heavy Machinery (Excavator, Tractor)</option>
+            <option value="3" selected="@(Context.Request.Query["category"] == "3")">Power Supply / Generator</option>
+            <option value="4" selected="@(Context.Request.Query["category"] == "4")">Evacuation & Shelter</option>
+            <option value="5" selected="@(Context.Request.Query["category"] == "5")">Plowing & Snow Clearing</option>
+            <option value="6" selected="@(Context.Request.Query["category"] == "6")">Search & Rescue Crew</option>
+            <option value="7" selected="@(Context.Request.Query["category"] == "7")">Medical Support</option>
+            <option value="8" selected="@(Context.Request.Query["category"] == "8")">Other Emergency Support</option>
+        </select>
+    </div>
+
+    <!-- Knapper -->
+    <div class="col-md-4 d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Filter</button>
+        <a asp-controller="PublicActor" asp-action="NeedsIndex" class="btn btn-outline-secondary">Reset</a>
+    </div>
+</form>
+    
+    @if (!Model.Any())
 {
     <p class="placeholder-copy">No needs are registered right now</p>
 }
 else
 {
+    
     <div class="table-wrapper">
     <table class="table table-dark table-striped">
         <thead>
@@ -28,8 +68,9 @@ else
             <th>Description</th>
             <th>Needed from</th>
             <th>Needed until</th>
-            <th> Lat/Long </th>
+            <th>Lat/Lng</th>
             <th>Registered</th>
+            <th>Priority</th>
             <th>Status</th>
             
         </tr>
@@ -42,8 +83,20 @@ else
                     <td>@need.Title</td>
                     <td>@need.ContactInfo</td>
                     <td>@need.CrisisEventId</td>
-                    <td>@need.Category</td>
-                    <td>@need.Quantity</td>
+                    <td>
+                        @switch ((int)need.Category)
+                        {
+                            case 1: <span>Transport / Logistics</span>; break;
+                            case 2: <span>Heavy Machinery</span>; break;
+                            case 3: <span>Power Supply / Generator</span>; break;
+                            case 4: <span>Evacuation & Shelter</span>; break;
+                            case 5: <span>Plowing & Snow Clearing</span>; break;
+                            case 6: <span>Search & Rescue Crew</span>; break;
+                            case 7: <span>Medical Support</span>; break;
+                            case 8: <span>Other Emergency Support</span>; break;
+                            default: <span>Unspecified</span>; break;
+                        }
+                    </td>                    <td>@need.Quantity</td>
                     <td>@need.Description</td>
                     <td>@(need.RequiredFrom?.ToString("dd.MM.yyyy") ?? "Not specified")</td>
                     <td>@(need.Deadline?.ToString("dd.MM.yyyy") ?? "Not specified")</td>
@@ -58,6 +111,30 @@ else
                     }
                     </td>
                     <td>@need.RegisteredAt.ToString("dd.MM.yyyy HH:mm")</td>
+                    <td>
+                        @switch (need.Priority)
+                        {
+                            case  NeedPriorityEnum.Planned:
+                                <span class="badge bg-secondary d-inline-flex align-items-center gap-1 px-2 py-1" title="Planned">
+                                    <i class="bi bi-calendar-event"></i>
+                                    <span>Planned</span>
+                                </span>
+                                break;
+                            case NeedPriorityEnum.Urgent:
+                                <span class="badge bg-warning text-dark d-inline-flex align-items-center gap-1 px-2 py-1" title="Urgent">
+                                    <i class="bi bi-exclamation-triangle"></i>
+                                    <span>Urgent</span>
+                                </span>
+                                break;
+
+                            case NeedPriorityEnum.Critical:
+                                <span class="badge bg-danger d-inline-flex align-items-center gap-1 px-2 py-1" title="Critical">
+                                    <i class="bi bi-fire"></i>
+                                    <span>Critical</span>
+                                </span>
+                                break;
+                        }
+                    </td>
                     <td><span class="status-label">@(need.Status == "Ny" ? "New" : need.Status)</span></td>
                     
                  
