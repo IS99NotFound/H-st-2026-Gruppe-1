@@ -7,7 +7,7 @@
     }
 
     //Hent registrerte ressurser, eller bruk en tom liste, om ingen finnes//
-    const resources = Array.isArray(window.publicActorResource)
+    const resources = Array.isArray(window.publicActorResources)
         ? window.publicActorResources
         : [];
 
@@ -20,17 +20,22 @@
     function renderResources() {
         resourceMarkers.clearLayers();
 
+        //Leser the resource types valgt i filter panelet.
         const selectedTypes = Array.from(
             document.querySelectorAll(
-                ".registered-resources-filte:checked"
+                ".registered-resources-filter:checked"
             )
         ).map(input => input.value);
 
         let visibleCount = 0;
 
         resources.forEach(resource => {
+            const latitude = Number(resource.latitude);
+            const longitude = Number(resource.longitude);
+
+            //Ignorer ressurser som ikke matcher filterne
+            //eller "invalid" koordinater
             if (
-                !selectedTypes.includes(resource.resourceType) ||
                 !selectedTypes.includes(resource.resourceType) ||
                 resource.latitude == null ||
                 resource.longitude == null ||

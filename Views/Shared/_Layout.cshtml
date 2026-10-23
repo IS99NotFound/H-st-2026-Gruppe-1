@@ -5,6 +5,14 @@
     var isAuthenticated = User.Identity?.IsAuthenticated == true;
     var isAuthPage = controller == "Auth";
     var userType = User.FindFirst("UserType")?.Value ?? "ResourceProvider";
+
+    var isPublicActor = userType == "PublicActor";
+    var mapController = isPublicActor ? "PublicActor" : "Home";
+    var mapAction = isPublicActor ? "DashboardIndex" : "Index";
+
+    var isMapPage = controller == "Home" ||
+        (isPublicActor && controller == "PublicActor");
+
 }
 <head>
     <meta charset="utf-8" />
@@ -31,8 +39,8 @@
 
         <!-- Topp del midten, faner -->
         <nav id="main-navigation" class="topbar-nav" aria-label="Hovednavigasjon">
-            <a asp-controller="Home" asp-action="Index"
-               class="topbar-link @(controller == "Home" ? "active" : "")">
+            <a asp-controller="@mapController" asp-action="@mapAction"
+               class="topbar-link @(isMapPage ? "active" : "")">
                 <i class="bi bi-map topbar-link-icon" aria-hidden="true"></i>
                 <span>Map</span>
             </a>

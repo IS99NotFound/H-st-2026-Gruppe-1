@@ -110,8 +110,8 @@
             (
                 nwr["amenity"="hospital"](${bbox});
                 nwr["amenity"="drinking_water"](${bbox});
-                nwr[amenity"="shelter"](${bbox});
-                nwr["emergency"="shelter](${bbox});
+                nwr["amenity"="shelter"](${bbox});
+                nwr["emergency"="shelter"](${bbox});
                 nwr["emergency"="assembly_point"](${bbox});
                 nwr["military"="bunker"](${bbox});
             );

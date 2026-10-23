@@ -90,10 +90,22 @@
 
     <!-- Map area (2/3), filtering meny (legg inn flere senere)-->
     <section class="map-area">
-        <div class="map-filtering">
-            <strong>Find survial locations</strong>
+        <div class="map-filtering" id="survival-filter-panel">
+            <div class="map-filter-header">
+                 <strong class="map-filter-title">Find survial locations</strong>
+            
+                <button type="button"
+                    id="survival-filter-button"
+                    class="map-filter-button"
+                    aria-expanded="true"
+                    aria-controls="survival-filter-content"
+                    aria-label="Collapse survival location filters">
+                    <i class="bi bi-chevron-left" aria-hidden="true"></i>
+                </button>
+            </div>
 
-            <div class ="map-filter-options">
+            <div id ="survival-filter-content">
+                <div class="map-filter-options">
                 <label>
                     <input type="checkbox" class="survival-filter"
                     value="hospital" checked />
@@ -117,6 +129,7 @@
                 Loading existing locations...
             </p>
         </div>
+        </div>
         <div id="map" role="application" aria-label="Interactive map"></div>
         <p id="map-status" class="map-status" role="status" aria-live="polite">Loading map ...</p>
     </section>
@@ -126,6 +139,9 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script src="~/js/survival-location-filters.js"
+        asp-append-version="true"></script>
+
+    <script src="~/js/map-filter-button.js"
         asp-append-version="true"></script>
 }
     <script>
