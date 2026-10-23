@@ -1,4 +1,7 @@
+
 @model List<H_st_2026_Gruppe_1.Models.ResourceNeed>
+
+
 
 @{
     ViewData["Title"] = "Needs";
@@ -28,8 +31,9 @@ else
             <th>Description</th>
             <th>Needed from</th>
             <th>Needed until</th>
-            <th> Lat/Long </th>
+            <th> Lat/Lng </th>
             <th>Registered</th>
+            <th>Priority</th>
             <th>Status</th>
             
         </tr>
@@ -58,6 +62,30 @@ else
                     }
                     </td>
                     <td>@need.RegisteredAt.ToString("dd.MM.yyyy HH:mm")</td>
+                    <td>
+                        @switch (need.Priority)
+                        {
+                            case  NeedPriorityEnum.Planned:
+                                <span class="badge bg-secondary d-inline-flex align-items-center gap-1 px-2 py-1" title="Planned">
+                                    <i class="bi bi-calendar-event"></i>
+                                    <span>Planned</span>
+                                </span>
+                                break;
+                            case NeedPriorityEnum.Urgent:
+                                <span class="badge bg-warning text-dark d-inline-flex align-items-center gap-1 px-2 py-1" title="Urgent">
+                                    <i class="bi bi-exclamation-triangle"></i>
+                                    <span>Urgent</span>
+                                </span>
+                                break;
+
+                            case NeedPriorityEnum.Critical:
+                                <span class="badge bg-danger d-inline-flex align-items-center gap-1 px-2 py-1" title="Critical">
+                                    <i class="bi bi-fire"></i>
+                                    <span>Critical</span>
+                                </span>
+                                break;
+                        }
+                    </td>
                     <td><span class="status-label">@(need.Status == "Ny" ? "New" : need.Status)</span></td>
                     
                  
