@@ -1,4 +1,5 @@
 @model H_st_2026_Gruppe_1.Models.ResourceNeed
+
 @{
     ViewData["Title"] = "Public Actor Dashboard";
     ViewData["FullWidth"] = true;
@@ -27,8 +28,8 @@
             </div>
 
             <div class="mb-2">
-                <label asp-for="ContactInfo">Contact Person / Info</label>
-                <input type="text" asp-for="ContactInfo" id="contactInput" class="form-control" placeholder="command Center phone: +4732459844" required />
+                <label asp-for="ContactInfo">Contact Info</label>
+                <input type="text" asp-for="ContactInfo" id="contactInput" class="form-control" placeholder="e.g command Center phone: +4732459844" required />
                 <span asp-validation-for="ContactInfo" class="text-danger"></span>
             </div>
 
@@ -66,6 +67,34 @@
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
 
+            <div class="mb-3">
+                <label class="form-label fw-bold">Priority Level</label>
+                <div class="btn-group w-100" role="group" aria-label="Priority selection">
+        
+                    <!-- Planned Option -->
+                    <input type="radio" class="btn-check" name="Priority" id="priorityPlanned" value="Planned" autocomplete="off" checked>
+                    <label class="btn btn-outline-secondary d-flex align-items-center justify-content-center gap-2 py-2" for="priorityPlanned">
+                        <i class="bi bi-calendar-event fs-5"></i>
+                        <span>Planned</span>
+                    </label>
+
+                    <!-- Urgent Option -->
+                    <input type="radio" class="btn-check" name="Priority" id="priorityUrgent" value="Urgent" autocomplete="off">
+                    <label class="btn btn-outline-warning d-flex align-items-center justify-content-center gap-2 py-2" for="priorityUrgent">
+                        <i class="bi bi-exclamation-triangle fs-5"></i>
+                        <span>Urgent</span>
+                    </label>
+
+                    <!-- Critical Option (Valgfri) -->
+                    <input type="radio" class="btn-check" name="Priority" id="priorityCritical" value="Critical" autocomplete="off">
+                    <label class="btn btn-outline-danger d-flex align-items-center justify-content-center gap-2 py-2" for="priorityCritical">
+                        <i class="bi bi-fire fs-5"></i>
+                        <span>Critical</span>
+                    </label>
+
+                </div>
+            </div>
+            
             <div class="mb-2">
                 <label asp-for="RequiredFrom">Needed From</label>
                 <input type="date" asp-for="RequiredFrom" class="form-control" />
@@ -77,6 +106,7 @@
                 <input type="date" asp-for="Deadline" id="deadlineDate" class="form-control" />
                 <span asp-validation-for="Deadline" class="text-danger"></span>
             </div>
+            
 
             <!-- Position fields populated by Leaflet map -->
             <input type="hidden" asp-for="Latitude" id="latInput"/>

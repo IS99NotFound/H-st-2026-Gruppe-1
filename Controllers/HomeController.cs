@@ -13,8 +13,40 @@ public class PublicActorController : Controller
 {
     public IActionResult DashboardIndex()
     {
-        var model = new ResourceNeed();
-        return View("DashboardIndex", model);
+        return View(new ResourceNeed());
+    }
+    
+    
+    public IActionResult NeedsIndex(NeedPriorityEnum? priority, int? category)
+    {
+        var results = NeedStore.Needs.AsQueryable();
+
+        if (priority.HasValue)
+        {
+            results = results.Where(need => need.Priority == priority.Value);
+        }
+
+        if (category.HasValue)
+        {
+            results = results.Where(need => need.Category == category.Value);
+        }
+
+        var sortedResults = results
+            .OrderBy(need => GetPriorityOrder(need.Priority))
+            .ToList();
+
+        return View(sortedResults);
+    }
+    
+    private int GetPriorityOrder(NeedPriorityEnum priority)
+    {
+        return priority switch
+        {
+            NeedPriorityEnum.Critical => 1,
+            NeedPriorityEnum.Urgent => 2,
+            NeedPriorityEnum.Planned => 3,
+            _ => 4
+        };
     }
     
     
@@ -23,11 +55,12 @@ public class PublicActorController : Controller
     {
         if (!ModelState.IsValid)
         {
-            return View("Dashboard", need);
+            return View("DashboardIndex", need);
         }
 
         // Save to cache
         NeedStore.AddOrUpdate(need);
+        need.RegisteredAt = DateTime.Now;
         // Show the resources near the new need
         return RedirectToAction("Matches", new { needId = need.Id });
     }
@@ -54,11 +87,12 @@ public class PublicActorController : Controller
         };
         return View(model);
     }
+    
 }
 
 
 public class HomeController : Controller
-{
+{            
     public IActionResult Index(int? id)
     {
         if (id.HasValue)

@@ -7,4 +7,8 @@
     <RootNamespace>H_st_2026_Gruppe_1</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="MySqlConnector" Version="2.4.0" />
+  </ItemGroup>
+
 </Project>
