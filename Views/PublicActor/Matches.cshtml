@@ -1,7 +1,7 @@
 @model H_st_2026_Gruppe_1.Models.MatchViewModel
 
 @{
-    ViewData["Title"] = "Matching resources";
+    ViewData["Title"] = "Matching overview";
 }
 
 <section class="subpage">
@@ -15,7 +15,6 @@
         <input type="number" name="radiusKm" id="radiusKm" value="@Model.RadiusKm" min="1" class="form-control" />
     </div>
     <button type="submit" class="btn btn-primary">Search</button>
-    <a asp-controller="PublicActor" asp-action="DashboardIndex" class="btn btn-primary ms-auto">Register another need</a>
 </form>
 
 @if (!Model.Matches.Any())

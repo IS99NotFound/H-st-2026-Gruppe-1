@@ -58,17 +58,40 @@ public class PublicActorController : Controller
             return View("DashboardIndex", need);
         }
 
-        // Lagre i minnet
+        // Save to cache
         NeedStore.AddOrUpdate(need);
         need.RegisteredAt = DateTime.Now;
         // Show the resources near the new need
-        return RedirectToAction("Matches", new { needId = need.Id });
+        return RedirectToAction("NeedsIndex");
     }
 
-    // Shows the resources within radiusKm of a need, nearest first.
-    public IActionResult Matches(int needId, double radiusKm = 50)
+    public IActionResult MatchesIndex()
     {
-        var need = NeedStore.GetById(needId);
+        var needs = NeedStore.Needs.ToList();
+        return View();
+    }
+    
+    // Shows the resources within radiusKm of a need, nearest first.
+    public IActionResult Matches(int? needId, double radiusKm = 50)
+    {
+        ResourceNeed need = null;
+
+        if (!ModelState.IsValid)
+        {
+            return RedirectToAction("DashboardIndex", "PublicActor");
+        }
+
+        // if its sent with an ID, fetch it, if not fetch the newest need automatically 
+        if (needId.HasValue)
+        {
+            need = NeedStore.GetById(needId.Value);
+        }
+        else
+        {
+            need = NeedStore.Needs.OrderByDescending(n => n.RegisteredAt).FirstOrDefault();
+        }
+
+        // If theres no need redirect to dashboard
         if (need == null)
         {
             return RedirectToAction("DashboardIndex");
@@ -135,11 +158,11 @@ public class HomeController : Controller
 
         if (userType == "PublicActor")
         {
-            // Sender brukeren til Public Actor Dashboard
+            // Route user to dashboard for Public Actor 
             return RedirectToAction("DashboardIndex", "PublicActor");
         }
 
-        // Standard fallback: Sender til sivil/ressursleverandør sine sider
+        // Standard fallback: Route to civilian/resource provider page
         return RedirectToAction("Index", "Home");
     }
 

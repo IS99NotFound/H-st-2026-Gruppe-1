@@ -6,11 +6,11 @@ namespace H_st_2026_Gruppe_1.Services
 {
     public static class NeedStore
     {
-        // Liste som holder på alle registrerte behov i minnet
+        // List to save registered needs to cache
         public static List<ResourceNeed> Needs { get; set; } = new List<ResourceNeed>();
         private static int _nextId = 1;
 
-        // Legg til eller oppdater et behov
+        // Add or update need
         public static void AddOrUpdate(ResourceNeed need)
         {
             if (need.Id == 0)
@@ -28,13 +28,13 @@ namespace H_st_2026_Gruppe_1.Services
             }
         }
 
-        // Hent et spesifikt behov basert på ID
+        // Get specific need based on ID
         public static ResourceNeed? GetById(int id)
         {
             return Needs.FirstOrDefault(n => n.Id == id);
         }
 
-        // Slett et behov
+        // Delete need 
         public static void Remove(int id)
         {
             var need = GetById(id);

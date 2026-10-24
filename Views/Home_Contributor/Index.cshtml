@@ -28,16 +28,18 @@
                 <input type="text" name="Phone" id="contactInput" value="@Model.Phone" class="form-control" placeholder="Phone number or email" required />
                 <small id="contactError" class="text-danger"></small>
             </div>
-            <div class="mb-2">
+            <div class="mb-2"> 
                 <label for="resourceType">Resource type</label>
                 <select name="ResourceType" id="resourceType" class="form-control" required>
-                    <option value="">Select an option</option>
-                    <option value="Shelter" selected="@(Model.ResourceType == "Shelter" ? "selected" : null)">Shelter</option>
-                    <option value="Mat" selected="@(Model.ResourceType == "Mat" ? "selected" : null)">Food</option>
-                    <option value="Transport" selected="@(Model.ResourceType == "Transport" ? "selected" : null)">Transport</option>
-                    <option value="Medisinsk" selected="@(Model.ResourceType == "Medisinsk" ? "selected" : null)">Medical</option>
-                    <option value="Materialer" selected="@(Model.ResourceType == "Materialer" ? "selected" : null)">Materialer</option>
-                    <option value="Annet" selected="@(Model.ResourceType == "Annet" ? "selected" : null)">Other</option>
+                    <option value="">Select a type</option>
+                    <option value="1" selected="@(Model.ResourceType == "Transport/logistics" ? "selected" : null)">Transport / logistics</option>
+                    <option value="2" selected="@(Model.ResourceType == "Heavy machinery" ? "selected" : null)">Heavy machinery e.g Tractor</option>
+                    <option value="3" selected="@(Model.ResourceType == "Power Supply / Generator" ? "selected" : null)">Power supply e.g Generator</option>
+                    <option value="4" selected="@(Model.ResourceType == "Evacuation / Shelter" ? "selected" : null)">Evacuation / shelter</option>
+                    <option value="5" selected="@(Model.ResourceType == "Plowing & Snow Clearing" ? "selected" : null)">Plowing & Snow Clearing</option>
+                    <option value="6" selected="@(Model.ResourceType == "Manpower" ? "selected" : null)">Search and rescue team</option>
+                    <option value="7" selected="@(Model.ResourceType == "Medical" ? "selected" : null)">Medical support</option>
+                    <option value="8" selected="@(Model.ResourceType == "Other" ? "selected" : null)">Other</option>
                 </select>
                 <small id="resourceTypeError" class="text-danger"></small>
             </div>
@@ -156,18 +158,19 @@
         const renewalDate = new Date();
 
         switch (resourceType.value) {
-            case 'Mat':
+            case '1':
                 renewalDate.setDate(renewalDate.getDate() + 14);
                 break;
-            case 'Medisinsk':
+            case '2':
                 renewalDate.setMonth(renewalDate.getMonth() + 1);
                 break;
-            case 'Materialer':
+            case '3':
                 renewalDate.setMonth(renewalDate.getMonth() + 6);
                 break;
-            case 'Shelter':
-            case 'Transport':
-            case 'Annet':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
                 renewalDate.setFullYear(renewalDate.getFullYear() + 1);
                 break;
             default:

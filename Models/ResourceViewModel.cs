@@ -2,16 +2,16 @@ using System.ComponentModel.DataAnnotations;
 
 namespace H_st_2026_Gruppe_1.Models;
 
-// Modellen som skjemaet bruker.
-// Den har kun feltene brukeren fyller ut, pluss valideringsreglene.
+// Forms model 
+// Only contains fields that the user fills out + validation rules 
 public class ResourceViewModel
 {
-    // Navn er påkrevd, maks 80 tegn
+    // Name required; Max 80 characters 
     [Required(ErrorMessage = "Full Name is required.")]
     [StringLength(80, MinimumLength = 1, ErrorMessage = "Full Name must be at least {2} and at most {1} characters long.")]
     public string Name { get; set; } = "";
 
-    // Kontaktinfo kan være e-post ELLER telefonnummer
+    // Contact information be E-mail OR phone number 
     [Required(ErrorMessage = "Contact information is required.")]
     [RegularExpression(
         @"^([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|(\+?[0-9\s]{8,15}))$",
@@ -19,22 +19,22 @@ public class ResourceViewModel
     )]
     public string Phone { get; set; } = "";
 
-    // Beskrivelse må fylles ut
+    // Description is required 
     [Required(ErrorMessage = "Description must be filled out")]
     public string Description { get; set; } = "";
 
-    // Brukeren må velge en ressurstype
+    // Resource type is required for user
     [Required(ErrorMessage = "Select a resource type.")]
     public string ResourceType { get; set; } = "";
 
-    // Utløpsdato er valgfri, den regnes ut av HomeController ut fra ressurstypen
+    // Expiration date is optional, calculated by HomeController based on resource type 
     public DateTime? ExpiryDate { get; set; }
 
-    // Latitude er påkrevd, så brukeren må klikke i kartet
+    // Latitide is required
     [Required(ErrorMessage = "Position on the map must be filled out")]
     public double? Latitude { get; set; }
 
-    // Longitude er påkrevd, så brukeren må klikke i kartet
+    // Longitude is required
     [Required(ErrorMessage = "Position on the map must be filled out")]
     public double? Longitude { get; set; }
 }
