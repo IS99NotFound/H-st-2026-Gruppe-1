@@ -57,39 +57,25 @@ public class PublicActorController : Controller
         {
             return View("DashboardIndex", need);
         }
+        
 
-        // Save to cache
-        NeedStore.AddOrUpdate(need);
         need.RegisteredAt = DateTime.Now;
-        // Show the resources near the new need
-        return RedirectToAction("NeedsIndex");
+        NeedStore.AddOrUpdate(need);
+        return RedirectToAction(nameof(Matches), new { needId = need.Id });
     }
 
     public IActionResult MatchesIndex()
     {
         var needs = NeedStore.Needs.ToList();
-        return View();
+        return View("NeedsIndex", needs);
     }
     
     // Shows the resources within radiusKm of a need, nearest first.
     public IActionResult Matches(int? needId, double radiusKm = 50)
     {
-        ResourceNeed need = null;
-
-        if (!ModelState.IsValid)
-        {
-            return RedirectToAction("DashboardIndex", "PublicActor");
-        }
-
-        // if its sent with an ID, fetch it, if not fetch the newest need automatically 
-        if (needId.HasValue)
-        {
-            need = NeedStore.GetById(needId.Value);
-        }
-        else
-        {
-            need = NeedStore.Needs.OrderByDescending(n => n.RegisteredAt).FirstOrDefault();
-        }
+        var need = needId.HasValue
+            ? NeedStore.GetById(needId.Value)
+            : NeedStore.Needs.OrderByDescending(n => n.RegisteredAt).FirstOrDefault();
 
         // If theres no need redirect to dashboard
         if (need == null)
@@ -97,7 +83,7 @@ public class PublicActorController : Controller
             return RedirectToAction("DashboardIndex");
         }
 
-        if (radiusKm <= 0)
+        if (!ModelState.IsValid || !double.IsFinite(radiusKm) || radiusKm <= 0)
         {
             radiusKm = 50;
         }
@@ -108,7 +94,7 @@ public class PublicActorController : Controller
             RadiusKm = radiusKm,
             Matches = RadiusMatcher.FindResources(need, radiusKm)
         };
-        return View(model);
+        return View("MatchesIndex", model);
     }
     
 }
@@ -202,10 +188,15 @@ public class HomeController : Controller
     {
         return resourceType switch
         {
-            "Shelter" or "Transport" or "Other" => DateTime.Today.AddYears(1),
+            "Shelter" or "Transport" or "Other" or
+                "Drone" or "ATV" or "Tractor" or "Excavator" or "Truck" or "Boat" or "Crew" or
+                "Transport/logistics" or "Evacuation / Shelter" or "Plowing & Snow Clearing" or "Manpower"
+                => DateTime.Today.AddYears(1),
             "Food" => DateTime.Today.AddDays(14),
             "Medical" => DateTime.Today.AddMonths(1),
-            "Materials" => DateTime.Today.AddMonths(6),
+            "Materials" or "Generator" or "Sand/Gravel" or
+                "Heavy machinery" or "Power Supply / Generator"
+                => DateTime.Today.AddMonths(6),
             _ => null
         };
     }

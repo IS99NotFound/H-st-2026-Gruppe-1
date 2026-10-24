@@ -38,16 +38,14 @@
                 <label for="resourceType">Resource type</label>
                 <select name="ResourceType" id="resourceType" class="form-control" required>
                     <option value="">Select an option</option>
-                    <option value="Drone" selected="@(Model.ResourceType == "Drone" ? "selected" : null)">Drone</option>
-                    <option value="ATV" selected="@(Model.ResourceType == "ATV" ? "selected" : null)">ATV</option>
-                    <option value="Tractor" selected="@(Model.ResourceType == "Tractor" ? "selected" : null)">Tractor</option>
-                    <option value="Generator" selected="@(Model.ResourceType == "Generator" ? "selected" : null)">Generator</option>
-                    <option value="Excavator" selected="@(Model.ResourceType == "Excavator" ? "selected" : null)">Excavator</option>
-                    <option value="Truck" selected="@(Model.ResourceType == "Truck" ? "selected" : null)">Truck</option>
-                    <option value="Boat" selected="@(Model.ResourceType == "Boat" ? "selected" : null)">Boat</option>
-                    <option value="Crew" selected="@(Model.ResourceType == "Crew" ? "selected" : null)">Cres</option>
-                    <option value="Sand/Gravel" selected="@(Model.ResourceType == "Sand/Gravel" ? "selected" : null)">Sand/Gravel</option>
-                    <option value="Other" selected="@(Model.ResourceType == "Otherl" ? "selected" : null)">Other</option>
+                    <option value="Transport/logistics" selected="@(Model.ResourceType == "Transport/logistics" ? "selected" : null)">Transport / logistics</option>
+                    <option value="Heavy machinery" selected="@(Model.ResourceType == "Heavy machinery" ? "selected" : null)">Heavy machinery e.g Tractor</option>
+                    <option value="Power Supply / Generator" selected="@(Model.ResourceType == "Power Supply / Generator" ? "selected" : null)">Power supply e.g Generator</option>
+                    <option value="Evacuation / Shelter" selected="@(Model.ResourceType == "Evacuation / Shelter" ? "selected" : null)">Evacuation / shelter</option>
+                    <option value="Plowing & Snow Clearing" selected="@(Model.ResourceType == "Plowing & Snow Clearing" ? "selected" : null)">Plowing & Snow Clearing</option>
+                    <option value="Manpower" selected="@(Model.ResourceType == "Manpower" ? "selected" : null)">Search and rescue team</option>
+                    <option value="Medical" selected="@(Model.ResourceType == "Medical" ? "selected" : null)">Medical support</option>
+                    <option value="Other" selected="@(Model.ResourceType == "Other" ? "selected" : null)">Other</option>
 
 
                     
@@ -112,7 +110,7 @@
 
         let selectedMarker = null;
 
-        // Check if position already exists (E.g. when editing)
+        // Check if position already exists (E.g., when editing)
         const initialLat = parseFloat(document.getElementById('latInput').value);
         const initialLng = parseFloat(document.getElementById('lngInput').value);
         if (!isNaN(initialLat) && !isNaN(initialLng)) {
@@ -194,17 +192,17 @@
         resourceType.addEventListener('change', function () {
             const renewalDate = new Date();
             switch (resourceType.value) {
-                case 'Food':
-                    renewalDate.setDate(renewalDate.getDate() + 14);
-                    break;
                 case 'Medical':
                     renewalDate.setMonth(renewalDate.getMonth() + 1);
                     break;
-                case 'Materials':
+                case 'Heavy machinery':
+                case 'Power Supply / Generator':
                     renewalDate.setMonth(renewalDate.getMonth() + 6);
                     break;
-                case 'Shelter':
-                case 'Transport':
+                case 'Transport/logistics':
+                case 'Evacuation / Shelter':
+                case 'Plowing & Snow Clearing':
+                case 'Manpower':
                 case 'Other':
                     renewalDate.setFullYear(renewalDate.getFullYear() + 1);
                     break;

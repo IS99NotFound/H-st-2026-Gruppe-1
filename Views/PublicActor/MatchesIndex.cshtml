@@ -5,17 +5,19 @@
 }
 
 <section class="subpage">
-<h1>Resources near: @Model.Need.Title</h1>
+    <h1>Resources near: @Model.Need.Title</h1>
+    
 
-<!-- Radius form, sends the need id and radius to the Matches action -->
-<form asp-controller="PublicActor" asp-action="Matches" method="get" class="d-flex align-items-end gap-2 mb-3">
-    <input type="hidden" name="needId" value="@Model.Need.Id" />
-    <div>
-        <label for="radiusKm">Radius (km)</label>
-        <input type="number" name="radiusKm" id="radiusKm" value="@Model.RadiusKm" min="1" class="form-control" />
-    </div>
-    <button type="submit" class="btn btn-primary">Search</button>
-</form>
+    <!-- Radius form, sends the need id and radius to the Matches action -->
+    <form asp-controller="PublicActor" asp-action="Matches" method="get" class="d-flex align-items-end gap-2 mb-3">
+        <input type="hidden" name="needId" value="@Model.Need.Id" />
+        <div>
+            <label for="radiusKm">Radius (km)</label>
+            <input type="number" name="radiusKm" id="radiusKm" value="@Model.RadiusKm" min="1" class="form-control" />
+        </div>
+        <button type="submit" class="btn btn-primary">Search</button>
+    </form>
+
 
 @if (!Model.Matches.Any())
 {
