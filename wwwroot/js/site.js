@@ -1,4 +1,4 @@
-﻿// Her samler vi mobilpanelets tilstand slik at knappene fungerer likt på alle sider.
+﻿// Collect phonepanel status so buttons works the same on all pages
 function initSiteBindings() {
 	if (window.__resq_site_initialized) return;
 	window.__resq_site_initialized = true;
@@ -15,7 +15,7 @@ function initSiteBindings() {
 			button.setAttribute('aria-expanded', String(isOpen));
 		});
 
-		// Leaflet må måle kartet på nytt når panelet endrer tilgjengelig plass.
+		// Leaflet measures map size anew when panel size changes Leaflet 
 		window.requestAnimationFrame(() => window.resqMap?.invalidateSize());
 	}
 
@@ -23,7 +23,7 @@ function initSiteBindings() {
 		button.addEventListener('click', () => {
 			if (!mainLayout || !sidePanel) {
 				const homeUrl = button.dataset.homeUrl;
-				// På undersider går vi til kartet og åpner ressursregistreringen der.
+				// On sub-pages, move to map and open resource registration 
 				if (homeUrl) window.location.href = `${homeUrl}?openResource=true`;
 				return;
 			}

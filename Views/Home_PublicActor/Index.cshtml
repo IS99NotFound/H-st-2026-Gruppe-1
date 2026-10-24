@@ -1,5 +1,5 @@
 
-    <!-- Kartområdet (2/3 av bredden) -->
+    <!-- Map area, cover 2/3 of the width of the page -->
     <section class="map-area">
         <div id="map" role="application" aria-label="Interactive map"></div>
         <p id="map-status" class="map-status" role="status" aria-live="polite">Loading map ...</p>
@@ -12,12 +12,12 @@
 }
 <script>
 
-    // Oppretter kartet og starter i Grimstad
+    // Create map and starts in Grimstad 
     const map = L.map('map').setView([58.4614, 8.7683], 13);
-    // Mobilpanelet bruker denne referansen når kartets synlige størrelse endres
+    // Phone panel uses this reference instead when the maps size changes 
     window.resqMap = map;
 
-    // Legger på kartfliser fra OpenStreetMap
+    // Add map tiles from OpenStreetMap
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
@@ -25,7 +25,7 @@
     const mapStatus = document.getElementById('map-status');
     mapStatus.textContent = 'The map is ready. Select a position or use your current location.';
 
-    // Prøver å finne brukerens posisjon og flytte kartet dit
+    // Get users location and move map accordingly 
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function (position) {
             const lat = position.coords.latitude;
@@ -43,7 +43,7 @@
         mapStatus.textContent = 'This browser does not support geolocation. Select a position on the map.';
     }
 
-    // Henter elementene i skjemaet som JavaScript trenger
+    // Elements needed for the form for JavaScript 
     const resourceType = document.getElementById('resourceType');
     const expiryDate = document.getElementById('expiryDate');
     const resourceForm = document.getElementById('resourceForm');
@@ -53,7 +53,7 @@
     const contactInput = document.getElementById('contactInput');
     const contactError = document.getElementById('contactError');
 
-    // Viser en enkel feilmelding og stopper innsendingen hvis et påkrevd felt er tomt
+    // Erorr message and stops form from being submitted when a mandatory field is left unfilled
     resourceForm.addEventListener('submit', function (event) {
         let hasErrors = false;
 
@@ -80,7 +80,7 @@
         }
     });
 
-    // Skjuler feilmeldingen når brukeren begynner å skrive
+    // Hide error message while user is typing 
     nameInput.addEventListener('input', function () {
         nameError.hidden = nameInput.value.trim() === '';
     });
@@ -89,7 +89,7 @@
         contactError.hidden = contactInput.value.trim() === '';
     });
 
-    // Viser utløpsdatoen når brukeren velger en ressurstype
+    // Show expiration date after user selects a resource type 
     resourceType.addEventListener('change', function () {
         resourceTypeError.hidden = resourceType.value === '';
         const renewalDate = new Date();
@@ -114,30 +114,30 @@
                 return;
         }
 
-        // Gjør om datoen til formatet åååå-mm-dd
+        // Convert date to format yyyy-mm-dd
         const year = renewalDate.getFullYear();
         const month = String(renewalDate.getMonth() + 1).padStart(2, '0');
         const day = String(renewalDate.getDate()).padStart(2, '0');
         expiryDate.value = `${year}-${month}-${day}`;
     });
 
-    // Husker markøren brukeren har valgt, slik at den kan fjernes ved nytt klikk
+    // Remember users marker so it can be removed with a new click
     let selectedMarker = null;
 
-    // Stopper innsendingen hvis brukeren ikke har valgt en posisjon i kartet
+    // Stops submittion of form if user hasn't chosen a position
     document.querySelector('form').addEventListener('submit', function (e) {
         const lat = document.getElementById('latInput').value;
         const posError = document.getElementById('posError');
 
         if (!lat) {
-            e.preventDefault(); // Stopper innsendingen av skjemaet
+            e.preventDefault(); 
             if (posError) {
                 posError.textContent = 'Du må velge en posisjon på kartet før du kan registrere.';
             }
         }
     });
 
-    // Fjerner eventuell feilmelding når brukeren klikker på kartet
+    // Remove errer message when user clicks on map 
     map.on('click', function (e) {
         const posError = document.getElementById('posError');
         if (posError) {
@@ -145,7 +145,7 @@
         }
     });
 
-    // Et klikk i kartet plasserer markøren og fyller koordinatene inn i skjemaet
+    // Clicking on the map places marker and sends coordinates to the form
     map.on('click', function (e) {
         const lat = e.latlng.lat;
         const lng = e.latlng.lng;
