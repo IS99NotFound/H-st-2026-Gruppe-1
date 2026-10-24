@@ -27,14 +27,14 @@
 @if (isAuthenticated)
 {
     <header class="topbar">
-        <!-- Topp del venstre, logo og tekst -->
+        <!-- Top, left corner, logo and text  -->
         <div class="topbar-brand">
             <a class="brand-name" asp-controller="Home" asp-action="Index">ResQ</a>
             <div class="brand-tagline">
             </div>
         </div>
 
-        <!-- Topp del midten, faner -->
+        <!-- Top, middle part, menu -->
         <nav id="main-navigation" class="topbar-nav" aria-label="Hovednavigasjon">
     @if (isPublicActor)
     {
@@ -89,7 +89,7 @@
     </button>
 </nav>
 
-        <!-- Topp del høyre, bruker -->
+        <!-- Top, right corner, User account  -->
         <div class="topbar-user-controls">
             <form asp-controller="Home" asp-action="SelectRole" method="post" class="d-flex align-items-center gap-2">
                 <label class="visually-hidden" for="UserType">Choose user</label>
@@ -112,7 +112,7 @@
 
 @if (!isAuthPage)
 {
-    <footer class="footer"> @* // Endrer bunnen av nettsiden til å se lik ut som resten *@
+    <footer class="footer"> @* // Changes the bottom part of the page to look like the rest *@
         <div class="container">
             &copy; 2026 - ResQ - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>

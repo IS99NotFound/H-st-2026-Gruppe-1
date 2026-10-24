@@ -38,7 +38,7 @@ public class ResourceEntry
 	public string Status { get; set; } = "New";
 }
 
-//attributter for å lagre resources og presentere de i dashboad view i MyResources
+//Attributes to save resources and show them in MyResources
 public class ResourceDashboard
 {
 	public int TotalResources { get; set; }

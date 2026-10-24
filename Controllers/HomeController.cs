@@ -58,7 +58,7 @@ public class PublicActorController : Controller
             return View("DashboardIndex", need);
         }
 
-        // Lagre i minnet
+        // Save to cache
         NeedStore.AddOrUpdate(need);
         need.RegisteredAt = DateTime.Now;
         // Show the resources near the new need
@@ -135,11 +135,11 @@ public class HomeController : Controller
 
         if (userType == "PublicActor")
         {
-            // Sender brukeren til Public Actor Dashboard
+            // Route user to dashboard for Public Actor 
             return RedirectToAction("DashboardIndex", "PublicActor");
         }
 
-        // Standard fallback: Sender til sivil/ressursleverandør sine sider
+        // Standard fallback: Route to civilian/resource provider page
         return RedirectToAction("Index", "Home");
     }
 

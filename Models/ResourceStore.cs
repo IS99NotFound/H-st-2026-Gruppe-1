@@ -1,6 +1,6 @@
 namespace H_st_2026_Gruppe_1.Models;
 
-// Enkel liste i minnet siden vi ikke har database, nullstilles ved restart av serveren
+// List for cache saving as database is not ready yet
 public static class ResourceStore
 {
     public static List<ResourceEntry> Resources = new List<ResourceEntry>();
@@ -27,10 +27,10 @@ public static class ResourceStore
 
     public static void Update(ResourceEntry UpdatedResource)
     {
-        //finne feltene 
+        //Find fields 
         var existingResource = Resources.FirstOrDefault(x => x.Id == UpdatedResource.Id);
         
-        //hvis feltene eksisterer overskrive dem
+        //If fields already exist, overwrite them
         if (existingResource != null)
         {
             existingResource.Name = UpdatedResource.Name;
