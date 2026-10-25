@@ -13,7 +13,8 @@ services:
       - "3307:3306"
     volumes:
       # Automatically initializes the schema on first startup
-      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./database/seed-demo.sql:/docker-entrypoint-initdb.d/02-seed-demo.sql:ro
       # Persists database data across container restarts
       - mariadb_data:/var/lib/mysql
 

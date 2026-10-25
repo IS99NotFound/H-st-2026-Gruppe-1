@@ -31,14 +31,10 @@
         <label for="categoryFilter" class="form-label text-muted small fw-bold">Filter by Category</label>
         <select name="category" id="categoryFilter" class="form-select">
             <option value="">All Categories</option>
-            <option value="1" selected="@(Context.Request.Query["category"] == "1")">Transport / Logistics</option>
-            <option value="2" selected="@(Context.Request.Query["category"] == "2")">Heavy Machinery (Excavator, Tractor)</option>
-            <option value="3" selected="@(Context.Request.Query["category"] == "3")">Power Supply / Generator</option>
-            <option value="4" selected="@(Context.Request.Query["category"] == "4")">Evacuation & Shelter</option>
-            <option value="5" selected="@(Context.Request.Query["category"] == "5")">Plowing & Snow Clearing</option>
-            <option value="6" selected="@(Context.Request.Query["category"] == "6")">Search & Rescue Crew</option>
-            <option value="7" selected="@(Context.Request.Query["category"] == "7")">Medical Support</option>
-            <option value="8" selected="@(Context.Request.Query["category"] == "8")">Other Emergency Support</option>
+            @foreach (var category in (List<Category>)ViewBag.Categories)
+            {
+                <option value="@category.CategoryId" selected="@(Context.Request.Query["category"] == category.CategoryId.ToString())">@category.CategoryName</option>
+            }
         </select>
     </div>
 
@@ -83,20 +79,8 @@ else
                     <td>@need.Title</td>
                     <td>@need.ContactInfo</td>
                     <td>@need.CrisisEventId</td>
-                    <td>
-                        @switch ((int)need.Category)
-                        {
-                            case 1: <span>Transport / Logistics</span>; break;
-                            case 2: <span>Heavy Machinery</span>; break;
-                            case 3: <span>Power Supply / Generator</span>; break;
-                            case 4: <span>Evacuation & Shelter</span>; break;
-                            case 5: <span>Plowing & Snow Clearing</span>; break;
-                            case 6: <span>Search & Rescue Crew</span>; break;
-                            case 7: <span>Medical Support</span>; break;
-                            case 8: <span>Other Emergency Support</span>; break;
-                            default: <span>Unspecified</span>; break;
-                        }
-                    </td>                    <td>@need.Quantity</td>
+                    <td>@(need.CategoryInfo?.CategoryName ?? "Unspecified")</td>
+                    <td>@need.Quantity</td>
                     <td>@need.Description</td>
                     <td>@(need.RequiredFrom?.ToString("dd.MM.yyyy") ?? "Not specified")</td>
                     <td>@(need.Deadline?.ToString("dd.MM.yyyy") ?? "Not specified")</td>

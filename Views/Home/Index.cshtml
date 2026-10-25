@@ -36,23 +36,14 @@
 
             <div class="mb-2">
                 <label for="resourceType">Resource type</label>
-                <select name="ResourceType" id="resourceType" class="form-control" required>
+                <select name="CategoryId" id="resourceType" class="form-control" required>
                     <option value="">Select an option</option>
-                    <option value="Drone" selected="@(Model.ResourceType == "Drone" ? "selected" : null)">Drone</option>
-                    <option value="ATV" selected="@(Model.ResourceType == "ATV" ? "selected" : null)">ATV</option>
-                    <option value="Tractor" selected="@(Model.ResourceType == "Tractor" ? "selected" : null)">Tractor</option>
-                    <option value="Generator" selected="@(Model.ResourceType == "Generator" ? "selected" : null)">Generator</option>
-                    <option value="Excavator" selected="@(Model.ResourceType == "Excavator" ? "selected" : null)">Excavator</option>
-                    <option value="Truck" selected="@(Model.ResourceType == "Truck" ? "selected" : null)">Truck</option>
-                    <option value="Boat" selected="@(Model.ResourceType == "Boat" ? "selected" : null)">Boat</option>
-                    <option value="Crew" selected="@(Model.ResourceType == "Crew" ? "selected" : null)">Cres</option>
-                    <option value="Sand/Gravel" selected="@(Model.ResourceType == "Sand/Gravel" ? "selected" : null)">Sand/Gravel</option>
-                    <option value="Other" selected="@(Model.ResourceType == "Otherl" ? "selected" : null)">Other</option>
-
-
-                    
+                    @foreach (var category in (List<Category>)ViewBag.Categories)
+                    {
+                        <option value="@category.CategoryId" selected="@(Model.CategoryId == category.CategoryId)">@category.CategoryName</option>
+                    }
                 </select>
-                <span asp-validation-for="ResourceType" class="text-danger"></span>
+                <span asp-validation-for="CategoryId" class="text-danger"></span>
             </div>
 
             <div class="mb-2">

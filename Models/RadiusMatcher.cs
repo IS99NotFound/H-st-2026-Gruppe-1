@@ -6,12 +6,11 @@ public static class RadiusMatcher
     private const double EarthRadiusKm = 6371;
 
     // Returns resources within radiusKm of the need, nearest first.
-    public static List<ResourceMatch> FindResources(ResourceNeed need, double radiusKm)
+    public static List<ResourceMatch> FindResources(ResourceNeed need, double radiusKm, IEnumerable<ResourceEntry> resources)
     {
         var matches = new List<ResourceMatch>();
 
-        // DATABASE: replace ResourceStore.Resources with a database query
-        foreach (var resource in ResourceStore.Resources)
+        foreach (var resource in resources)
         {
             // Skip resources that have no position
             if (resource.Latitude == null || resource.Longitude == null)
