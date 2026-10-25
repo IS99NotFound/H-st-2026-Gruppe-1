@@ -43,14 +43,10 @@
                 <label asp-for="Category">Category</label>
                 <select asp-for="Category" id="categoryInput" class="form-select" required>
                     <option value="">Select category</option>
-                    <option value="1">Transport / Logistics</option>
-                    <option value="2">Heavy Machinery (Excavator, Tractor)</option>
-                    <option value="3">Power Supply / Generator</option>
-                    <option value="4">Evacuation & Shelter</option>
-                    <option value="5">Plowing & Snow Clearing</option>
-                    <option value="6">Search & Rescue Crew</option>
-                    <option value="7">Medical Support</option>
-                    <option value="8">Other Emergency Support</option>
+                    @foreach (var category in (List<Category>)ViewBag.Categories)
+                    {
+                        <option value="@category.CategoryId">@category.CategoryName</option>
+                    }
                 </select>
                 <span asp-validation-for="Category" class="text-danger"></span>
             </div>

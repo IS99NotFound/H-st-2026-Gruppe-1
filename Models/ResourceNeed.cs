@@ -26,6 +26,10 @@ namespace H_st_2026_Gruppe_1.Models
         [Required(ErrorMessage = "Please select a category.")]
         [Range(1, int.MaxValue, ErrorMessage = "Please select a valid category.")]
         public int Category { get; set; }
+        public Category? CategoryInfo { get; set; }
+
+        // Required by the database. Set in the controller, not in the form.
+        public int PublicActorId { get; set; }
         
         [Required(ErrorMessage = "Description is required.")]
         [StringLength(1000, ErrorMessage = "Description cannot exceed 1000 characters.")]
@@ -53,7 +57,7 @@ namespace H_st_2026_Gruppe_1.Models
         [Range(-180.0, 180.0, ErrorMessage = "Invalid longitude value.")]
         public double Longitude { get; set; }
 
-        public string Status { get; set; } = "Open";
+        public string Status { get; set; } = "new";
     }
 }
 
