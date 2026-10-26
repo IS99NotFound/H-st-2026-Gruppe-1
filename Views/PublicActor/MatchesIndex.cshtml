@@ -5,7 +5,25 @@
 }
 
 <section class="subpage">
-    <h1>Resources near: @Model.Need.Title</h1>
+    <div class="match-heading">
+        <h1>Resource match near:</h1>
+        <form method="get" asp-action="Matches">
+            <select name="needId" id="needId" class="form-select" onchange="this.form.submit()">
+                @foreach (var need in Model.UserNeeds)
+                {
+                    if (need.Id == Model.Need.Id)
+                    {
+                        <option value="@need.Id" selected="selected">@need.Title (incident ID: @need.CrisisEventId)</option>
+                    }
+                    else
+                    {
+                        <option value="@need.Id">@need.Title (incident ID: @need.CrisisEventId)</option>
+                    }
+                }
+            </select>
+        </form>
+    </div>
+    
     
 
     <!-- Both buttons submit the selected need and radius; the second uses a different action. -->
