@@ -148,17 +148,44 @@ public class PublicActorController : Controller
         {
             radiusKm = 50;
         }
-
+        
+        
         var model = new MatchViewModel
         {
             Need = need,
             RadiusKm = radiusKm,
-            Matches = RadiusMatcher.FindResources(need, radiusKm, _db.Resources.Include(r => r.Category).ToList())
+            Matches = RadiusMatcher.FindResources(
+                need, radiusKm, 
+                _db.Resources.Include(r => r.Category).ToList())
         };
         return View("MatchesIndex", model);
     }
     
+    public IActionResult ShowAllResourcesInMatches(int needId, double radiusKm = 50)
+    {
+        var need = _db.Needs.Find(needId);
+        if (need == null)
+        {
+            return NotFound();
+        }
+        if (!double.IsFinite(radiusKm) || radiusKm <= 0)
+        {
+            radiusKm = 50;
+        }
+        var model = new MatchViewModel
+        {
+            Need = need,
+            RadiusKm = radiusKm,
+            AllCategories = true,
+            Matches = RadiusMatcher.FindResources(
+                need, radiusKm, 
+                _db.Resources.Include(r => r.Category).ToList(),
+                allCategories: true)
+        };
+        return View("MatchesIndex", model);
+    }
 }
+
 
 
 public class HomeController : Controller
@@ -324,5 +351,6 @@ public class HomeController : Controller
         return RedirectToAction("NeedsIndex", "PublicActor");
     }
 
+    
    
 }
