@@ -467,6 +467,15 @@ body {
     min-width: 64px;
 }
 
+.need-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.need-actions .btn {
+    min-width: 64px;
+}
+
 .status-label {
     display: inline-block;
     padding: 3px 8px;
