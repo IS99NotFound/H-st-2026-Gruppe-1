@@ -148,7 +148,7 @@
         </div>
         </header>
 }
-<div class="container @(ViewData["FullWidth"] is true ? "container-full-width" : "") @(isAuthPage ? "auth-container" : "")">
+<div class="container @(ViewData["FullWidth"] is true ? "container-full-width" : "") @(ViewData["WideContent"] is true ? "container-wide-content" : "") @(isAuthPage ? "auth-container" : "")">
     <main role="main">
         @RenderBody()
     </main>

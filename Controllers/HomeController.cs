@@ -193,6 +193,25 @@ public class PublicActorController : Controller
                 allCategories: true)
         };
         return View("MatchesIndex", model);
+        
+    }
+
+    [HttpPost]
+    public IActionResult UpdateResourceStatus(int ResourceId, string NewStatus, string statusComment, int? needId)
+    {
+        var resource = _db.Resources.Find(ResourceId);
+        if (resource == null)
+        {
+            return NotFound();
+        }
+        if (!string.IsNullOrWhiteSpace(statusComment))
+        {
+            resource.StatusComment = statusComment;
+        }
+        resource.Status = NewStatus;
+        resource.StatusComment = statusComment;
+        _db.SaveChanges();
+        return RedirectToAction("Matches");
     }
 }
 
@@ -366,4 +385,6 @@ public class HomeController : Controller
     //{
         // Show form for creating an incident 
     //}
+    
+    
 }
