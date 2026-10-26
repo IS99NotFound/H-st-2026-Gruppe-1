@@ -14,7 +14,7 @@ public class PublicActorController : Controller
 {
     private readonly AppDbContext _db;
 
-    public PublicActorController(AppDbContext db)
+    public PublicActorController (AppDbContext db)
     {
         _db = db;
     }
@@ -350,7 +350,10 @@ public class HomeController : Controller
         }
         return RedirectToAction("NeedsIndex", "PublicActor");
     }
-
     
-   
+    // [Authorize(Roles = "PublicActor")]
+    // public IActionResult CreateIncident()
+    {
+        // Show form for creating an incident 
+    }
 }

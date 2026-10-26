@@ -9,10 +9,13 @@ public class AppDbContext : DbContext
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
     }
+    
 
     public DbSet<ResourceEntry> Resources => Set<ResourceEntry>();
     public DbSet<ResourceNeed> Needs => Set<ResourceNeed>();
     public DbSet<Category> Categories => Set<Category>();
+    public DbSet<Incident> Incidents => Set<Incident>();
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -50,5 +53,17 @@ public class AppDbContext : DbContext
             entity.HasKey(c => c.CategoryId);
             entity.Property(c => c.CategoryId).HasColumnName("CategoryID");
         });
+
+        modelBuilder.Entity<Incident>(entity =>
+        {
+            entity.ToTable("Incident");
+            entity.HasKey(i => i.IncidentId);
+            entity.Property(i => i.IncidentId).HasColumnName("IncidentID");
+            entity.Property(i => i.PublicActorId).HasColumnName("PublicActorID");
+            entity.Property(i => i.Latitude).HasPrecision(9, 6);
+            entity.Property(i => i.Longitude).HasPrecision(9, 6);
+        });
+            
     }
+    
 }

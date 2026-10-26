@@ -724,6 +724,84 @@ body {
     margin-bottom: 24px;
 }
 
+.incident-list {
+    display: grid;
+    gap: 16px;
+}
+
+.incident-card {
+    padding: 20px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg-panel);
+}
+
+.incident-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.incident-card h2 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 650;
+}
+
+.incident-status {
+    flex: 0 0 auto;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    text-transform: capitalize;
+}
+
+.incident-status-active {
+    border-color: #198754;
+    background-color: #198754;
+    color: #fff;
+}
+
+.incident-description {
+    margin: 14px 0 0;
+    color: var(--text-muted);
+    white-space: pre-line;
+}
+
+.incident-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px 32px;
+    margin: 18px 0 0;
+}
+
+.incident-details div {
+    min-width: 150px;
+}
+
+.incident-details dt {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+.incident-details dd {
+    margin: 3px 0 0;
+}
+
+@media (max-width: 576px) {
+    .incident-card {
+        padding: 16px;
+    }
+
+    .incident-card-header {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+
 .auth-field {
     margin-bottom: 20px;
 }
