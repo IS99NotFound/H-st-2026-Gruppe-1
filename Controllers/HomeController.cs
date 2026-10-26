@@ -98,6 +98,7 @@ public class PublicActorController : Controller
     public IActionResult MatchesIndex()
     {
         var needs = _db.Needs.Include(need => need.CategoryInfo).ToList();
+        ViewBag.Categories = _db.Categories.OrderBy(c => c.CategoryId).ToList();
         return View("NeedsIndex", needs);
     }
     
