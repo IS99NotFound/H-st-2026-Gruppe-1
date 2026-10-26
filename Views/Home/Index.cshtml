@@ -103,7 +103,7 @@
 
         let selectedMarker = null;
 
-        // Check if position already exists (E.g. when editing)
+        // Check if position already exists (E.g., when editing)
         const initialLat = parseFloat(document.getElementById('latInput').value);
         const initialLng = parseFloat(document.getElementById('lngInput').value);
         if (!isNaN(initialLat) && !isNaN(initialLng)) {
@@ -185,17 +185,17 @@
         resourceType.addEventListener('change', function () {
             const renewalDate = new Date();
             switch (resourceType.value) {
-                case 'Food':
-                    renewalDate.setDate(renewalDate.getDate() + 14);
-                    break;
                 case 'Medical':
                     renewalDate.setMonth(renewalDate.getMonth() + 1);
                     break;
-                case 'Materials':
+                case 'Heavy machinery':
+                case 'Power Supply / Generator':
                     renewalDate.setMonth(renewalDate.getMonth() + 6);
                     break;
-                case 'Shelter':
-                case 'Transport':
+                case 'Transport/logistics':
+                case 'Evacuation / Shelter':
+                case 'Plowing & Snow Clearing':
+                case 'Manpower':
                 case 'Other':
                     renewalDate.setFullYear(renewalDate.getFullYear() + 1);
                     break;

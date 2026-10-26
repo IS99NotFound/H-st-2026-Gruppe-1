@@ -76,6 +76,7 @@ public class PublicActorController : Controller
             LoadDropdowns();
             return View("DashboardIndex", need);
         }
+        
 
         // Save to database
         need.PublicActorId = DemoDefaults.PublicActorId;
@@ -91,19 +92,30 @@ public class PublicActorController : Controller
         _db.SaveChanges();
 
         // Show the resources near the new need
-        return RedirectToAction("Matches", new { needId = need.Id });
+        return RedirectToAction(nameof(Matches), new { needId = need.Id });
     }
 
-    // Shows the resources within radiusKm of a need, nearest first.
-    public IActionResult Matches(int needId, double radiusKm = 50)
+    public IActionResult MatchesIndex()
     {
-        var need = _db.Needs.Find(needId);
+        var needs = _db.Needs.Include(need => need.CategoryInfo).ToList();
+        ViewBag.Categories = _db.Categories.OrderBy(c => c.CategoryId).ToList();
+        return View("NeedsIndex", needs);
+    }
+    
+    // Shows the resources within radiusKm of a need, nearest first.
+    public IActionResult Matches(int? needId, double radiusKm = 50)
+    {
+        var need = needId.HasValue
+            ? _db.Needs.Find(needId.Value)
+            : _db.Needs.OrderByDescending(n => n.RegisteredAt).FirstOrDefault();
+
+        // If theres no need redirect to dashboard
         if (need == null)
         {
             return RedirectToAction("DashboardIndex");
         }
 
-        if (radiusKm <= 0)
+        if (!ModelState.IsValid || !double.IsFinite(radiusKm) || radiusKm <= 0)
         {
             radiusKm = 50;
         }
@@ -114,7 +126,7 @@ public class PublicActorController : Controller
             RadiusKm = radiusKm,
             Matches = RadiusMatcher.FindResources(need, radiusKm, _db.Resources.Include(r => r.Category).ToList())
         };
-        return View(model);
+        return View("MatchesIndex", model);
     }
     
 }
@@ -234,10 +246,16 @@ public class HomeController : Controller
     {
         return resourceType switch
         {
-            "Shelter" or "Transport" or "Other" => DateTime.Today.AddYears(1),
+            "Shelter" or "Transport" or "Other" or
+                "Drone" or "ATV" or "Tractor" or "Excavator" or "Truck" or "Boat" or "Crew" or
+                "Transport/logistics" or "Evacuation / Shelter" or "Plowing & Snow Clearing" or "Manpower" or
+                "Drone observation" or "Evacuation" or "Snow clearing" or "Crew / personnel"
+                => DateTime.Today.AddYears(1),
             "Food" => DateTime.Today.AddDays(14),
             "Medical" => DateTime.Today.AddMonths(1),
-            "Materials" => DateTime.Today.AddMonths(6),
+            "Materials" or "Generator" or "Sand/Gravel" or
+                "Heavy machinery" or "Power Supply / Generator" or "Power / generator" or "Sand / gravel"
+                => DateTime.Today.AddMonths(6),
             _ => null
         };
     }
