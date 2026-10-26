@@ -7,12 +7,11 @@ public static class RadiusMatcher
     private const double EarthRadiusKm = 6371;
 
     // Returns resources within radiusKm of the need, nearest first.
-    public static List<ResourceMatch> FindResources(ResourceNeed need, double radiusKm)
+    public static List<ResourceMatch> FindResources(ResourceNeed need, double radiusKm, IEnumerable<ResourceEntry> resources)
     {
         var matches = new List<ResourceMatch>();
 
-        // DATABASE: replace ResourceStore.Resources with a database query
-        foreach (var resource in ResourceStore.Resources)
+        foreach (var resource in resources)
         {
             // Skip resources that have no position
             if (resource.Latitude == null || resource.Longitude == null)
@@ -20,8 +19,7 @@ public static class RadiusMatcher
                 continue;
             }
             
-            var resourceCategory = GetCategory(resource.ResourceType);
-            if (!resourceCategory.HasValue || resourceCategory.Value != need.Category)
+            if (resource.CategoryId != need.Category)
             {
                 continue;
             }
@@ -36,27 +34,6 @@ public static class RadiusMatcher
 
         // Nearest first
         return matches.OrderBy(m => m.DistanceKm).ToList();
-    }
-
-    private static int? GetCategory(string resourceType)
-    {
-        if (int.TryParse(resourceType, out var category) && category is >= 1 and <= 8)
-        {
-            return category;
-        }
-
-        return resourceType switch
-        {
-            "Transport/logistics" or "ATV" or "Truck" or "Boat" => 1,
-            "Heavy machinery" or "Tractor" or "Excavator" => 2,
-            "Power Supply / Generator" or "Generator" => 3,
-            "Evacuation / Shelter" or "Shelter" => 4,
-            "Plowing & Snow Clearing" => 5,
-            "Manpower" or "Crew" => 6,
-            "Medical" => 7,
-            "Other" or "Sand/Gravel" or "Drone" => 8,
-            _ => null
-        };
     }
 
     // Distance in km between two points on the earth (haversine formula).

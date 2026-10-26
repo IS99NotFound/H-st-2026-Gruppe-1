@@ -18,8 +18,13 @@ public class ResourceEntry
 	)]
 	public string Phone { get; set; } = "";
 
-	[Required(ErrorMessage = "Select a resource type.")]
-	public string ResourceType { get; set; } = "";
+	[Range(1, int.MaxValue, ErrorMessage = "Select a resource type.")]
+	public int CategoryId { get; set; }
+	public Category? Category { get; set; }
+
+	// Required by the database. Set in the controller, not in the form.
+	public int ProviderId { get; set; }
+	public int RegionId { get; set; }
 
 	[Required(ErrorMessage = "Description must be filled out.")]
 	public string Description { get; set; } = "";
@@ -35,7 +40,7 @@ public class ResourceEntry
 	public double? Longitude { get; set; }
 
 	public DateTime RegisteredAt { get; set; }
-	public string Status { get; set; } = "New";
+	public string Status { get; set; } = "available";
 }
 
 //Attributes to save resources and show them in MyResources

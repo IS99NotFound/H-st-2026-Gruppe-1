@@ -43,7 +43,7 @@ else
                 <tr>
                     <td>@match.DistanceKm.ToString("F1")</td>
                     <td>@match.Resource.Name</td>
-                    <td>@match.Resource.ResourceType</td>
+                    <td>@match.Resource.Category?.CategoryName</td>
                     <td>@match.Resource.Phone</td>
                     <td>@match.Resource.Description</td>
                     <td>@match.Resource.ExpirationDate?.ToString("dd.MM.yyyy")</td>

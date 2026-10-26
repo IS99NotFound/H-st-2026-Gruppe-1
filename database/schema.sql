@@ -29,8 +29,8 @@ CREATE TABLE Category (
 CREATE TABLE Organization (
     OrganizationID    INT           NOT NULL AUTO_INCREMENT,
     OrganizationName  VARCHAR(150)  NOT NULL,
-    Sector            ENUM('stat', 'kommune', 'politi', 'brann', 'helse',
-                           'sivilforsvaret', 'forsvaret_heimevernet', 'annet')
+    Sector            ENUM('state', 'municipality', 'police', 'fire', 'health',
+                           'civil_defence', 'armed_forces_home_guard', 'other')
                       NOT NULL,
     RegionID          INT           NOT NULL,
     Latitude          DECIMAL(9,6)  NULL,
@@ -104,8 +104,8 @@ CREATE TABLE PublicActor (
 -- A user who offers resources. ProviderID is the same number as UserID.
 CREATE TABLE CivilianProvider (
     ProviderID    INT NOT NULL,
-    ProviderType  ENUM('privatperson', 'bedrift', 'bonde', 'entreprenor',
-                       'frivillig_org', 'droneoperator')
+    ProviderType  ENUM('private_person', 'company', 'farmer', 'contractor',
+                       'volunteer_org', 'drone_operator')
                   NOT NULL,
 
     PRIMARY KEY (ProviderID),
@@ -270,19 +270,19 @@ CREATE INDEX idx_ResourceNeed_Position ON ResourceNeed (Latitude, Longitude);
 
 -- Categories from the case description
 INSERT INTO Category (CategoryName, Description) VALUES
-    ('Transport',        'Kjøretøy og transport av folk eller utstyr'),
-    ('Droneobservasjon', 'Drone og droneoperatør'),
-    ('Strøm/aggregat',   'Aggregater og nødstrøm'),
-    ('Snørydding',       'Brøyting og snørydding'),
-    ('Sand/grus',        'Sand, grus og andre masser'),
-    ('Maskiner',         'Gravemaskin, traktor, hjullaster, skogsmaskin'),
-    ('Evakuering',       'Evakuering og midlertidig innkvartering'),
-    ('Samband',          'Sambandsutstyr og kommunikasjon'),
-    ('Mannskap',         'Mannskap og frivillige'),
-    ('Lokaler',          'Lokaler til innkvartering, samling eller lager'),
-    ('Båt',              'Båter og sjøtransport'),
-    ('Drivstoff',        'Drivstoff til kjøretøy og aggregat'),
-    ('Annet',            'Annet som ikke passer i de andre kategoriene');
+    ('Transport',          'Vehicles and transport of people or equipment'),
+    ('Drone observation',  'Drones and drone operators'),
+    ('Power / generator',  'Generators and emergency power'),
+    ('Snow clearing',      'Plowing and snow clearing'),
+    ('Sand / gravel',      'Sand, gravel and other materials'),
+    ('Heavy machinery',    'Excavator, tractor, wheel loader, forestry machine'),
+    ('Evacuation',         'Evacuation and temporary accommodation'),
+    ('Communications',     'Communication equipment'),
+    ('Crew / personnel',   'Crew and volunteers'),
+    ('Premises',           'Premises for accommodation, meeting or storage'),
+    ('Boat',               'Boats and sea transport'),
+    ('Fuel',               'Fuel for vehicles and generators'),
+    ('Other',              'Anything that does not fit the other categories');
 
 -- Regions (counties)
 INSERT INTO Region (RegionName) VALUES
