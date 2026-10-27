@@ -12,5 +12,6 @@ public class MatchViewModel
 {
 	public ResourceNeed Need { get; set; } = new();
 	public double RadiusKm { get; set; }
+	public bool AllCategories { get; set; }
 	public List<ResourceMatch> Matches { get; set; } = new();
 }

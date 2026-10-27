@@ -25,9 +25,19 @@ public class PublicActorController : Controller
         ViewBag.Categories = _db.Categories.OrderBy(c => c.CategoryId).ToList();
     }
 
-    public IActionResult DashboardIndex()
+    public IActionResult DashboardIndex(int? id)
     {
         LoadDropdowns();
+        if (id.HasValue)
+        {
+            var need = _db.Needs.Find(id.Value);
+            if (need == null)
+            {
+                return NotFound();
+            }
+            return View(need);
+        }
+
         return View(new ResourceNeed());
     }
     
@@ -66,7 +76,9 @@ public class PublicActorController : Controller
             _ => 4
         };
     }
+    [HttpGet]
     
+
     
     [HttpPost]
     public IActionResult RegisterNeed(ResourceNeed need)
@@ -76,23 +88,40 @@ public class PublicActorController : Controller
             LoadDropdowns();
             return View("DashboardIndex", need);
         }
-        
-
         // Save to database
         need.PublicActorId = DemoDefaults.PublicActorId;
         need.RegisteredAt = DateTime.Now;
-        if (need.Id == 0)
+        if (need.Id > 0)
         {
-            _db.Needs.Add(need);
+            var existingNeed = _db.Needs.Find(need.Id);
+            if (existingNeed != null)
+            {
+                existingNeed.Title = need.Title;
+                existingNeed.ContactInfo = need.ContactInfo;
+                existingNeed.CrisisEventId = need.CrisisEventId;
+                existingNeed.Latitude = need.Latitude;
+                existingNeed.Longitude = need.Longitude;
+                existingNeed.Category = need.Category;
+                existingNeed.Description = need.Description;
+                existingNeed.Quantity = need.Quantity;
+                existingNeed.RequiredFrom = need.RequiredFrom;
+                existingNeed.Deadline =need.Deadline;
+                existingNeed.Priority = need.Priority;
+                existingNeed.RegisteredAt = DateTime.Now;
+                existingNeed.Status = need.Status; 
+                _db.SaveChanges();
+            }
         }
         else
         {
-            _db.Needs.Update(need);
+            need.PublicActorId = DemoDefaults.PublicActorId;
+            need.RegisteredAt = DateTime.Now;
+            _db.Needs.Add(need);
+            _db.SaveChanges();
         }
         _db.SaveChanges();
-
         // Show the resources near the new need
-        return RedirectToAction(nameof(Matches), new { needId = need.Id });
+        return RedirectToAction("NeedsIndex");
     }
 
     public IActionResult MatchesIndex()
@@ -119,17 +148,44 @@ public class PublicActorController : Controller
         {
             radiusKm = 50;
         }
-
+        
+        
         var model = new MatchViewModel
         {
             Need = need,
             RadiusKm = radiusKm,
-            Matches = RadiusMatcher.FindResources(need, radiusKm, _db.Resources.Include(r => r.Category).ToList())
+            Matches = RadiusMatcher.FindResources(
+                need, radiusKm, 
+                _db.Resources.Include(r => r.Category).ToList())
         };
         return View("MatchesIndex", model);
     }
     
+    public IActionResult ShowAllResourcesInMatches(int needId, double radiusKm = 50)
+    {
+        var need = _db.Needs.Find(needId);
+        if (need == null)
+        {
+            return NotFound();
+        }
+        if (!double.IsFinite(radiusKm) || radiusKm <= 0)
+        {
+            radiusKm = 50;
+        }
+        var model = new MatchViewModel
+        {
+            Need = need,
+            RadiusKm = radiusKm,
+            AllCategories = true,
+            Matches = RadiusMatcher.FindResources(
+                need, radiusKm, 
+                _db.Resources.Include(r => r.Category).ToList(),
+                allCategories: true)
+        };
+        return View("MatchesIndex", model);
+    }
 }
+
 
 
 public class HomeController : Controller
@@ -282,4 +338,19 @@ public class HomeController : Controller
         }
         return RedirectToAction("index", "Resources");
     }
+
+    [HttpPost]
+    public IActionResult DeleteNeed(int id)
+    {
+        var need = _db.Needs.Find(id);
+        if (need != null)
+        {
+            _db.Needs.Remove(need);
+            _db.SaveChanges();
+        }
+        return RedirectToAction("NeedsIndex", "PublicActor");
+    }
+
+    
+   
 }

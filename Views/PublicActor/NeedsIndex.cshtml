@@ -1,9 +1,5 @@
 @model List<H_st_2026_Gruppe_1.Models.ResourceNeed>
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 0282a439a75c6a74fc293997a45797b32825feca
 @{
     ViewData["Title"] = "Needs";
 }
@@ -68,6 +64,8 @@ else
             <th>Registered</th>
             <th>Priority</th>
             <th>Status</th>
+            <th>Actions</th>
+            
             
         </tr>
         </thead>
@@ -120,7 +118,16 @@ else
                         }
                     </td>
                     <td><span class="status-label">@(need.Status == "Ny" ? "New" : need.Status)</span></td>
-                    
+                    <td>
+                        <form class="need-actions" asp-controller="Home" asp-action="DeleteNeed" asp-route-id="@need.Id" method="post"
+                              onsubmit="return confirm('Are you sure you want to delete this resource?');">
+                            <a asp-controller="PublicActor"
+                               asp-action="DashboardIndex" asp-route-id="@need.Id" class="btn btn-sm btn-primary">
+                                Edit
+                            </a>
+                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                        </form>
+                    </td>
                  
                 </tr>
             }

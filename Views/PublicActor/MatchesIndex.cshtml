@@ -8,20 +8,24 @@
     <h1>Resources near: @Model.Need.Title</h1>
     
 
-    <!-- Radius form, sends the need id and radius to the Matches action -->
-    <form asp-controller="PublicActor" asp-action="Matches" method="get" class="d-flex align-items-end gap-2 mb-3">
+    <!-- Both buttons submit the selected need and radius; the second uses a different action. -->
+    <form asp-controller="PublicActor" asp-action="Matches" method="get" class="match-controls mb-3">
         <input type="hidden" name="needId" value="@Model.Need.Id" />
         <div>
             <label for="radiusKm">Radius (km)</label>
             <input type="number" name="radiusKm" id="radiusKm" value="@Model.RadiusKm" min="1" class="form-control" />
         </div>
-        <button type="submit" class="btn btn-primary">Search</button>
+        <button type="submit" class="btn btn-primary">Find matches </button>
+        <button type="submit"
+                formaction="@Url.Action("ShowAllResourcesInMatches", "PublicActor")"
+                class="btn btn-outline-primary">
+           View all resources within radius
+        </button>
     </form>
-
-
-@if (!Model.Matches.Any())
+    
+    @if (!Model.Matches.Any())
 {
-    <p>No resources found within @Model.RadiusKm km</p>
+    <p>No resources found within @Model.RadiusKm km@(Model.AllCategories ? "." : " in the need's category.")</p>
 }
 else
 {

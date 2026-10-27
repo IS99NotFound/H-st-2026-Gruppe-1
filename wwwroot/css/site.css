@@ -467,6 +467,26 @@ body {
     min-width: 64px;
 }
 
+.need-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.need-actions .btn {
+    min-width: 64px;
+}
+
+.match-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 12px;
+}
+
+.match-controls form {
+    margin: 0;
+}
+
 .status-label {
     display: inline-block;
     padding: 3px 8px;
