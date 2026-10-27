@@ -483,6 +483,20 @@ body {
     gap: 12px;
 }
 
+.match-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.match-heading form {
+    flex: 1 1 280px;
+    max-width: 520px;
+    margin: 0;
+}
+
 .match-controls form {
     margin: 0;
 }

@@ -1,10 +1,12 @@
 using System.Diagnostics;
+using System.Reflection.Metadata.Ecma335;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using H_st_2026_Gruppe_1.Data;
 using H_st_2026_Gruppe_1.Models;
+
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 
@@ -134,14 +136,22 @@ public class PublicActorController : Controller
     // Shows the resources within radiusKm of a need, nearest first.
     public IActionResult Matches(int? needId, double radiusKm = 50)
     {
-        var need = needId.HasValue
-            ? _db.Needs.Find(needId.Value)
-            : _db.Needs.OrderByDescending(n => n.RegisteredAt).FirstOrDefault();
-
+        ResourceNeed need = null;
+        
+        if (needId.HasValue)
+        {
+            need = _db.Needs.Find(needId.Value);
+        }
         // If theres no need redirect to dashboard
+        else
+        {
+            need = _db.Needs.OrderByDescending(n => n.Id).FirstOrDefault();
+            
+        }
+
         if (need == null)
         {
-            return RedirectToAction("DashboardIndex");
+            return NotFound();
         }
 
         if (!ModelState.IsValid || !double.IsFinite(radiusKm) || radiusKm <= 0)
@@ -149,11 +159,11 @@ public class PublicActorController : Controller
             radiusKm = 50;
         }
         
-        
         var model = new MatchViewModel
         {
             Need = need,
             RadiusKm = radiusKm,
+            UserNeeds = _db.Needs.ToList(),
             Matches = RadiusMatcher.FindResources(
                 need, radiusKm, 
                 _db.Resources.Include(r => r.Category).ToList())
@@ -353,7 +363,7 @@ public class HomeController : Controller
     
     // [Authorize(Roles = "PublicActor")]
     // public IActionResult CreateIncident()
-    {
+    //{
         // Show form for creating an incident 
-    }
+    //}
 }
