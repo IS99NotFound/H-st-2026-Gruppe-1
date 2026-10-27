@@ -77,21 +77,7 @@ else
                     </td>
                     <td>@r.RegisteredAt.ToString("dd.MM.yyyy HH:mm")</td>
                     <td>
-                        <details class="resource-status-details">
-                            <summary>
-                                <span class="status-label @statusClass">@statusText</span>
-                                <span class="status-comment-hint">Show comment</span>
-                            </summary>
-
-                            @if (!string.IsNullOrWhiteSpace(r.StatusComment))
-                            {
-                                <p class="resource-status-comment">@r.StatusComment</p>
-                            }
-                            else
-                            {
-                                <p class="resource-status-comment">No comment is made.</p>
-                            }
-                        </details>
+                        <span class="status-label @statusClass">@statusText</span>
                     </td>
                     <td>
                         <form class="resource-actions" asp-controller="Home" asp-action="DeleteResource" asp-route-id="@r.Id" method="post"

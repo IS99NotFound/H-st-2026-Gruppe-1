@@ -25,6 +25,7 @@ public class PublicActorController : Controller
     private void LoadDropdowns()
     {
         ViewBag.Categories = _db.Categories.OrderBy(c => c.CategoryId).ToList();
+        ViewBag.Incidents = _db.Incidents.OrderBy(i => i.IncidentId).ToList();
     }
 
     public IActionResult DashboardIndex(int? id)
@@ -168,6 +169,15 @@ public class PublicActorController : Controller
                 need, radiusKm, 
                 _db.Resources.Include(r => r.Category).ToList())
         };
+        // Add the saved decisions from the ResourceMatch table
+        var records = _db.MatchRecords.Where(m => m.NeedId == need.Id).ToList();
+        foreach (var match in model.Matches)
+        {
+            var record = records.FirstOrDefault(r => r.ResourceId == match.Resource.Id);
+            match.MatchStatus = record?.Status;
+            match.Comment = record?.Comment;
+        }
+
         return View("MatchesIndex", model);
     }
     
@@ -187,31 +197,64 @@ public class PublicActorController : Controller
             Need = need,
             RadiusKm = radiusKm,
             AllCategories = true,
+            UserNeeds = _db.Needs.ToList(),
             Matches = RadiusMatcher.FindResources(
                 need, radiusKm, 
                 _db.Resources.Include(r => r.Category).ToList(),
                 allCategories: true)
         };
+        // Add the saved decisions from the ResourceMatch table
+        var records = _db.MatchRecords.Where(m => m.NeedId == need.Id).ToList();
+        foreach (var match in model.Matches)
+        {
+            var record = records.FirstOrDefault(r => r.ResourceId == match.Resource.Id);
+            match.MatchStatus = record?.Status;
+            match.Comment = record?.Comment;
+        }
+
         return View("MatchesIndex", model);
         
     }
 
+    // Saves the decision about a resource for a need in the ResourceMatch table.
+    // newStatus: accepted = assigned, proposed = under review, declined = rejected
     [HttpPost]
-    public IActionResult UpdateResourceStatus(int ResourceId, string NewStatus, string statusComment, int? needId)
+    public IActionResult UpdateResourceStatus(int resourceId, int needId, string newStatus, string? statusComment)
     {
-        var resource = _db.Resources.Find(ResourceId);
-        if (resource == null)
+        if (newStatus is not ("proposed" or "accepted" or "declined"))
+        {
+            return BadRequest();
+        }
+
+        if (_db.Needs.Find(needId) == null || _db.Resources.Find(resourceId) == null)
         {
             return NotFound();
         }
-        if (!string.IsNullOrWhiteSpace(statusComment))
+
+        var comment = string.IsNullOrWhiteSpace(statusComment) ? null : statusComment.Trim();
+        if (comment != null && comment.Length > 500)
         {
-            resource.StatusComment = statusComment;
+            comment = comment.Substring(0, 500);
         }
-        resource.Status = NewStatus;
-        resource.StatusComment = statusComment;
+
+        var record = _db.MatchRecords.Find(needId, resourceId);
+        if (record == null)
+        {
+            record = new MatchRecord
+            {
+                NeedId = needId,
+                ResourceId = resourceId
+            };
+            _db.MatchRecords.Add(record);
+        }
+
+        record.PublicActorId = DemoDefaults.PublicActorId;
+        record.Status = newStatus;
+        record.Comment = comment;
+        record.MatchDate = DateTime.Now;
         _db.SaveChanges();
-        return RedirectToAction("Matches");
+
+        return RedirectToAction("Matches", new { needId });
     }
 }
 

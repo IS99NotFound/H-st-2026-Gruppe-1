@@ -15,6 +15,7 @@ public class AppDbContext : DbContext
     public DbSet<ResourceNeed> Needs => Set<ResourceNeed>();
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Incident> Incidents => Set<Incident>();
+    public DbSet<MatchRecord> MatchRecords => Set<MatchRecord>();
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -62,6 +63,15 @@ public class AppDbContext : DbContext
             entity.Property(i => i.PublicActorId).HasColumnName("PublicActorID");
             entity.Property(i => i.Latitude).HasPrecision(9, 6);
             entity.Property(i => i.Longitude).HasPrecision(9, 6);
+        });
+
+        modelBuilder.Entity<MatchRecord>(entity =>
+        {
+            entity.ToTable("ResourceMatch");
+            entity.HasKey(m => new { m.NeedId, m.ResourceId });
+            entity.Property(m => m.NeedId).HasColumnName("NeedID");
+            entity.Property(m => m.ResourceId).HasColumnName("ResourceID");
+            entity.Property(m => m.PublicActorId).HasColumnName("PublicActorID");
         });
             
     }
