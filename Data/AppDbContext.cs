@@ -64,6 +64,7 @@ public class AppDbContext : DbContext
             entity.HasKey(i => i.IncidentId);
             entity.Property(i => i.IncidentId).HasColumnName("IncidentID");
             entity.Property(i => i.PublicActorId).HasColumnName("PublicActorID");
+            entity.Property(i => i.IncidentType).HasColumnName("IncidentType");
             entity.Property(i => i.Latitude).HasPrecision(9, 6);
             entity.Property(i => i.Longitude).HasPrecision(9, 6);
         });
