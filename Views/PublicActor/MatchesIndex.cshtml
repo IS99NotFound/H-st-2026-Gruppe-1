@@ -79,15 +79,15 @@ else
                             <input type="hidden" name="needId" value="@Model.Need.Id"/>
 
                             <label for="comment-@match.Resource.Id">Comment</label>
-                            <textarea id="comment-@match.Resource.Id" name="statusComment" class="form-control" placeholder="Write a comment"> @match.Resource.StatusComment</textarea>
+                            <textarea id="comment-@match.Resource.Id" name="statusComment" class="form-control" placeholder="Write a comment">@match.Comment</textarea>
                             <div class="match-status-buttons">
-                                <button type="submit" name="newStatus" value="assigned" class="btn btn-success @(match.Resource.Status == "assigned" ? "status-selected" : "")">
+                                <button type="submit" name="newStatus" value="accepted" class="btn btn-success @(match.MatchStatus == "accepted" ? "status-selected" : "")">
                                     Assign
                                 </button>
-                                <button type="submit" name="newStatus" value="under_review" class="btn btn-warning @(match.Resource.Status == "under_review" ? "status-selected" : "")">
+                                <button type="submit" name="newStatus" value="proposed" class="btn btn-warning @(match.MatchStatus == "proposed" ? "status-selected" : "")">
                                     Under review
                                 </button>
-                                <button type="submit" name="newStatus" value="rejected" class="btn btn-danger @(match.Resource.Status == "rejected" ? "status-selected" : "")">
+                                <button type="submit" name="newStatus" value="declined" class="btn btn-danger @(match.MatchStatus == "declined" ? "status-selected" : "")">
                                     Reject
                                 </button>
                             </div>

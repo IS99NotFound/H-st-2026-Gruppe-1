@@ -5,6 +5,10 @@ public class ResourceMatch
 {
 	public ResourceEntry Resource { get; set; } = new();
 	public double DistanceKm { get; set; }
+
+	// From the ResourceMatch table. Null when no decision has been made yet.
+	public string? MatchStatus { get; set; }
+	public string? Comment { get; set; }
 }
 
 // Data sent to the Matches view: the need, the chosen radius and the resources found.
