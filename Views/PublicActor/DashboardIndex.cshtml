@@ -35,7 +35,13 @@
 
             <div class="mb-2">
                 <label asp-for="CrisisEventId">Crisis Incident</label>
-                <input type="number" asp-for="CrisisEventId" id="crisisEventInput" class="form-control" placeholder="Enter Incident ID" required />
+                <select asp-for="CrisisEventId" id="crisisEventInput" class="form-select" required>
+                    <option value="">Select incident</option>
+                    @foreach (var incident in (List<Incident>)ViewBag.Incidents)
+                    {
+                        <option value="@incident.IncidentId">@incident.Title</option>
+                    }
+                </select>
                 <span asp-validation-for="CrisisEventId" class="text-danger"></span>
             </div>
 

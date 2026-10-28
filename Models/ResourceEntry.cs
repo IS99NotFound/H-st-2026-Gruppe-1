@@ -41,7 +41,6 @@ public class ResourceEntry
 
 	public DateTime RegisteredAt { get; set; }
 	public string Status { get; set; } = "available";
-	public string? StatusComment { get; set; } = "";
 }
 
 //Attributes to save resources and show them in MyResources
