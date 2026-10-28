@@ -1,26 +1,166 @@
-@model List<H_st_2026_Gruppe_1.Models.Incident>
+@model H_st_2026_Gruppe_1.Models.IncidentIndexViewModel
 @{
     ViewData["Title"] = "Incidents";
+    var isPublicActor = User.IsInRole("PublicActor");
+    var incidentTypes = new[] { "Forest fire", "Landslide", "Flood", "Storm", "Power outage", "Other" };
 }
 
 <section class="subpage">
     <div class="subpage-header">
         <h1>Incidents</h1>
+        @if (isPublicActor)
+        {
+            <button class="btn btn-success" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#incident-create-panel" aria-expanded="false"
+                    aria-controls="incident-create-panel" aria-label="Register incident">
+                <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                Register
+            </button>
+        }
     </div>
 
-    @if (Model == null || !Model.Any())
+    <form method="get" asp-controller="Incidents" asp-action="Index" class="incident-filter-bar">
+        <div class="needs-filter-field">
+            <label for="statusFilter" class="form-label text-muted small fw-bold">Filter by status</label>
+            <select name="status" id="statusFilter" class="form-select">
+                <option value="" selected="@(Context.Request.Query["status"].ToString() == "")">All</option>
+                <option value="active" selected="@(Context.Request.Query["status"] == "active")">Active</option>
+                <option value="resolved" selected="@(Context.Request.Query["status"] == "resolved")">Resolved</option>
+            </select>
+        </div>
+
+        <div class="needs-filter-field">
+            <label for="incidentTypeFilter" class="form-label text-muted small fw-bold">Filter by type</label>
+            <select name="incidentType" id="incidentTypeFilter" class="form-select">
+                <option value="">All</option>
+                @foreach (var incidentType in incidentTypes)
+                {
+                    <option value="@incidentType" selected="@(Context.Request.Query["incidentType"] == incidentType)">
+                        @incidentType
+                    </option>
+                }
+            </select>
+        </div>
+
+        <div class="needs-filter-field">
+            <label for="dateFilter" class="form-label text-muted small fw-bold">Quick date filter</label>
+            <select name="dateFilter" id="dateFilter" class="form-select">
+                <option value="1day" selected="@(Context.Request.Query["dateFilter"] == "1day")">Last day</option>
+                <option value="7days" selected="@(Context.Request.Query["dateFilter"] == "7days")">Last 7 days</option>
+                <option value="30days" selected="@(Context.Request.Query["dateFilter"] == "30days")">Last 30 days</option>
+            </select>
+        </div>
+
+        <div class="needs-filter-field">
+            <label for="startDate" class="form-label text-muted small fw-bold">Date from</label>
+            <input type="date" name="startDate" id="startDate" class="form-control"
+                   value="@Context.Request.Query["startDate"]" />
+        </div>
+
+        <div class="needs-filter-field">
+            <label for="endDate" class="form-label text-muted small fw-bold">Date to</label>
+            <input type="date" name="endDate" id="endDate" class="form-control"
+                   value="@Context.Request.Query["endDate"]" />
+        </div>
+
+        <div class="needs-filter-field">
+            <label for="radiusFilter" class="form-label text-muted small fw-bold">Distance</label>
+            <input id="radiusFilter" type="range" class="form-range" min="1" max="50" value="50" />
+            <div class="incident-radius-value" id="radiusValue">50 km</div>
+        </div>
+
+        <div class="needs-filter-actions">
+            <button type="submit" class="btn btn-primary">Filter</button>
+            <a asp-controller="Incidents" asp-action="Index" class="btn btn-outline-secondary">Reset</a>
+        </div>
+    </form>
+    <p id="location-error" class="incident-location-error" role="alert" hidden>
+        Location access is required to use the distance filter.
+    </p>
+
+    @if (TempData["IncidentCreated"] is string successMessage)
+    {
+        <div class="alert alert-success" role="status">@successMessage</div>
+    }
+
+    @if (TempData["IncidentUpdated"] is string statusMessage)
+    {
+        <div class="alert alert-success" role="status">@statusMessage</div>
+    }
+
+    @if (isPublicActor)
+    {
+        <div id="incident-create-panel" class="collapse incident-create-panel">
+            <form asp-controller="Incidents" asp-action="Create" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <div class="incident-register-layout">
+                    <div class="incident-form-fields">
+                        <div>
+                            <label asp-for="CreateModel.Title" class="form-label">Incident name</label>
+                            <input asp-for="CreateModel.Title" class="form-control compact-field"
+                                   placeholder="Flood in Agder" />
+                            <span asp-validation-for="CreateModel.Title" class="text-danger"></span>
+                        </div>
+                        <div>
+                            <label asp-for="CreateModel.IncidentType" class="form-label">Incident type</label>
+                            <select asp-for="CreateModel.IncidentType" class="form-select compact-field">
+                                <option value="">Select type</option>
+                                @foreach (var incidentType in incidentTypes)
+                                {
+                                    <option value="@incidentType">@incidentType</option>
+                                }
+                            </select>
+                            <span asp-validation-for="CreateModel.IncidentType" class="text-danger"></span>
+                        </div>
+                        <div>
+                            <label asp-for="CreateModel.Description" class="form-label">Description</label>
+                            <textarea asp-for="CreateModel.Description" class="form-control compact-field" rows="3"
+                                      placeholder="Describe what has happened and where help is needed."></textarea>
+                            <span asp-validation-for="CreateModel.Description" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="incident-map-panel">
+                        <label class="form-label">Location</label>
+                        <div id="incident-map" class="incident-map" role="application"
+                             aria-label="Select incident location on map"></div>
+                        <p id="incident-map-status" class="map-status" role="status" aria-live="polite">
+                            Click the map to select the incident location.
+                        </p>
+                        <input asp-for="CreateModel.Latitude" type="hidden" id="incident-latitude" />
+                        <input asp-for="CreateModel.Longitude" type="hidden" id="incident-longitude" />
+                        <span asp-validation-for="CreateModel.Latitude" class="text-danger d-block"></span>
+                        <span asp-validation-for="CreateModel.Longitude" class="text-danger d-block"></span>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-success mt-3">Register incident</button>
+            </form>
+        </div>
+    }
+
+    @{
+        var activeIncidents = Model.Incidents.Where(incident => incident.Status == "active").ToList();
+        var resolvedIncidents = Model.Incidents.Where(incident => incident.Status == "resolved").ToList();
+        var showingResolvedOnly = Context.Request.Query["status"] == "resolved";
+    }
+
+    @if (Model.Incidents == null || !Model.Incidents.Any())
     {
         <p class="placeholder-copy">No incidents have been reported yet.</p>
     }
     else
     {
         <div class="incident-list">
-            @foreach (var incident in Model)
+            @foreach (var incident in activeIncidents)
             {
-                <article class="incident-card">
+                <article class="incident-card"
+                         data-latitude="@incident.Latitude"
+                         data-longitude="@incident.Longitude">
                     <div class="incident-card-header">
                         <h2>@incident.Title</h2>
-                        <span class="incident-status @(incident.Status == "active" ? "incident-status-active" : "")">
+                        <span class="incident-status @(incident.Status == "active" ? "incident-status-active" : "incident-status-resolved")">
                             @incident.Status
                         </span>
                     </div>
@@ -32,6 +172,10 @@
 
                     <dl class="incident-details">
                         <div>
+                            <dt>Type</dt>
+                            <dd>@incident.IncidentType</dd>
+                        </div>
+                        <div>
                             <dt>Location (lat/lng)</dt>
                             <dd>@incident.Latitude, @incident.Longitude</dd>
                         </div>
@@ -40,8 +184,195 @@
                             <dd>@incident.CreatedAt.ToString("dd.MM.yyyy HH:mm")</dd>
                         </div>
                     </dl>
+
+                    @if (isPublicActor && incident.Status == "active")
+                    {
+                        <div class="incident-card-footer">
+                            <form asp-controller="Incidents" asp-action="MarkAsResolved" method="post">
+                                <input type="hidden" name="incidentId" value="@incident.IncidentId" />
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                    Mark as resolved
+                                </button>
+                            </form>
+                        </div>
+                    }
                 </article>
             }
         </div>
+
+        @if (resolvedIncidents.Any())
+        {
+            <div class="resolved-incidents @(showingResolvedOnly ? "resolved-filter-results" : "")">
+                @if (!showingResolvedOnly)
+                {
+                    <button class="resolved-incidents-toggle" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#resolved-incidents-list" aria-expanded="false"
+                            aria-controls="resolved-incidents-list">
+                        <span>Resolved incidents</span>
+                        <span class="incident-count">@resolvedIncidents.Count</span>
+                        <i class="bi bi-chevron-down" aria-hidden="true"></i>
+                    </button>
+                }
+
+                <div id="resolved-incidents-list" class="@(showingResolvedOnly ? "" : "collapse")">
+                    <div class="incident-list">
+                        @foreach (var incident in resolvedIncidents)
+                        {
+                            <article class="incident-card"
+                                     data-latitude="@incident.Latitude"
+                                     data-longitude="@incident.Longitude">
+                                <div class="incident-card-header">
+                                    <h2>@incident.Title</h2>
+                                    <span class="incident-status incident-status-resolved">@incident.Status</span>
+                                </div>
+
+                                @if (!string.IsNullOrWhiteSpace(incident.Description))
+                                {
+                                    <p class="incident-description">@incident.Description</p>
+                                }
+
+                                <dl class="incident-details">
+                                    <div>
+                                        <dt>Type</dt>
+                                        <dd>@incident.IncidentType</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Location (lat/lng)</dt>
+                                        <dd>@incident.Latitude, @incident.Longitude</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Reported</dt>
+                                        <dd>@incident.CreatedAt.ToString("dd.MM.yyyy HH:mm")</dd>
+                                    </div>
+                                </dl>
+
+                                @if (isPublicActor)
+                                {
+                                    <div class="incident-card-footer">
+                                        <form asp-controller="Incidents" asp-action="Reactivate" method="post">
+                                            <input type="hidden" name="incidentId" value="@incident.IncidentId" />
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-success">
+                                                Reactivate
+                                            </button>
+                                        </form>
+                                    </div>
+                                }
+                            </article>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
     }
 </section>
+
+@section Scripts {
+@if (isPublicActor)
+{
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const incidentMap = L.map('incident-map').setView([58.4614, 8.7683], 6);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(incidentMap);
+
+        let incidentMarker = null;
+        const latitudeInput = document.getElementById('incident-latitude');
+        const longitudeInput = document.getElementById('incident-longitude');
+        const mapStatus = document.getElementById('incident-map-status');
+
+        incidentMap.on('click', function (event) {
+            const latitude = event.latlng.lat;
+            const longitude = event.latlng.lng;
+
+            if (incidentMarker) {
+                incidentMap.removeLayer(incidentMarker);
+            }
+
+            incidentMarker = L.marker([latitude, longitude]).addTo(incidentMap);
+            latitudeInput.value = latitude.toFixed(6);
+            longitudeInput.value = longitude.toFixed(6);
+            mapStatus.textContent = `Selected location: ${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+        });
+
+        setTimeout(() => incidentMap.invalidateSize(), 50);
+
+        const registerButton = document.querySelector('[data-bs-target="#incident-create-panel"]');
+        if (registerButton) {
+            registerButton.addEventListener('click', function () {
+                setTimeout(() => incidentMap.invalidateSize(), 100);
+            });
+        }
+
+        const radiusFilter = document.getElementById('radiusFilter');
+        const locationError = document.getElementById('location-error');
+        const radiusValue = document.getElementById('radiusValue');
+        let userLocation = null;
+
+        function distanceInKilometres(latitude, longitude) {
+            const earthRadius = 6371;
+            const latitudeDifference = (latitude - userLocation.latitude) * Math.PI / 180;
+            const longitudeDifference = (longitude - userLocation.longitude) * Math.PI / 180;
+            const firstLatitude = userLocation.latitude * Math.PI / 180;
+            const secondLatitude = latitude * Math.PI / 180;
+            const haversine = Math.sin(latitudeDifference / 2) ** 2
+                + Math.cos(firstLatitude) * Math.cos(secondLatitude)
+                * Math.sin(longitudeDifference / 2) ** 2;
+
+            return earthRadius * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
+        }
+
+        function applyRadiusFilter() {
+            const radius = Number(radiusFilter.value);
+            document.querySelectorAll('.incident-card').forEach(function (card) {
+                if (!userLocation) {
+                    card.hidden = false;
+                    return;
+                }
+
+                const latitude = Number(card.dataset.latitude);
+                const longitude = Number(card.dataset.longitude);
+                card.hidden = distanceInKilometres(latitude, longitude) > radius;
+            });
+        }
+
+        function requestLocation() {
+            if (!navigator.geolocation) {
+                locationError.hidden = false;
+                applyRadiusFilter();
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(function (position) {
+                userLocation = {
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude
+                };
+                locationError.hidden = true;
+                applyRadiusFilter();
+            }, function () {
+                locationError.hidden = false;
+                radiusFilter.value = '50';
+                radiusValue.textContent = '50 km';
+                localStorage.setItem('incidentRadius', '50');
+                applyRadiusFilter();
+            });
+        }
+
+        radiusFilter.addEventListener('input', function () {
+            radiusValue.textContent = `${radiusFilter.value} km`;
+            localStorage.setItem('incidentRadius', radiusFilter.value);
+            requestLocation();
+        });
+
+        const savedRadius = localStorage.getItem('incidentRadius');
+        if (savedRadius && Number(savedRadius) >= 1 && Number(savedRadius) <= 50) {
+            radiusFilter.value = savedRadius;
+            radiusValue.textContent = `${savedRadius} km`;
+            requestLocation();
+        }
+    </script>
+}
+}
