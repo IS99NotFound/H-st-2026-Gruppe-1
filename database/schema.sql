@@ -1,215 +1,291 @@
--- Heimevernet "Kriseberedskap" - databaseskjema (MariaDB)
--- Basert på klassediagram, event table og statecharts fra Deliverable 1
--- v0.1
+-- ResQ (Kriseberedskap) database schema for MariaDB
 
 SET NAMES utf8mb4;
-SET FOREIGN_KEY_CHECKS = 0;
 
--- basis for alle brukere, public sector entity og civilian provider arver fra denne
-CREATE TABLE user_account (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(100) NOT NULL UNIQUE,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
+-- Lookup tables (lists used in dropdown menus)
 
-    role ENUM(
-        'public_actor',
-        'privileged_public_actor',
-        'civilian_provider',
-        'administrator'
-    ) NOT NULL,
+-- A county. Used to print resource lists per region.
+CREATE TABLE Region (
+    RegionID    INT          NOT NULL AUTO_INCREMENT,
+    RegionName  VARCHAR(100) NOT NULL,
 
-    -- 2FA løses av rammeverket, ikke egne felt her
+    PRIMARY KEY (RegionID),
+    UNIQUE KEY uq_Region_RegionName (RegionName)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+-- Type of need or resource. Shared, so a need and a resource can be compared on type.
+CREATE TABLE Category (
+    CategoryID    INT          NOT NULL AUTO_INCREMENT,
+    CategoryName  VARCHAR(100) NOT NULL,
+    Description   VARCHAR(255) NULL,
 
--- stat, kommune, politi, brann, helse, sivilforsvaret, heimevernet osv
-CREATE TABLE public_sector_entity (
-    user_account_id INT PRIMARY KEY,
-    organization_name VARCHAR(255) NOT NULL,
-    sector_type ENUM(
-        'stat', 'kommune', 'politi', 'brann', 'helse',
-        'sivilforsvaret', 'forsvaret_heimevernet', 'annet'
-    ) NOT NULL,
-    contact_point VARCHAR(255) NULL,
+    PRIMARY KEY (CategoryID),
+    UNIQUE KEY uq_Category_CategoryName (CategoryName)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-    FOREIGN KEY (user_account_id) REFERENCES user_account(id) ON DELETE CASCADE
-);
+-- Users and organizations
 
--- privatperson, bedrift, bonde, entreprenør, frivillig org, droneoperatør
-CREATE TABLE civilian_provider (
-    user_account_id INT PRIMARY KEY,
-    provider_type ENUM(
-        'privatperson', 'bedrift', 'bonde', 'entreprenor',
-        'frivillig_organisasjon', 'droneoperator'
-    ) NOT NULL,
-    contact_point VARCHAR(255) NULL,
+-- A public body, e.g. a police district or a municipality.
+CREATE TABLE Organization (
+    OrganizationID    INT           NOT NULL AUTO_INCREMENT,
+    OrganizationName  VARCHAR(150)  NOT NULL,
+    Sector            ENUM('state', 'municipality', 'police', 'fire', 'health',
+                           'civil_defence', 'armed_forces_home_guard', 'other')
+                      NOT NULL,
+    RegionID          INT           NOT NULL,
+    Latitude          DECIMAL(9,6)  NULL,
+    Longitude         DECIMAL(9,6)  NULL,
 
-    FOREIGN KEY (user_account_id) REFERENCES user_account(id) ON DELETE CASCADE
-);
+    PRIMARY KEY (OrganizationID),
+    CONSTRAINT fk_Organization_Region
+        FOREIGN KEY (RegionID) REFERENCES Region (RegionID),
 
-CREATE TABLE geographic_location (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    latitude DECIMAL(9,6) NOT NULL,
-    longitude DECIMAL(9,6) NOT NULL,
-    address VARCHAR(255) NULL,
-    region VARCHAR(100) NULL
-);
+    CONSTRAINT ck_Organization_Position CHECK (
+        (Latitude IS NULL AND Longitude IS NULL)
+        OR (Latitude IS NOT NULL AND Longitude IS NOT NULL
+            AND Latitude BETWEEN -90 AND 90
+            AND Longitude BETWEEN -180 AND 180)
+    )
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE category (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL UNIQUE,
-    description VARCHAR(255) NULL
-);
+-- All users, with the columns ASP.NET Core Identity expects. Administrator is only Role = 'Administrator'.
+CREATE TABLE `User` (
+    UserID                INT           NOT NULL AUTO_INCREMENT,
+    UserName              VARCHAR(50)   NOT NULL,
+    NormalizedUserName    VARCHAR(50)   NOT NULL,
+    Email                 VARCHAR(255)  NOT NULL,
+    NormalizedEmail       VARCHAR(255)  NOT NULL,
+    EmailConfirmed        BOOLEAN       NOT NULL DEFAULT FALSE,
+    PasswordHash          VARCHAR(255)  NOT NULL,
+    SecurityStamp         VARCHAR(64)   NULL,
+    ConcurrencyStamp      VARCHAR(64)   NULL,
+    PhoneNumber           VARCHAR(20)   NULL,
+    PhoneNumberConfirmed  BOOLEAN       NOT NULL DEFAULT FALSE,
+    TwoFactorEnabled      BOOLEAN       NOT NULL DEFAULT FALSE,
+    LockoutEnd            DATETIME(6)   NULL,
+    LockoutEnabled        BOOLEAN       NOT NULL DEFAULT TRUE,
+    AccessFailedCount     INT           NOT NULL DEFAULT 0,
+    Name                  VARCHAR(100)  NOT NULL,
+    Role                  ENUM('PublicActor', 'CivilianProvider', 'Administrator')
+                          NOT NULL,
+    CreatedAt             DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-CREATE TABLE crisis_event (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    description TEXT NULL,
-    category_id INT NULL,
-    location_id INT NULL,
-    created_by INT NOT NULL,
+    PRIMARY KEY (UserID),
+    UNIQUE KEY uq_User_NormalizedUserName (NormalizedUserName),
+    UNIQUE KEY uq_User_NormalizedEmail (NormalizedEmail)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-    priority_color ENUM('red', 'yellow', 'green', 'blue') NOT NULL DEFAULT 'yellow',
-    status ENUM('active', 'resolved') NOT NULL DEFAULT 'active',
+-- Identity stores the two-factor key and recovery codes here.
+CREATE TABLE UserToken (
+    UserID         INT           NOT NULL,
+    LoginProvider  VARCHAR(128)  NOT NULL,
+    Name           VARCHAR(128)  NOT NULL,
+    Value          TEXT          NULL,
 
-    registered_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (UserID, LoginProvider, Name),
+    CONSTRAINT fk_UserToken_User
+        FOREIGN KEY (UserID) REFERENCES `User` (UserID)
+        ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-    FOREIGN KEY (category_id) REFERENCES category(id),
-    FOREIGN KEY (location_id) REFERENCES geographic_location(id),
-    FOREIGN KEY (created_by) REFERENCES public_sector_entity(user_account_id)
-);
+-- A user who works for a public organization. PublicActorID is the same number as UserID.
+CREATE TABLE PublicActor (
+    PublicActorID   INT NOT NULL,
+    OrganizationID  INT NOT NULL,
 
-CREATE TABLE resource_need (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    crisis_event_id INT NOT NULL,
-    category_id INT NOT NULL,
-    location_id INT NULL,
-    created_by INT NOT NULL,
+    PRIMARY KEY (PublicActorID),
+    CONSTRAINT fk_PublicActor_User
+        FOREIGN KEY (PublicActorID) REFERENCES `User` (UserID)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_PublicActor_Organization
+        FOREIGN KEY (OrganizationID) REFERENCES Organization (OrganizationID)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-    description TEXT NOT NULL,
-    quantity INT NOT NULL DEFAULT 1,
-    deadline DATETIME NULL,
+-- A user who offers resources. ProviderID is the same number as UserID.
+CREATE TABLE CivilianProvider (
+    ProviderID    INT NOT NULL,
+    ProviderType  ENUM('private_person', 'company', 'farmer', 'contractor',
+                       'volunteer_org', 'drone_operator')
+                  NOT NULL,
 
-    priority ENUM('red', 'yellow', 'green', 'blue') NOT NULL DEFAULT 'yellow',
-    status ENUM('new', 'under_review', 'allocated', 'resolved', 'cancelled')
-        NOT NULL DEFAULT 'new',
+    PRIMARY KEY (ProviderID),
+    CONSTRAINT fk_CivilianProvider_User
+        FOREIGN KEY (ProviderID) REFERENCES `User` (UserID)
+        ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-    registered_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+-- A code an employee needs to register as a public actor. It decides which organization they belong to.
+CREATE TABLE InviteCode (
+    InviteCodeID    INT          NOT NULL AUTO_INCREMENT,
+    Code            VARCHAR(32)  NOT NULL,
+    OrganizationID  INT          NOT NULL,
+    ExpiresAt       DATETIME     NOT NULL,
+    UsedByUserID    INT          NULL,
+    UsedAt          DATETIME     NULL,
 
-    FOREIGN KEY (crisis_event_id) REFERENCES crisis_event(id) ON DELETE CASCADE,
-    FOREIGN KEY (category_id) REFERENCES category(id),
-    FOREIGN KEY (location_id) REFERENCES geographic_location(id),
-    FOREIGN KEY (created_by) REFERENCES public_sector_entity(user_account_id)
-);
+    PRIMARY KEY (InviteCodeID),
+    UNIQUE KEY uq_InviteCode_Code (Code),
+    UNIQUE KEY uq_InviteCode_UsedByUserID (UsedByUserID),
+    CONSTRAINT fk_InviteCode_Organization
+        FOREIGN KEY (OrganizationID) REFERENCES Organization (OrganizationID),
+    CONSTRAINT fk_InviteCode_User
+        FOREIGN KEY (UsedByUserID) REFERENCES `User` (UserID)
+        ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE civilian_resource (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    civilian_provider_id INT NOT NULL,
-    category_id INT NOT NULL,
-    location_id INT NULL,
+-- Incidents and needs
 
-    name VARCHAR(255) NOT NULL,
-    description TEXT NULL,
-    quantity INT NOT NULL DEFAULT 1,
+-- A crisis or event (storm, power outage). Needs are grouped under an incident.
+CREATE TABLE Incident (
+    IncidentID      INT           NOT NULL AUTO_INCREMENT,
+    PublicActorID   INT           NOT NULL,
+    Title           VARCHAR(150)  NOT NULL,
+    Description     TEXT          NULL,
+    Status          ENUM('active', 'resolved') NOT NULL DEFAULT 'active',
+    Latitude        DECIMAL(9,6)  NOT NULL,
+    Longitude       DECIMAL(9,6)  NOT NULL,
+    CreatedAt       DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    status ENUM('active', 'temporarily_unavailable', 'cancelled')
-        NOT NULL DEFAULT 'active',
+    PRIMARY KEY (IncidentID),
+    CONSTRAINT fk_Incident_PublicActor
+        FOREIGN KEY (PublicActorID) REFERENCES PublicActor (PublicActorID),
+    CONSTRAINT ck_Incident_Position CHECK (
+        Latitude BETWEEN -90 AND 90 AND Longitude BETWEEN -180 AND 180
+    )
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-    -- midlertidig utilgjengelig, jf brukerhistorie om utstyr som er opptatt
-    unavailable_reason VARCHAR(255) NULL,
-    unavailable_until DATETIME NULL,
+-- A request for help within an incident. The map colour is worked out from Priority.
+CREATE TABLE ResourceNeed (
+    NeedID         INT           NOT NULL AUTO_INCREMENT,
+    IncidentID     INT           NOT NULL,
+    PublicActorID  INT           NOT NULL,
+    CategoryID     INT           NOT NULL,
+    Title          VARCHAR(100)  NOT NULL,
+    Description    TEXT          NULL,
+    Quantity       INT           NOT NULL DEFAULT 1,
+    SearchRadiusKm INT           NOT NULL DEFAULT 50,
+    Priority       ENUM('planned', 'urgent', 'critical')
+                   NOT NULL DEFAULT 'planned',
+    Status         ENUM('new', 'under_review', 'assigned', 'resolved', 'cancelled', 'rejected')
+                   NOT NULL DEFAULT 'new',
+    RequiredFrom   DATETIME      NULL,
+    Deadline       DATETIME      NULL,
+    ContactInfo    VARCHAR(255)  NOT NULL,
+    Latitude       DECIMAL(9,6)  NOT NULL,
+    Longitude      DECIMAL(9,6)  NOT NULL,
+    CreatedAt      DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    -- for offline registrering / synk når nett er nede
-    is_draft BOOLEAN NOT NULL DEFAULT FALSE,
-    synced_at DATETIME NULL,
+    PRIMARY KEY (NeedID),
+    CONSTRAINT fk_ResourceNeed_Incident
+        FOREIGN KEY (IncidentID) REFERENCES Incident (IncidentID),
+    CONSTRAINT fk_ResourceNeed_PublicActor
+        FOREIGN KEY (PublicActorID) REFERENCES PublicActor (PublicActorID),
+    CONSTRAINT fk_ResourceNeed_Category
+        FOREIGN KEY (CategoryID) REFERENCES Category (CategoryID),
 
-    registered_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT ck_ResourceNeed_Quantity CHECK (Quantity > 0),
+    CONSTRAINT ck_ResourceNeed_Radius CHECK (SearchRadiusKm > 0),
+    CONSTRAINT ck_ResourceNeed_Dates CHECK (
+        RequiredFrom IS NULL OR Deadline IS NULL OR Deadline >= RequiredFrom
+    ),
+    CONSTRAINT ck_ResourceNeed_Position CHECK (
+        Latitude BETWEEN -90 AND 90 AND Longitude BETWEEN -180 AND 180
+    )
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-    FOREIGN KEY (civilian_provider_id) REFERENCES civilian_provider(user_account_id) ON DELETE CASCADE,
-    FOREIGN KEY (category_id) REFERENCES category(id),
-    FOREIGN KEY (location_id) REFERENCES geographic_location(id)
-);
+-- Resources
 
--- egen tabell, ikke bare kobling - holder egen status/data (se argumentasjon i rapporten)
-CREATE TABLE resource_match (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    resource_need_id INT NOT NULL,
-    civilian_resource_id INT NOT NULL,
+-- Something a provider offers. "Delete" sets Status to 'withdrawn', so the match history is kept.
+CREATE TABLE Resource (
+    ResourceID       INT           NOT NULL AUTO_INCREMENT,
+    ProviderID       INT           NOT NULL,
+    CategoryID       INT           NOT NULL,
+    RegionID         INT           NOT NULL,
+    Name             VARCHAR(100)  NOT NULL,
+    Description      TEXT          NULL,
+    Quantity         INT           NOT NULL DEFAULT 1,
+    AvailableFrom    DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ExpirationDate   DATETIME      NULL,
+    Status           ENUM('available', 'unavailable', 'withdrawn')
+                     NOT NULL DEFAULT 'available',
+    ContactInfo      VARCHAR(255)  NOT NULL,
+    Latitude         DECIMAL(9,6)  NOT NULL,
+    Longitude        DECIMAL(9,6)  NOT NULL,
+    CreatedAt        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    status ENUM('found', 'approved', 'allocated', 'completed', 'freed')
-        NOT NULL DEFAULT 'found',
+    PRIMARY KEY (ResourceID),
+    CONSTRAINT fk_Resource_CivilianProvider
+        FOREIGN KEY (ProviderID) REFERENCES CivilianProvider (ProviderID),
+    CONSTRAINT fk_Resource_Category
+        FOREIGN KEY (CategoryID) REFERENCES Category (CategoryID),
+    CONSTRAINT fk_Resource_Region
+        FOREIGN KEY (RegionID) REFERENCES Region (RegionID),
 
-    approved_by INT NULL,
+    CONSTRAINT ck_Resource_Quantity CHECK (Quantity > 0),
+    CONSTRAINT ck_Resource_Dates CHECK (
+        ExpirationDate IS NULL OR ExpirationDate >= AvailableFrom
+    ),
+    CONSTRAINT ck_Resource_Position CHECK (
+        Latitude BETWEEN -90 AND 90 AND Longitude BETWEEN -180 AND 180
+    )
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-    matched_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    approved_at DATETIME NULL,
-    completed_at DATETIME NULL,
+-- Matching (many-to-many between needs and resources)
 
-    FOREIGN KEY (resource_need_id) REFERENCES resource_need(id) ON DELETE CASCADE,
-    FOREIGN KEY (civilian_resource_id) REFERENCES civilian_resource(id) ON DELETE CASCADE,
-    FOREIGN KEY (approved_by) REFERENCES public_sector_entity(user_account_id)
-);
+-- Links one need to one resource. The primary key stops the same pair from being matched twice.
+CREATE TABLE ResourceMatch (
+    NeedID         INT           NOT NULL,
+    ResourceID     INT           NOT NULL,
+    PublicActorID  INT           NOT NULL,
+    Quantity       INT           NOT NULL DEFAULT 1,
+    Status         ENUM('proposed', 'accepted', 'declined', 'completed')
+                   NOT NULL DEFAULT 'proposed',
+    Comment        VARCHAR(500)  NULL,
+    MatchDate      DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-CREATE TABLE incident_log (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    crisis_event_id INT NULL,
-    resource_need_id INT NULL,
-    civilian_resource_id INT NULL,
-    resource_match_id INT NULL,
-    actor_user_id INT NULL,
+    PRIMARY KEY (NeedID, ResourceID),
+    CONSTRAINT fk_ResourceMatch_ResourceNeed
+        FOREIGN KEY (NeedID) REFERENCES ResourceNeed (NeedID),
+    CONSTRAINT fk_ResourceMatch_Resource
+        FOREIGN KEY (ResourceID) REFERENCES Resource (ResourceID),
+    CONSTRAINT fk_ResourceMatch_PublicActor
+        FOREIGN KEY (PublicActorID) REFERENCES PublicActor (PublicActorID),
 
-    event_type ENUM(
-        'resource_registered', 'resource_allocated', 'resource_cancelled',
-        'resource_freed', 'resource_updated',
-        'need_registered', 'need_cancelled', 'need_completed', 'need_updated',
-        'match_found', 'match_approved',
-        'crisis_registered'
-    ) NOT NULL,
+    CONSTRAINT ck_ResourceMatch_Quantity CHECK (Quantity > 0)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-    description TEXT NULL,
-    logged_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- Indexes
 
-    FOREIGN KEY (crisis_event_id) REFERENCES crisis_event(id) ON DELETE SET NULL,
-    FOREIGN KEY (resource_need_id) REFERENCES resource_need(id) ON DELETE SET NULL,
-    FOREIGN KEY (civilian_resource_id) REFERENCES civilian_resource(id) ON DELETE SET NULL,
-    FOREIGN KEY (resource_match_id) REFERENCES resource_match(id) ON DELETE SET NULL,
-    FOREIGN KEY (actor_user_id) REFERENCES user_account(id) ON DELETE SET NULL
-);
+-- Resource list per region
+CREATE INDEX idx_Resource_Region_Status ON Resource (RegionID, Status);
 
-CREATE TABLE message_alert (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    recipient_user_id INT NOT NULL,
-    crisis_event_id INT NULL,
-    resource_need_id INT NULL,
-    resource_match_id INT NULL,
+-- Need list
+CREATE INDEX idx_ResourceNeed_Status_Priority ON ResourceNeed (Status, Priority);
 
-    message TEXT NOT NULL,
-    alert_type ENUM('info', 'warning', 'critical') NOT NULL DEFAULT 'info',
+-- Radius search on the map
+CREATE INDEX idx_Resource_Position ON Resource (Latitude, Longitude);
+CREATE INDEX idx_ResourceNeed_Position ON ResourceNeed (Latitude, Longitude);
 
-    sent_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    read_at DATETIME NULL,
+-- Start data
 
-    FOREIGN KEY (recipient_user_id) REFERENCES user_account(id) ON DELETE CASCADE,
-    FOREIGN KEY (crisis_event_id) REFERENCES crisis_event(id) ON DELETE CASCADE,
-    FOREIGN KEY (resource_need_id) REFERENCES resource_need(id) ON DELETE CASCADE,
-    FOREIGN KEY (resource_match_id) REFERENCES resource_match(id) ON DELETE CASCADE
-);
+-- Categories from the case description
+INSERT INTO Category (CategoryName, Description) VALUES
+    ('Transport',          'Vehicles and transport of people or equipment'),
+    ('Drone observation',  'Drones and drone operators'),
+    ('Power / generator',  'Generators and emergency power'),
+    ('Snow clearing',      'Plowing and snow clearing'),
+    ('Sand / gravel',      'Sand, gravel and other materials'),
+    ('Heavy machinery',    'Excavator, tractor, wheel loader, forestry machine'),
+    ('Evacuation',         'Evacuation and temporary accommodation'),
+    ('Communications',     'Communication equipment'),
+    ('Crew / personnel',   'Crew and volunteers'),
+    ('Premises',           'Premises for accommodation, meeting or storage'),
+    ('Boat',               'Boats and sea transport'),
+    ('Fuel',               'Fuel for vehicles and generators'),
+    ('Other',              'Anything that does not fit the other categories');
 
-SET FOREIGN_KEY_CHECKS = 1;
-
--- kategorier fra casebeskrivelsen
-INSERT INTO category (name) VALUES
-    ('Transport'), ('Droneobservasjon'), ('Strøm/aggregat'),
-    ('Snørydding'), ('Sand/grus'), ('Maskiner'), ('Evakuering'),
-    ('Samband'), ('Mannskap'), ('Lokaler'), ('Shelter');
-
-CREATE INDEX idx_resource_location ON civilian_resource(location_id);
-CREATE INDEX idx_need_location ON resource_need(location_id);
-CREATE INDEX idx_crisis_location ON crisis_event(location_id);
+-- Regions (counties)
+INSERT INTO Region (RegionName) VALUES
+    ('Østfold'), ('Akershus'), ('Oslo'), ('Innlandet'), ('Buskerud'),
+    ('Vestfold'), ('Telemark'), ('Agder'), ('Rogaland'), ('Vestland'),
+    ('Møre og Romsdal'), ('Trøndelag'), ('Nordland'), ('Troms'), ('Finnmark');

@@ -1,8 +1,47 @@
+@model List<H_st_2026_Gruppe_1.Models.Incident>
 @{
     ViewData["Title"] = "Incidents";
 }
 
-<section class="placeholder-page">
-    <h1>Incidents</h1>
-    <p class="placeholder-copy">No incidents have been reported yet.</p>
+<section class="subpage">
+    <div class="subpage-header">
+        <h1>Incidents</h1>
+    </div>
+
+    @if (Model == null || !Model.Any())
+    {
+        <p class="placeholder-copy">No incidents have been reported yet.</p>
+    }
+    else
+    {
+        <div class="incident-list">
+            @foreach (var incident in Model)
+            {
+                <article class="incident-card">
+                    <div class="incident-card-header">
+                        <h2>@incident.Title</h2>
+                        <span class="incident-status @(incident.Status == "active" ? "incident-status-active" : "")">
+                            @incident.Status
+                        </span>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(incident.Description))
+                    {
+                        <p class="incident-description">@incident.Description</p>
+                    }
+
+                    <dl class="incident-details">
+                        <div>
+                            <dt>Location (lat/lng)</dt>
+                            <dd>@incident.Latitude, @incident.Longitude</dd>
+                        </div>
+                        <div>
+                            <dt>Reported</dt>
+                            <dd>@incident.CreatedAt.ToString("dd.MM.yyyy HH:mm")</dd>
+                        </div>
+                    </dl>
+                </article>
+            }
+        </div>
+    }
 </section>

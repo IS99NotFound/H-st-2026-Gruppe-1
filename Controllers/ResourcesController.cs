@@ -1,26 +1,35 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using H_st_2026_Gruppe_1.Data;
 using H_st_2026_Gruppe_1.Models;
 
 namespace H_st_2026_Gruppe_1.Controllers;
 
 public class ResourcesController : Controller
 {
+    private readonly AppDbContext _db;
+
+    public ResourcesController(AppDbContext db)
+    {
+        _db = db;
+    }
+
     public IActionResult Index()
     {
         var now = DateTime.Today;
         var fiveDaysAhead = now.AddDays(5);
-        var allResources = ResourceStore.Resources;
+        var allResources = _db.Resources.Include(r => r.Category).OrderBy(r => r.Id).ToList();
         var dashboardModel = new ResourceDashboard
         {
             TotalResources = allResources.Count,
 
-            // Ressurser som utløper mellom i dag og 5 dager frem i tid
+            // Resources that expires today or in 5 days 
             ExpiringSoonCount = allResources.Count(r =>
                 r.ExpirationDate.HasValue &&
                 r.ExpirationDate.Value.Date >= now &&
                 r.ExpirationDate.Value.Date <= fiveDaysAhead),
 
-            // Ressurser som allerede har utløpt (før i dag)
+            // Resource already expired before today 
             ExpiredCount = allResources.Count(r =>
                 r.ExpirationDate.HasValue &&
                 r.ExpirationDate.Value.Date < now),
@@ -28,7 +37,7 @@ public class ResourcesController : Controller
             Resources = allResources
         };
 
-        // 3. Send dashboard-modellen til Viewet
+        // 3. Send dashboard-model to View
         return View(dashboardModel);
     }
 }

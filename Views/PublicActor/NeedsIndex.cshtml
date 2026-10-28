@@ -2,22 +2,55 @@
 
 @{
     ViewData["Title"] = "Needs";
+    ViewData["WideContent"] = true;
 }
 
-<section class="subpage">
+<section class="subpage needs-page">
     <div class="subpage-header">
         <h1>Needs</h1>
         <a asp-controller="PublicActor" asp-action="DashboardIndex" class="btn btn-primary">Register need</a>
     </div>
-   
-@if (!Model.Any())
+   <form method="get" asp-controller="PublicActor" asp-action="NeedsIndex" class="needs-filter-bar">
+    
+    <!-- Filter på Prioritet -->
+    <div class="needs-filter-field">
+        <label for="priorityFilter" class="form-label text-muted small fw-bold">Filter by Priority</label>
+        <select name="priority" id="priorityFilter" class="form-select">
+            <option value="">All Priorities</option>
+            <option value="Critical" selected="@(Context.Request.Query["priority"] == "Critical")">Critical</option>
+            <option value="Urgent" selected="@(Context.Request.Query["priority"] == "Urgent")">Urgent</option>
+            <option value="Planned" selected="@(Context.Request.Query["priority"] == "Planned")">Planned</option>
+        </select>
+    </div>
+
+    <!-- Filter på Kategori -->
+    <div class="needs-filter-field">
+        <label for="categoryFilter" class="form-label text-muted small fw-bold">Filter by Category</label>
+        <select name="category" id="categoryFilter" class="form-select">
+            <option value="">All Categories</option>
+            @foreach (var category in (List<Category>)ViewBag.Categories)
+            {
+                <option value="@category.CategoryId" selected="@(Context.Request.Query["category"] == category.CategoryId.ToString())">@category.CategoryName</option>
+            }
+        </select>
+    </div>
+
+    <!-- Knapper -->
+    <div class="needs-filter-actions">
+        <button type="submit" class="btn btn-primary">Filter</button>
+        <a asp-controller="PublicActor" asp-action="NeedsIndex" class="btn btn-outline-secondary">Reset</a>
+    </div>
+</form>
+    
+    @if (!Model.Any())
 {
-    <p class="placeholder-copy">No needs are registered right now</p>
+    <p class="placeholder-copy needs-empty-state">No needs are registered right now</p>
 }
 else
 {
-    <div class="table-wrapper">
-    <table class="table table-dark table-striped">
+    
+    <div class="table-wrapper needs-table-wrapper">
+    <table class="table table-dark table-striped needs-table">
         <thead>
         <tr>
             <th>Title</th>
@@ -28,9 +61,12 @@ else
             <th>Description</th>
             <th>Needed from</th>
             <th>Needed until</th>
-            <th> Lat/Long </th>
+            <th>Lat/Lng</th>
             <th>Registered</th>
+            <th>Priority</th>
             <th>Status</th>
+            <th>Actions</th>
+            
             
         </tr>
         </thead>
@@ -42,7 +78,7 @@ else
                     <td>@need.Title</td>
                     <td>@need.ContactInfo</td>
                     <td>@need.CrisisEventId</td>
-                    <td>@need.Category</td>
+                    <td>@(need.CategoryInfo?.CategoryName ?? "Unspecified")</td>
                     <td>@need.Quantity</td>
                     <td>@need.Description</td>
                     <td>@(need.RequiredFrom?.ToString("dd.MM.yyyy") ?? "Not specified")</td>
@@ -58,8 +94,41 @@ else
                     }
                     </td>
                     <td>@need.RegisteredAt.ToString("dd.MM.yyyy HH:mm")</td>
+                    <td>
+                        @switch (need.Priority)
+                        {
+                            case  NeedPriorityEnum.Planned:
+                                <span class="badge bg-secondary d-inline-flex align-items-center gap-1 px-2 py-1" title="Planned">
+                                    <i class="bi bi-calendar-event"></i>
+                                    <span>Planned</span>
+                                </span>
+                                break;
+                            case NeedPriorityEnum.Urgent:
+                                <span class="badge bg-warning text-dark d-inline-flex align-items-center gap-1 px-2 py-1" title="Urgent">
+                                    <i class="bi bi-exclamation-triangle"></i>
+                                    <span>Urgent</span>
+                                </span>
+                                break;
+
+                            case NeedPriorityEnum.Critical:
+                                <span class="badge bg-danger d-inline-flex align-items-center gap-1 px-2 py-1" title="Critical">
+                                    <i class="bi bi-fire"></i>
+                                    <span>Critical</span>
+                                </span>
+                                break;
+                        }
+                    </td>
                     <td><span class="status-label">@(need.Status == "Ny" ? "New" : need.Status)</span></td>
-                    
+                    <td>
+                        <form class="need-actions" asp-controller="Home" asp-action="DeleteNeed" asp-route-id="@need.Id" method="post"
+                              onsubmit="return confirm('Are you sure you want to delete this resource?');">
+                            <a asp-controller="PublicActor"
+                               asp-action="DashboardIndex" asp-route-id="@need.Id" class="btn btn-sm btn-primary">
+                                Edit
+                            </a>
+                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                        </form>
+                    </td>
                  
                 </tr>
             }

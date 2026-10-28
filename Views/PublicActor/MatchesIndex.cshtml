@@ -1,0 +1,102 @@
+@model H_st_2026_Gruppe_1.Models.MatchViewModel
+
+@{
+    ViewData["Title"] = "Matching overview";
+    ViewData["WideContent"] = true;
+}
+
+<section class="subpage matches-page">
+    <div class="match-heading">
+        <h1>Resource match near:</h1>
+        <form method="get" asp-action="Matches">
+            <select name="needId" id="needId" class="form-select" onchange="this.form.submit()">
+                @foreach (var need in Model.UserNeeds)
+                {
+                    if (need.Id == Model.Need.Id)
+                    {
+                        <option value="@need.Id" selected="selected">@need.Title (incident ID: @need.CrisisEventId)</option>
+                    }
+                    
+                    else
+                    {
+                        <option value="@need.Id">@need.Title (incident ID: @need.CrisisEventId)</option>
+                    }
+                }
+            </select>
+        </form>
+    </div>
+    
+    
+
+    <!-- Both buttons submit the selected need and radius; the second uses a different action. -->
+    <form asp-controller="PublicActor" asp-action="Matches" method="get" class="match-controls">
+        <input type="hidden" name="needId" value="@Model.Need.Id" />
+        <div>
+            <label for="radiusKm">Radius (km)</label>
+            <input type="number" name="radiusKm" id="radiusKm" value="@Model.RadiusKm" min="1" class="form-control" />
+        </div>
+        <button type="submit" class="btn btn-primary">Find matches </button>
+        <button type="submit"
+                formaction="@Url.Action("ShowAllResourcesInMatches", "PublicActor")"
+                class="btn btn-outline-primary">
+           View all resources within radius
+        </button>
+    </form>
+    
+    @if (!Model.Matches.Any())
+{
+    <p class="match-empty-state">No resources found within @Model.RadiusKm km@(Model.AllCategories ? "." : " in the need's category.")</p>
+}
+else
+{
+    <div class="table-wrapper matches-table-wrapper">
+    <table class="table table-dark table-striped matches-table">
+        <thead>
+        <tr>
+            <th>Distance (km)</th>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Contact</th>
+            <th>Description</th>
+            <th>Expiry date</th>
+            <th> Actions </th>
+        </tr>
+        </thead>
+
+        <tbody>
+        @foreach (var match in Model.Matches)
+        {
+                <tr>
+                    <td>@match.DistanceKm.ToString("F1")</td>
+                    <td>@match.Resource.Name</td>
+                    <td>@match.Resource.Category?.CategoryName</td>
+                    <td>@match.Resource.Phone</td>
+                    <td>@match.Resource.Description</td>
+                    <td>@match.Resource.ExpirationDate?.ToString("dd.MM.yyyy")</td>
+                    <td>
+                        <form asp-controller="PublicActor" asp-action="UpdateResourceStatus" method="post" class="match-status-form">
+                            <input type="hidden" name="resourceId" value="@match.Resource.Id"/>
+                            <input type="hidden" name="needId" value="@Model.Need.Id"/>
+
+                            <label for="comment-@match.Resource.Id">Comment</label>
+                            <textarea id="comment-@match.Resource.Id" name="statusComment" class="form-control" placeholder="Write a comment"> @match.Resource.StatusComment</textarea>
+                            <div class="match-status-buttons">
+                                <button type="submit" name="newStatus" value="assigned" class="btn btn-success @(match.Resource.Status == "assigned" ? "status-selected" : "")">
+                                    Assign
+                                </button>
+                                <button type="submit" name="newStatus" value="under_review" class="btn btn-warning @(match.Resource.Status == "under_review" ? "status-selected" : "")">
+                                    Under review
+                                </button>
+                                <button type="submit" name="newStatus" value="rejected" class="btn btn-danger @(match.Resource.Status == "rejected" ? "status-selected" : "")">
+                                    Reject
+                                </button>
+                            </div>
+                        </form>
+                    </td>
+                </tr>
+        }
+        </tbody>
+    </table>
+    </div>
+}
+</section>

@@ -1,4 +1,5 @@
 namespace H_st_2026_Gruppe_1.Models;
+using H_st_2026_Gruppe_1.Models;
 
 // Finds the resources that are within a given radius of a need.
 public static class RadiusMatcher
@@ -6,18 +7,27 @@ public static class RadiusMatcher
     private const double EarthRadiusKm = 6371;
 
     // Returns resources within radiusKm of the need, nearest first.
-    public static List<ResourceMatch> FindResources(ResourceNeed need, double radiusKm)
+    public static List<ResourceMatch> FindResources(
+        ResourceNeed need,
+        double radiusKm,
+        IEnumerable<ResourceEntry> resources,
+        bool allCategories = false)
     {
         var matches = new List<ResourceMatch>();
 
-        // DATABASE: replace ResourceStore.Resources with a database query
-        foreach (var resource in ResourceStore.Resources)
+        foreach (var resource in resources)
         {
             // Skip resources that have no position
             if (resource.Latitude == null || resource.Longitude == null)
             {
                 continue;
             }
+            
+            if (!allCategories && resource.CategoryId != need.Category)
+            {
+                continue;
+            }
+            
 
             var distance = DistanceKm(need.Latitude, need.Longitude, resource.Latitude.Value, resource.Longitude.Value);
 

@@ -2,11 +2,13 @@ using System.Globalization;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.EntityFrameworkCore;
+using H_st_2026_Gruppe_1.Data;
 
-// Oppretter byggeren som setter opp applikasjonen
+// App builder 
 var builder = WebApplication.CreateBuilder(args);
 
-// Legger til støtte for controllere og views (MVC)
+// Controllers and views (MVC)
 builder.Services.AddControllersWithViews(options =>
 {
     options.Filters.Add(new AuthorizeFilter());
@@ -22,10 +24,16 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     });
 builder.Services.AddAuthorization();
 
+// Database connection (from docker-compose, or appsettings.Development.json outside Docker)
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("The connection string 'DefaultConnection' is missing.");
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseMySql(connectionString, new MariaDbServerVersion(new Version(11, 4, 0))));
+
 var app = builder.Build();
 
-// Tvinger appen til å alltid bruke punktum som desimaltegn (en-US),
-// uavhengig av hvilket språk maskinen/serveren har, løser valideringsfeil på koordinater
+// Forces application to use period for decimal values (en-us)
+// Independent of device language, resolves validation error for coordinates
 var localizationOptions = new RequestLocalizationOptions
 {
     DefaultRequestCulture = new RequestCulture("en-US"),
@@ -35,31 +43,31 @@ var localizationOptions = new RequestLocalizationOptions
 localizationOptions.RequestCultureProviders.Clear();
 app.UseRequestLocalization(localizationOptions);
 
-// Oppsett av hvordan forespørsler behandles.
-// I produksjon vises en feilside i stedet for detaljert feilinformasjon.
+// Setup for requests processing 
+// Only show error page while in production 
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // Standardverdien for HSTS er 30 dager. Kan endres for produksjon, se https://aka.ms/aspnetcore-hsts.
+    // Standard value for HSTS; 30 days. Can be changed for production
     app.UseHsts();
 }
 
 if (app.Environment.IsDevelopment())
 {
-    app.UseDeveloperExceptionPage(); // Viser gult/rødt feilskjermbilde med eksakt linjenummer ved krasj
+    app.UseDeveloperExceptionPage(); // Show yellow/red error screencapture with exact line number when crashes occurs 
 }
 
-// Sender http-forespørsler videre til https
+// Forwards http-requests to https
 app.UseHttpsRedirection();
 app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Gjør css, js og bilder tilgjengelige
+// Makes css, js and pictures available
 app.MapStaticAssets();
 
-// Standardrute: Home-controlleren og Index-metoden brukes hvis ingenting annet er oppgitt
+// Standard route: Home-controller and Index-method is used when nohing else is mentioned 
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Auth}/{action=Login}/{id?}")

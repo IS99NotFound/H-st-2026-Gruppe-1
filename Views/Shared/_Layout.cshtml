@@ -1,4 +1,6 @@
 ﻿@using Microsoft.AspNetCore.Identity
+
+
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="dark">
 
@@ -9,6 +11,7 @@
     var isAuthPage = controller == "Auth";
     var userType = User.FindFirst("UserType")?.Value ?? "ResourceProvider";
     var isPublicActor = User.IsInRole("PublicActor");
+    var userName = User.Identity?.Name ?? "User";
 }
 
 <head>
@@ -27,14 +30,14 @@
 @if (isAuthenticated)
 {
     <header class="topbar">
-        <!-- Topp del venstre, logo og tekst -->
+        <!-- Top, left corner, logo and text  -->
         <div class="topbar-brand">
             <a class="brand-name" asp-controller="Home" asp-action="Index">ResQ</a>
             <div class="brand-tagline">
             </div>
         </div>
 
-        <!-- Topp del midten, faner -->
+        <!-- Top, middle part, menu -->
         <nav id="main-navigation" class="topbar-nav" aria-label="Hovednavigasjon">
     @if (isPublicActor)
     {
@@ -65,6 +68,12 @@
            class="topbar-link @(controller == "PublicActor" && action == "NeedsIndex" ? "active" : "")">            <i class="bi bi-clipboard-check topbar-link-icon" aria-hidden="true"></i>
             <span>Needs</span>
         </a>
+        
+        <a asp-controller="PublicActor" asp-action="Matches" 
+           class="topbar-link @(controller == "PublicActor" ? "active" : "")">
+            <i class="bi bi-bar-chart-line topbar-link-icon" aria-hidden="true"></i>
+            <span>Matching</span>
+        </a>
     }
     else
     {
@@ -74,6 +83,7 @@
             <span>Resources</span>
         </a>
     }
+    
 
     <a asp-controller="Reports" asp-action="Index"
        class="topbar-link @(controller == "Reports" ? "active" : "")">
@@ -89,22 +99,56 @@
     </button>
 </nav>
 
-        <!-- Topp del høyre, bruker -->
-        <div class="topbar-user-controls">
-            <form asp-controller="Home" asp-action="SelectRole" method="post" class="d-flex align-items-center gap-2">
-                <label class="visually-hidden" for="UserType">Choose user</label>
-                <select name="UserType" id="UserType" class="form-select form-select-sm" onchange="this.form.submit()">
-                    <option value="ResourceProvider" selected="@(userType == "ResourceProvider")">Resource Provider</option>
-                    <option value="PublicActor" selected="@(userType == "PublicActor")">Public Actor</option>
-                </select>
-            </form>
-            <form asp-controller="Auth" asp-action="Logout" method="post">
-                <button type="submit" class="btn btn-primary logout-button">Log out</button>
-            </form>
+        <!-- Top, right corner, User account  -->
+        <div class="topbar-user-controls dropdown">
+            <button type="button" class="user-menu-button" data-bs-toggle="dropdown"
+                    aria-expanded="false" aria-label="Open user menu">
+                <span class="user-avatar" aria-hidden="true">
+                    <i class="bi bi-person-fill"></i>
+                </span>
+                <span class="user-name">@userName</span>
+            </button>
+
+            <div class="dropdown-menu dropdown-menu-end user-menu">
+                <div class="user-menu-header">
+                    <span class="user-avatar" aria-hidden="true">
+                        <i class="bi bi-person-fill"></i>
+                    </span>
+                    <span class="user-menu-name">@userName</span>
+                </div>
+                <div class="dropdown-divider"></div>
+
+                @* Placeholders, pages for profile and settings are not made yet *@
+                <a class="dropdown-item user-menu-item" href="#">
+                    <i class="bi bi-person-circle" aria-hidden="true"></i>
+                    <span>My profile</span>
+                </a>
+                <a class="dropdown-item user-menu-item" href="#">
+                    <i class="bi bi-gear" aria-hidden="true"></i>
+                    <span>Settings</span>
+                </a>
+                <div class="dropdown-divider"></div>
+
+                <form asp-controller="Home" asp-action="SelectRole" method="post" class="user-menu-role">
+                    <label for="UserType">Switch user</label>
+                    <select name="UserType" id="UserType" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <option value="ResourceProvider" selected="@(userType == "ResourceProvider")">Resource Provider</option>
+                        <option value="PublicActor" selected="@(userType == "PublicActor")">Public Actor</option>
+                    </select>
+                </form>
+                <div class="dropdown-divider"></div>
+
+                <form asp-controller="Auth" asp-action="Logout" method="post">
+                    <button type="submit" class="dropdown-item user-menu-item logout-item">
+                        <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                        <span>Log out</span>
+                    </button>
+                </form>
+            </div>
         </div>
         </header>
 }
-<div class="container @(ViewData["FullWidth"] is true ? "container-full-width" : "") @(isAuthPage ? "auth-container" : "")">
+<div class="container @(ViewData["FullWidth"] is true ? "container-full-width" : "") @(ViewData["WideContent"] is true ? "container-wide-content" : "") @(isAuthPage ? "auth-container" : "")">
     <main role="main">
         @RenderBody()
     </main>
@@ -112,7 +156,7 @@
 
 @if (!isAuthPage)
 {
-    <footer class="footer"> @* // Endrer bunnen av nettsiden til å se lik ut som resten *@
+    <footer class="footer"> @* // Changes the bottom part of the page to look like the rest *@
         <div class="container">
             &copy; 2026 - ResQ - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
