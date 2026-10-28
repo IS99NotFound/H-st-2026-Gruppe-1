@@ -133,6 +133,82 @@
 
     <!-- Map area -->
     <section class="map-area">
+        <div class="map-filtering" id ="survival-filter-panel">
+            <div class="map-filter-header">
+                <button type="button"
+                    id="survival-filter-button"
+                    class ="map-filter-button"
+                    aria-expanded="true"
+                    aria-controls="survival-filter-content"
+                    aria-label="Collapse registered resource filters">
+                <i class="bi bi-chevron-left" aria-hidden="true"></i>
+            </button>
+            
+            <strong class="map-filter-title">Filter registered resources</strong>
+        </div>
+
+        <div id="survival-filter-content">
+            <div class="map-filter-options">
+                <label>
+                    <input type="checkbox" class="registered-resources-filter"
+                        value="Drone" checked/>
+                    Drones
+                </label>
+
+                <label>
+                    <input type="checkbox" class="registered-resources-filter"
+                        value ="ATV" checked/>
+                    ATVs
+                </label>
+
+                                <label>
+                    <input type="checkbox" class="registered-resources-filter"
+                        value ="Tractor" checked/>
+                    Tractors
+                </label>
+
+                                <label>
+                    <input type="checkbox" class="registered-resources-filter"
+                        value ="Generator" checked/>
+                    Generators
+                </label>
+
+                                <label>
+                    <input type="checkbox" class="registered-resources-filter"
+                        value ="Excavator" checked/>
+                    Excavators
+                </label>
+
+                                <label>
+                    <input type="checkbox" class="registered-resources-filter"
+                        value ="Truck" checked/>
+                    Trucks
+                </label>
+
+                                <label>
+                    <input type="checkbox" class="registered-resources-filter"
+                        value ="Boat" checked/>
+                    Boats
+                </label>
+
+                <label>
+                    <input type="checkbox" class="registered-resources-filter"
+                        value ="Sand/Gravel" checked/>
+                    Sand / Gravel
+                </label>
+
+                                <label>
+                    <input type="checkbox" class="registered-resources-filter"
+                        value ="Other" checked/>
+                    Other
+                </label>
+            </div>
+
+            <p id="registered-resources-status" role="status">
+                Loading registered resources...
+            </p>
+        </div>
+        </div> 
         <div id="map" role="application" aria-label="Interactive map"></div>
         <p id="map-status" class="map-status" role="status" aria-live="polite">Loading map ...</p>
     </section>
@@ -141,7 +217,10 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-}
+
+<script>
+    window.publicActorResources = @Html.Raw(ViewBag.ResourceMarkersJson ?? "[]");
+</script>
 
 <script>
     const map = L.map('map').setView([58.4614, 8.7683], 13);
@@ -216,3 +295,8 @@
         if (posError) posError.textContent = '';
     });
 </script>
+<script src="~/js/public-actor-resource-filters.js"
+    asp-append-version="true"></script>
+    <script src="~/js/map-filter-button.js"
+        asp-append-version="true"></script>
+}

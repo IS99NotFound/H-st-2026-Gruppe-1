@@ -16,6 +16,13 @@ public class AuthController : Controller
     {
         if (User.Identity?.IsAuthenticated == true)
         {
+            var userType = User.FindFirst("UserType")?.Value;
+            
+            if (userType == "PublicActor")
+            {
+                return RedirectToAction("DashboardIndex", "PublicActor");
+            }
+
             return RedirectToAction("Index", "Home");
         }
 
@@ -71,6 +78,11 @@ public class AuthController : Controller
             CookieAuthenticationDefaults.AuthenticationScheme,
             new ClaimsPrincipal(identity),
             properties);
+
+        if (model.UserType == "PublicActor")
+        {
+            return RedirectToAction("DashboardIndex", "PublicActor");
+        }
 
         return RedirectToAction("Index", "Home");
     }
