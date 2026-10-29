@@ -8,35 +8,21 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
     }
 
+    const setFilterState = function (isCollapsed) {
+        filterPanel.classList.toggle("is-collapsed", isCollapsed);
+        filterButton.setAttribute("aria-expanded", String(!isCollapsed));
+        filterButton.setAttribute(
+            "aria-label",
+            isCollapsed ? "Expand map filters" : "Collapse map filters"
+        );
+        filterButton.innerHTML = isCollapsed
+            ? '<i class="bi bi-chevron-right" aria-hidden="true"></i>'
+            : '<i class="bi bi-chevron-left" aria-hidden="true"></i>';
+    };
+
+    setFilterState(true);
     filterButton.addEventListener("click", function () {
         const isCollapsed = filterPanel.classList.contains("is-collapsed");
-
-        filterButton.setAttribute("aria-expanded", String(!isCollapsed));
-
-        if (isCollapsed) {
-
-            filterPanel.classList.remove("is-collapsed");
-            //Viser pilen som lar bruker åpne filter.
-            filterButton.innerHTML =
-            '<i class="bi bi-chevron-left" aria-hidden="true"></i>';
-
-            filterButton.setAttribute("aria-expanded", "true");
-            filterButton.setAttribute(
-                "aria-label",
-                "Collapse survival locations-filters"
-            );
-
-        } else {
-            filterPanel.classList.add("is-collapsed");
-            
-            //Viser pilen som lar bruker lukke filter.
-            filterButton.innerHTML = '<i class ="bi bi-chevron-right" aria-hidden="true"></i>';
-
-            filterButton.setAttribute("aria-expanded", "false");
-            filterButton.setAttribute(
-                "aria-label",
-                "Expand survival locations-filters"
-            );
-        }
+        setFilterState(!isCollapsed);
     });
 });
