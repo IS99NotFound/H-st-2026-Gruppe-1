@@ -14,7 +14,7 @@ INSERT INTO PublicActor (PublicActorID, OrganizationID) VALUES (1, 1);
 
 INSERT INTO CivilianProvider (ProviderID, ProviderType) VALUES (2, 'private_person');
 
-INSERT INTO Incident (IncidentID, PublicActorID, Title, IncidentType, Description, Latitude, Longitude) VALUES
-    (1, 1, 'Storm in Agder',            'Storm',          'Fallen trees and blocked roads',          58.146700, 7.995600),
-    (2, 1, 'Flooding in Rogaland',      'Flood',          'Rivers over their banks',                 58.970000, 5.733100),
-    (3, 1, 'Power outage in Trøndelag', 'Power outage',   'Large power outage after heavy snowfall', 63.430500, 10.395100);
+INSERT INTO Incident (IncidentID, PublicActorID, Title, NormalizedTitle, IncidentType, Description, Latitude, Longitude) VALUES
+    (1, 1, 'Storm in Agder',            'storm in agder',            'Storm',        'Fallen trees and blocked roads',          58.146700, 7.995600),
+    (2, 1, 'Flooding in Rogaland',      'flooding in rogaland',      'Flood',        'Flooding rivers',                 58.970000, 5.733100),
+    (3, 1, 'Power outage in Trøndelag', 'power outage in trøndelag', 'Power outage', 'Large power outage after heavy snowfall', 63.430500, 10.395100);

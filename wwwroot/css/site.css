@@ -563,7 +563,7 @@ body {
 
 .incident-filter-bar {
     display: grid;
-    grid-template-columns: repeat(3, minmax(140px, 1fr)) auto;
+    grid-template-columns: minmax(180px, 1.4fr) repeat(4, minmax(120px, 1fr)) auto;
     align-items: end;
     gap: 10px;
     margin-bottom: 24px;
@@ -571,6 +571,10 @@ body {
     border: 1px solid var(--border);
     border-radius: 12px;
     background: var(--bg-panel);
+}
+
+.incident-search-field {
+    min-width: 0;
 }
 
 .incident-filter-bar .needs-filter-field label {

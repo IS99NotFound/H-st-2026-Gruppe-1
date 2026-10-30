@@ -3,6 +3,7 @@
     ViewData["Title"] = "Incidents";
     var isPublicActor = User.IsInRole("PublicActor");
     var incidentTypes = new[] { "Forest fire", "Landslide", "Flood", "Storm", "Power outage", "Other" };
+    var showCreatePanel = !ViewData.ModelState.IsValid;
 }
 
 <section class="subpage">
@@ -11,7 +12,7 @@
         @if (isPublicActor)
         {
             <button class="btn btn-success" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#incident-create-panel" aria-expanded="false"
+                    data-bs-target="#incident-create-panel" aria-expanded="@(showCreatePanel.ToString().ToLowerInvariant())"
                     aria-controls="incident-create-panel" aria-label="Register incident">
                 <i class="bi bi-plus-lg" aria-hidden="true"></i>
                 Register
@@ -20,6 +21,12 @@
     </div>
 
     <form method="get" asp-controller="Incidents" asp-action="Index" class="incident-filter-bar">
+        <div class="needs-filter-field incident-search-field">
+            <label for="incidentSearch" class="form-label text-muted small fw-bold">Search</label>
+            <input type="search" name="search" id="incidentSearch" class="form-control"
+                   value="@Model.Search" placeholder="Search incident title" />
+        </div>
+
         <div class="needs-filter-field">
             <label for="statusFilter" class="form-label text-muted small fw-bold">Filter by status</label>
             <select name="status" id="statusFilter" class="form-select">
@@ -43,15 +50,6 @@
         </div>
 
         <div class="needs-filter-field">
-            <label for="dateFilter" class="form-label text-muted small fw-bold">Quick date filter</label>
-            <select name="dateFilter" id="dateFilter" class="form-select">
-                <option value="1day" selected="@(Context.Request.Query["dateFilter"] == "1day")">Last day</option>
-                <option value="7days" selected="@(Context.Request.Query["dateFilter"] == "7days")">Last 7 days</option>
-                <option value="30days" selected="@(Context.Request.Query["dateFilter"] == "30days")">Last 30 days</option>
-            </select>
-        </div>
-
-        <div class="needs-filter-field">
             <label for="startDate" class="form-label text-muted small fw-bold">Date from</label>
             <input type="date" name="startDate" id="startDate" class="form-control"
                    value="@Context.Request.Query["startDate"]" />
@@ -66,11 +64,11 @@
         <div class="needs-filter-field">
             <label for="radiusFilter" class="form-label text-muted small fw-bold">Distance</label>
             <input id="radiusFilter" type="range" class="form-range" min="1" max="50" value="50" />
-            <div class="incident-radius-value" id="radiusValue">50 km</div>
+            <div class="incident-radius-value" id="radiusValue">Unlimited</div>
         </div>
 
         <div class="needs-filter-actions">
-            <button type="submit" class="btn btn-primary">Filter</button>
+            <button type="submit" class="btn btn-primary">Search</button>
             <a asp-controller="Incidents" asp-action="Index" class="btn btn-outline-secondary">Reset</a>
         </div>
     </form>
@@ -90,7 +88,7 @@
 
     @if (isPublicActor)
     {
-        <div id="incident-create-panel" class="collapse incident-create-panel">
+        <div id="incident-create-panel" class="collapse incident-create-panel @(showCreatePanel ? "show" : "")">
             <form asp-controller="Incidents" asp-action="Create" method="post">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
@@ -99,7 +97,7 @@
                         <div>
                             <label asp-for="CreateModel.Title" class="form-label">Incident name</label>
                             <input asp-for="CreateModel.Title" class="form-control compact-field"
-                                   placeholder="Flood in Agder" />
+                                   placeholder="Example: Flood near Arendal" />
                             <span asp-validation-for="CreateModel.Title" class="text-danger"></span>
                         </div>
                         <div>
@@ -130,8 +128,11 @@
                         </p>
                         <input asp-for="CreateModel.Latitude" type="hidden" id="incident-latitude" />
                         <input asp-for="CreateModel.Longitude" type="hidden" id="incident-longitude" />
-                        <span asp-validation-for="CreateModel.Latitude" class="text-danger d-block"></span>
-                        <span asp-validation-for="CreateModel.Longitude" class="text-danger d-block"></span>
+                        @if (ViewData.ModelState["CreateModel.Latitude"]?.Errors.Count > 0
+                            || ViewData.ModelState["CreateModel.Longitude"]?.Errors.Count > 0)
+                        {
+                            <span class="text-danger d-block">This field is required.</span>
+                        }
                     </div>
                 </div>
 
@@ -269,9 +270,9 @@
 </section>
 
 @section Scripts {
-@if (isPublicActor)
-{
     <partial name="_ValidationScriptsPartial" />
+    @if (isPublicActor)
+    {
     <script>
         const incidentMap = L.map('incident-map').setView([58.4614, 8.7683], 6);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -305,11 +306,17 @@
                 setTimeout(() => incidentMap.invalidateSize(), 100);
             });
         }
+    </script>
+    }
+
+    <script>
 
         const radiusFilter = document.getElementById('radiusFilter');
         const locationError = document.getElementById('location-error');
         const radiusValue = document.getElementById('radiusValue');
         let userLocation = null;
+        let locationRequestPending = false;
+        let locationUnavailable = false;
 
         function distanceInKilometres(latitude, longitude) {
             const earthRadius = 6371;
@@ -327,7 +334,7 @@
         function applyRadiusFilter() {
             const radius = Number(radiusFilter.value);
             document.querySelectorAll('.incident-card').forEach(function (card) {
-                if (!userLocation) {
+                if (radius >= 50 || !userLocation) {
                     card.hidden = false;
                     return;
                 }
@@ -339,13 +346,21 @@
         }
 
         function requestLocation() {
+            if (userLocation || locationRequestPending || locationUnavailable) {
+                applyRadiusFilter();
+                return;
+            }
+
             if (!navigator.geolocation) {
+                locationUnavailable = true;
                 locationError.hidden = false;
                 applyRadiusFilter();
                 return;
             }
 
+            locationRequestPending = true;
             navigator.geolocation.getCurrentPosition(function (position) {
+                locationRequestPending = false;
                 userLocation = {
                     latitude: position.coords.latitude,
                     longitude: position.coords.longitude
@@ -353,26 +368,38 @@
                 locationError.hidden = true;
                 applyRadiusFilter();
             }, function () {
+                locationRequestPending = false;
+                locationUnavailable = true;
                 locationError.hidden = false;
                 radiusFilter.value = '50';
-                radiusValue.textContent = '50 km';
+                radiusValue.textContent = 'Unlimited';
                 localStorage.setItem('incidentRadius', '50');
                 applyRadiusFilter();
             });
         }
 
         radiusFilter.addEventListener('input', function () {
-            radiusValue.textContent = `${radiusFilter.value} km`;
+            radiusValue.textContent = radiusFilter.value === '50'
+                ? 'Unlimited'
+                : `${radiusFilter.value} km`;
             localStorage.setItem('incidentRadius', radiusFilter.value);
-            requestLocation();
+            if (Number(radiusFilter.value) < 50) {
+                requestLocation();
+            } else {
+                locationError.hidden = true;
+                applyRadiusFilter();
+            }
         });
 
         const savedRadius = localStorage.getItem('incidentRadius');
         if (savedRadius && Number(savedRadius) >= 1 && Number(savedRadius) <= 50) {
             radiusFilter.value = savedRadius;
-            radiusValue.textContent = `${savedRadius} km`;
-            requestLocation();
+            radiusValue.textContent = savedRadius === '50'
+                ? 'Unlimited'
+                : `${savedRadius} km`;
+            if (Number(savedRadius) < 50) {
+                requestLocation();
+            }
         }
     </script>
-}
 }

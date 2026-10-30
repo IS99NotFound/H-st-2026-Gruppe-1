@@ -15,17 +15,18 @@ public class IncidentsController : Controller
     }
     
     public IActionResult Index(
+        string? search,
         string? status,
         string? incidentType,
-        string? dateFilter,
         DateTime? startDate,
         DateTime? endDate)
     {
-        var incidents = GetIncidents(status, incidentType, dateFilter, startDate, endDate);
+        var incidents = GetIncidents(search, status, incidentType, startDate, endDate);
 
         return View(new IncidentIndexViewModel
         {
-            Incidents = incidents
+            Incidents = incidents,
+            Search = search
         });
     }
 
@@ -45,6 +46,7 @@ public class IncidentsController : Controller
         {
             PublicActorId = DemoDefaults.PublicActorId,
             Title = createModel.Title.Trim(),
+            NormalizedTitle = NormalizeTitle(createModel.Title),
             IncidentType = createModel.IncidentType,
             Description = string.IsNullOrWhiteSpace(createModel.Description)
                 ? null
@@ -99,13 +101,19 @@ public class IncidentsController : Controller
     }
 
     private List<Incident> GetIncidents(
+        string? search = null,
         string? status = null,
         string? incidentType = null,
-        string? dateFilter = null,
         DateTime? startDate = null,
         DateTime? endDate = null)
     {
         var incidents = _db.Incidents.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var normalizedSearch = NormalizeTitle(search);
+            incidents = incidents.Where(incident => incident.NormalizedTitle.Contains(normalizedSearch));
+        }
 
         if (!string.IsNullOrWhiteSpace(status))
         {
@@ -115,20 +123,6 @@ public class IncidentsController : Controller
         if (!string.IsNullOrWhiteSpace(incidentType))
         {
             incidents = incidents.Where(incident => incident.IncidentType == incidentType);
-        }
-
-        if (!string.IsNullOrWhiteSpace(dateFilter))
-        {
-            var now = DateTime.Now;
-            var fromDate = dateFilter switch
-            {
-                "1day" => now.AddDays(-1),
-                "7days" => now.AddDays(-7),
-                "30days" => now.AddDays(-30),
-                _ => now.AddYears(-100)
-            };
-
-            incidents = incidents.Where(incident => incident.CreatedAt >= fromDate);
         }
 
         if (startDate.HasValue)
@@ -145,5 +139,10 @@ public class IncidentsController : Controller
             .OrderBy(incident => incident.Status == "resolved" ? 1 : 0)
             .ThenByDescending(incident => incident.CreatedAt)
             .ToList();
+    }
+
+    private static string NormalizeTitle(string title)
+    {
+        return title.Trim().ToLowerInvariant();
     }
 }

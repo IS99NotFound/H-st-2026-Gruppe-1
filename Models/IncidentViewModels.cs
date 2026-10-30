@@ -6,6 +6,7 @@ public class IncidentIndexViewModel
 {
     public IReadOnlyList<Incident> Incidents { get; set; } = [];
     public IncidentCreateViewModel CreateModel { get; set; } = new();
+    public string? Search { get; set; }
 }
 
 public class IncidentCreateViewModel

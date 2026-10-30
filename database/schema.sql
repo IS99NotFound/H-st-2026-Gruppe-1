@@ -140,6 +140,7 @@ CREATE TABLE Incident (
     IncidentID      INT           NOT NULL AUTO_INCREMENT,
     PublicActorID   INT           NOT NULL,
     Title           VARCHAR(150)  NOT NULL,
+    NormalizedTitle VARCHAR(150)  NOT NULL DEFAULT '',
     IncidentType    VARCHAR(50)   NOT NULL DEFAULT 'Other',
     Description     TEXT          NULL,
     Status          ENUM('active', 'resolved') NOT NULL DEFAULT 'active',
