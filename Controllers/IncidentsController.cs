@@ -60,7 +60,7 @@ public class IncidentsController : Controller
         _db.Incidents.Add(incident);
         _db.SaveChanges();
 
-        TempData["IncidentCreated"] = "Incident created successfully.";
+        TempData["IncidentCreated"] = "Incident registered successfully.";
         return RedirectToAction(nameof(Index));
     }
 
