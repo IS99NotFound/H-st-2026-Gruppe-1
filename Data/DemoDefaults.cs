@@ -6,4 +6,5 @@ public static class DemoDefaults
     public const int PublicActorId = 1;
     public const int ProviderId = 2;
     public const int RegionId = 8; // Agder
+    public const int OrganizationId = 1;
 }

@@ -1,0 +1,63 @@
+﻿@model H_st_2026_Gruppe_1.Models.RegisterViewModel
+@{
+    ViewData["Title"] = "Register";
+}
+
+<div class="auth-page">
+    <section class="auth-content">
+        <div class="auth-form-container">
+            <h2>Create account</h2>
+            <p class="auth-description">Create a test user.</p>
+
+            <form asp-controller="Register" asp-action="Index" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <div class="auth-field">
+                    <label asp-for="Name">Full name</label>
+                    <input asp-for="Name" class="form-control" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+                <div class="auth-field">
+                    <label asp-for="UserName">Username</label>
+                    <input asp-for="UserName" class="form-control" />
+                    <span asp-validation-for="UserName" class="text-danger"></span>
+                </div>
+                <div class="auth-field">
+                    <label asp-for="Email">Email</label>
+                    <input asp-for="Email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+                <div class="auth-field">
+                    <label asp-for="PhoneNumber">Phone (optional)</label>
+                    <input asp-for="PhoneNumber" class="form-control" />
+                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                </div>
+                <div class="auth-field">
+                    <label asp-for="Role">Role</label> <!-- Testing phase only, later on it will be provider type etc.-->
+                    <select asp-for="Role" class="form-select">
+                        <option value="CivilianProvider">Resource provider</option>
+                        <option value="PublicActor">Public Actor</option>
+                        <option value="Administrator">Administrator</option>
+                    </select>
+                    <span asp-validation-for="Role" class="text-danger"></span>
+                </div>
+                <div class="auth-field">
+                    <label asp-for="Password">Password</label>
+                    <input asp-for="Password" class="form-control" />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+                <div class="auth-field">
+                    <label asp-for="ConfirmPassword">Confirm password</label>
+                    <input asp-for="ConfirmPassword" class="form-control" />
+                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                </div>
+
+                <button type="submit" class="btn auth-submit">Create account</button>
+            </form>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
