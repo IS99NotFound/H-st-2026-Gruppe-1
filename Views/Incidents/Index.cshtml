@@ -72,7 +72,7 @@
             <a asp-controller="Incidents" asp-action="Index" class="btn btn-outline-secondary">Reset</a>
         </div>
     </form>
-    <p id="location-error" class="incident-location-error" role="alert" hidden>
+    <p id="location-error" class="incident-location-error" role="alert" aria-live="polite" hidden>
         Location access is required to use the distance filter.
     </p>
 
@@ -121,8 +121,9 @@
 
                     <div class="incident-map-panel">
                         <label class="form-label">Location</label>
-                        <div id="incident-map" class="incident-map" role="application"
-                             aria-label="Select incident location on map"></div>
+                        <div id="incident-map" class="incident-map" role="application" tabindex="0"
+                             aria-label="Select incident location on map"
+                             aria-describedby="incident-map-status"></div>
                         <p id="incident-map-status" class="map-status" role="status" aria-live="polite">
                             Click the map to select the incident location.
                         </p>
