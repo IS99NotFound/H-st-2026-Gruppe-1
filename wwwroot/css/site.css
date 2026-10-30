@@ -697,7 +697,8 @@ body {
         grid-area: nav;
         display: flex;
         align-items: center;
-        justify-content: flex-end;
+        justify-content: center;
+        gap: 14px;
         height: auto;
         padding: 0;
         border: 0;
