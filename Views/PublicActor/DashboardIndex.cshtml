@@ -1,302 +1,198 @@
 @model H_st_2026_Gruppe_1.Models.ResourceNeed
-
 @{
     ViewData["Title"] = "Public Actor Dashboard";
     ViewData["FullWidth"] = true;
+    ViewData["RegistrationType"] = "need";
+    var canRegisterResource = User.IsInRole("ResourceProvider") || User.IsInRole("Administrator");
+    var openRegistrationModal = ViewBag.OpenRegistrationModal is bool shouldOpen
+        ? shouldOpen
+        : Context.Request.Query["register"] == "need";
 }
-<div class="main-layout">
 
-    <aside id="side-panel" class="side-panel" aria-label="Need registration">
-        <div class="side-panel-header">
-            <div>
-                <h1>Register Resource Need</h1>
-            </div>
-            <button class="panel-toggle panel-close" type="button" aria-controls="side-panel" aria-expanded="false">
-                <span class="visually-hidden">Close panel</span>
-                <i class="bi bi-x-lg" aria-hidden="true"></i>
-            </button>
-        </div>
-
-        <!-- Form for registering a resource need -->
-        <form id="needForm" asp-controller="PublicActor" asp-action="RegisterNeed" method="post">
-            <input type="hidden" asp-for="Id" />
-
-            <div class="mb-2">
-                <label asp-for="Title">Title </label>
-                <input type="text" asp-for="Title" id="titleInput" class="form-control" placeholder="Need excavators for landslide clearing" required />
-                <span asp-validation-for="Title" class="text-danger"></span>
-            </div>
-
-            <div class="mb-2">
-                <label asp-for="ContactInfo">Contact Info</label>
-                <input type="text" asp-for="ContactInfo" id="contactInput" class="form-control" placeholder="e.g command Center phone: +4732459844" required />
-                <span asp-validation-for="ContactInfo" class="text-danger"></span>
-            </div>
-
-            <div class="mb-2">
-                <label asp-for="CrisisEventId">Crisis Incident</label>
-                <select asp-for="CrisisEventId" id="crisisEventInput" class="form-select" required>
-                    <option value="">Select incident</option>
-                    @foreach (var incident in (List<Incident>)ViewBag.Incidents)
-                    {
-                        <option value="@incident.IncidentId">@incident.Title</option>
-                    }
-                </select>
-                <span asp-validation-for="CrisisEventId" class="text-danger"></span>
-            </div>
-
-            <div class="mb-2">
-                <label asp-for="Category">Category</label>
-                <select asp-for="Category" id="categoryInput" class="form-select" required>
-                    <option value="">Select category</option>
-                    @foreach (var category in (List<Category>)ViewBag.Categories)
-                    {
-                        <option value="@category.CategoryId">@category.CategoryName</option>
-                    }
-                </select>
-                <span asp-validation-for="Category" class="text-danger"></span>
-            </div>
-
-            <div class="mb-2">
-                <label asp-for="Quantity">Quantity Needed</label>
-                <input type="number" asp-for="Quantity" id="quantityInput" class="form-control" min="1" required />
-                <span asp-validation-for="Quantity" class="text-danger"></span>
-            </div>
-
-            <div class="mb-2">
-                <label asp-for="Description">Detailed Description</label>
-                <textarea asp-for="Description" id="descriptionInput" class="form-control" rows="3" placeholder="Describe the situation and specific requirements..."></textarea>
-                <span asp-validation-for="Description" class="text-danger"></span>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label fw-bold">Priority Level</label>
-                <div class="btn-group w-100" role="group" aria-label="Priority selection">
-        
-                    <!-- Planned Option -->
-                    <input type="radio" class="btn-check" name="Priority" id="priorityPlanned" value="Planned" autocomplete="off" checked>
-                    <label class="btn btn-outline-secondary d-flex align-items-center justify-content-center gap-2 py-2" for="priorityPlanned">
-                        <i class="bi bi-calendar-event fs-5"></i>
-                        <span>Planned</span>
-                    </label>
-
-                    <!-- Urgent Option -->
-                    <input type="radio" class="btn-check" name="Priority" id="priorityUrgent" value="Urgent" autocomplete="off">
-                    <label class="btn btn-outline-warning d-flex align-items-center justify-content-center gap-2 py-2" for="priorityUrgent">
-                        <i class="bi bi-exclamation-triangle fs-5"></i>
-                        <span>Urgent</span>
-                    </label>
-
-                    <!-- Critical Option (Valgfri) -->
-                    <input type="radio" class="btn-check" name="Priority" id="priorityCritical" value="Critical" autocomplete="off">
-                    <label class="btn btn-outline-danger d-flex align-items-center justify-content-center gap-2 py-2" for="priorityCritical">
-                        <i class="bi bi-fire fs-5"></i>
-                        <span>Critical</span>
-                    </label>
-
-                </div>
-            </div>
-            
-            <div class="mb-2">
-                <label asp-for="RequiredFrom">Needed From</label>
-                <input type="date" asp-for="RequiredFrom" class="form-control" />
-                <span asp-validation-for="RequiredFrom" class="text-danger"></span>
-            </div>
-
-            <div class="mb-2">
-                <label asp-for="Deadline">Needed Until</label>
-                <input type="date" asp-for="Deadline" id="deadlineDate" class="form-control" />
-                <span asp-validation-for="Deadline" class="text-danger"></span>
-            </div>
-            
-
-            <!-- Position fields populated by Leaflet map -->
-            <input type="hidden" asp-for="Latitude" id="latInput"/>
-            <input type="hidden" asp-for="Longitude" id="lngInput"/>
-
-            <p id="posText" class="placeholder-text">
-                @if (Model != null && Model.Latitude != 0 && Model.Longitude != 0)
-                {
-                    @:Selected position: lat: @Model.Latitude.ToString("F5"), lng: @Model.Longitude.ToString("F5")
-                }
-                else
-                {
-                    @:No position marked on the map
-                }
-            </p>
-            
-            <span asp-validation-for="Latitude" class="text-danger d-block mb-2" id="posError"></span>
-
-            <button type="submit" class="btn btn-primary w-100" id="registerButtonPa">Register Need</button>
-        </form>
-    </aside>
-
-    <!-- Map area -->
+<div class="main-layout registration-modal-page">
+    <partial name="_OperationalFeed" />
+    <div class="feed-resizer" role="separator" aria-orientation="vertical"
+         aria-label="Resize operational feed" tabindex="0"></div>
     <section class="map-area">
-        <div class="map-filtering" id ="survival-filter-panel">
+        <div id="map" role="application" aria-label="Interactive map"
+             data-resource-registration-url="@(canRegisterResource ? Url.Action("Index", "Home") : null)"
+             data-need-registration-url="@Url.Action("DashboardIndex", "PublicActor")"
+             data-registration-type="need"></div>
+        <div class="map-filtering is-collapsed" id="survival-filter-panel">
             <div class="map-filter-header">
-                <button type="button"
-                    id="survival-filter-button"
-                    class ="map-filter-button"
-                    aria-expanded="true"
-                    aria-controls="survival-filter-content"
-                    aria-label="Collapse registered resource filters">
-                <i class="bi bi-chevron-left" aria-hidden="true"></i>
-            </button>
-            
-            <strong class="map-filter-title">Filter registered resources</strong>
-        </div>
-
-        <div id="survival-filter-content">
-            <div class="map-filter-options">
-                <label>
-                    <input type="checkbox" class="registered-resources-filter"
-                        value="Drone" checked/>
-                    Drones
-                </label>
-
-                <label>
-                    <input type="checkbox" class="registered-resources-filter"
-                        value ="ATV" checked/>
-                    ATVs
-                </label>
-
-                                <label>
-                    <input type="checkbox" class="registered-resources-filter"
-                        value ="Tractor" checked/>
-                    Tractors
-                </label>
-
-                                <label>
-                    <input type="checkbox" class="registered-resources-filter"
-                        value ="Generator" checked/>
-                    Generators
-                </label>
-
-                                <label>
-                    <input type="checkbox" class="registered-resources-filter"
-                        value ="Excavator" checked/>
-                    Excavators
-                </label>
-
-                                <label>
-                    <input type="checkbox" class="registered-resources-filter"
-                        value ="Truck" checked/>
-                    Trucks
-                </label>
-
-                                <label>
-                    <input type="checkbox" class="registered-resources-filter"
-                        value ="Boat" checked/>
-                    Boats
-                </label>
-
-                <label>
-                    <input type="checkbox" class="registered-resources-filter"
-                        value ="Sand/Gravel" checked/>
-                    Sand / Gravel
-                </label>
-
-                                <label>
-                    <input type="checkbox" class="registered-resources-filter"
-                        value ="Other" checked/>
-                    Other
-                </label>
+                <button type="button" id="survival-filter-button" class="map-filter-button"
+                        aria-expanded="false" aria-controls="survival-filter-content"
+                        aria-label="Collapse registered resource filters">
+                    <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                </button>
+                <strong class="map-filter-title">Filter registered resources</strong>
             </div>
-
-            <p id="registered-resources-status" role="status">
-                Loading registered resources...
-            </p>
+            <div id="survival-filter-content">
+                <div class="map-filter-options">
+                    @foreach (var resourceType in new[] { "Drone", "ATV", "Tractor", "Generator", "Excavator", "Truck", "Boat", "Sand/Gravel", "Other" })
+                    {
+                        <label><input type="checkbox" class="registered-resources-filter" value="@resourceType" checked /> @resourceType</label>
+                    }
+                </div>
+                <p id="registered-resources-status" role="status">Loading registered resources...</p>
+            </div>
         </div>
-        </div> 
-        <div id="map" role="application" aria-label="Interactive map"></div>
         <p id="map-status" class="map-status" role="status" aria-live="polite">Loading map ...</p>
     </section>
+</div>
 
+<div class="modal fade registration-modal" id="registrationModal" tabindex="-1"
+     aria-labelledby="registrationModalTitle" aria-hidden="true" data-bs-backdrop="static"
+     data-registration-modal data-open-registration-modal="@(openRegistrationModal ? "true" : "false")">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg modal-fullscreen-md-down">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title fs-4" id="registrationModalTitle">
+                    <i class="bi bi-clipboard-plus me-2" aria-hidden="true"></i>Register resource need
+                </h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close registration form"></button>
+            </div>
+            <div class="modal-body" data-registration-modal-body>
+                <partial name="_NeedRegistrationForm" model="Model" />
+            </div>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-
-<script>
-    window.publicActorResources = @Html.Raw(ViewBag.ResourceMarkersJson ?? "[]");
-</script>
-
-<script>
-    const map = L.map('map').setView([58.4614, 8.7683], 13);
-    window.resqMap = map;
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
-
-    const mapStatus = document.getElementById('map-status');
-    mapStatus.textContent = 'Map ready. Select position for the crisis need.';
-
-    let selectedMarker = null;
-
-    // Check initial position from model
-    const latElem = document.getElementById('latInput');
-    const lngElem = document.getElementById('lngInput');
-    const initialLat = latElem ? parseFloat(latElem.value) : NaN;
-    const initialLng = lngElem ? parseFloat(lngElem.value) : NaN;
-
-    if (!isNaN(initialLat) && !isNaN(initialLng) && initialLat !== 0) {
-        map.setView([initialLat, initialLng], 13);
-        selectedMarker = L.marker([initialLat, initialLng]).addTo(map)
-            .bindPopup('Need Location: ' + initialLat.toFixed(5) + ', ' + initialLng.toFixed(5))
-            .openPopup();
-    } else if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function (position) {
-            const lat = position.coords.latitude;
-            const lng = position.coords.longitude;
-            map.setView([lat, lng], 13);
-            mapStatus.textContent = 'Map centered on current location.';
+    <script>
+        window.publicActorResources = @Html.Raw(ViewBag.ResourceMarkersJson ?? "[]");
+    </script>
+    <script src="~/js/map-registration.js" asp-append-version="true"></script>
+    <script src="~/js/public-actor-resource-filters.js" asp-append-version="true" defer></script>
+    <script src="~/js/map-filter-button.js" asp-append-version="true" defer></script>
+    <script>
+        window.operationalFeedIncidents = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+            ViewBag.FeedIncidents ?? new List<object>(),
+            new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }));
+    </script>
+    <script src="~/js/operational-feed.js" asp-append-version="true" defer></script>
+    <script>
+        const map = L.map('map').setView([58.4614, 8.7683], 13);
+        window.resqMap = map;
+        const mapElement = document.getElementById('map');
+        const registrationLinks = window.resqMapRegistration.bind(map, {
+            resource: mapElement.dataset.resourceRegistrationUrl,
+            need: mapElement.dataset.needRegistrationUrl,
+            currentType: mapElement.dataset.registrationType
         });
-    }
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+        document.getElementById('map-status').textContent =
+            'Map ready. Select position for the crisis need.';
 
-    const needForm = document.getElementById('needForm');
+        let selectedMarker = null;
+        let abMode = null;
+        let markerA = null;
+        let markerB = null;
+        let abLine = null;
+        let abButton = null;
+        const latInput = document.getElementById('latInput');
+        const lngInput = document.getElementById('lngInput');
+        const requestedLocation = window.resqMapRegistration.readRequestedLocation();
+        const initialLat = Number(latInput?.value);
+        const initialLng = Number(lngInput?.value);
+        const selectedLat = requestedLocation?.lat ?? initialLat;
+        const selectedLng = requestedLocation?.lng ?? initialLng;
 
-    // Frontend validation on submit
-    needForm?.addEventListener('submit', function (e) {
-        let hasErrors = false;
-
-        const lat = document.getElementById('latInput').value;
-        const posError = document.getElementById('posError');
-        
-        if (!lat || lat === "0") {
-            if (posError) posError.textContent = 'Position on map is required.';
-            hasErrors = true;
+        function setPosition(lat, lng) {
+            selectedMarker && map.removeLayer(selectedMarker);
+            selectedMarker = L.marker([lat, lng]).addTo(map)
+                .bindPopup('Need location: ' + lat.toFixed(5) + ', ' + lng.toFixed(5))
+                .openPopup();
+            latInput.value = lat;
+            lngInput.value = lng;
+            document.getElementById('posText').textContent =
+                'Selected position: lat: ' + lat.toFixed(5) + ', lng: ' + lng.toFixed(5);
+            document.getElementById('posError').textContent = '';
         }
 
-        if (hasErrors) {
-            e.preventDefault();
-        }
-    });
-
-    // Map click handling
-    map.on('click', function (e) {
-        const lat = e.latlng.lat;
-        const lng = e.latlng.lng;
-
-        if (selectedMarker) {
-            map.removeLayer(selectedMarker);
+        function createAbIcon(letter) {
+            return L.divIcon({
+                className: '',
+                html: '<div class="ab-marker"><span>' + letter + '</span></div>',
+                iconSize: [28, 28],
+                iconAnchor: [13, 34]
+            });
         }
 
-        selectedMarker = L.marker([lat, lng]).addTo(map)
-            .bindPopup('Need Location: ' + lat.toFixed(5) + ', ' + lng.toFixed(5))
-            .openPopup();
+        function resetAb() {
+            if (markerA) map.removeLayer(markerA);
+            if (markerB) map.removeLayer(markerB);
+            if (abLine) map.removeLayer(abLine);
+            markerA = markerB = abLine = null;
+        }
 
-        document.getElementById('latInput').value = lat;
-        document.getElementById('lngInput').value = lng;
-        document.getElementById('posText').innerText = 'Selected position: lat: ' + lat.toFixed(5) + ', lng: ' + lng.toFixed(5);
+        const AbControl = L.Control.extend({
+            options: { position: 'topleft' },
+            onAdd: function () {
+                const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+                abButton = L.DomUtil.create('a', 'ab-button', container);
+                abButton.href = '#';
+                abButton.title = 'Mark point A and B';
+                abButton.setAttribute('role', 'button');
+                abButton.innerHTML = '<span aria-hidden="true">A-B</span>';
+                L.DomEvent.disableClickPropagation(container);
+                L.DomEvent.on(abButton, 'click', function (event) {
+                    L.DomEvent.preventDefault(event);
+                    if (abMode) {
+                        abMode = null;
+                        abButton.classList.remove('active');
+                    } else {
+                        resetAb();
+                        abMode = 'A';
+                        abButton.classList.add('active');
+                    }
+                });
+                return container;
+            }
+        });
+        new AbControl().addTo(map);
 
-        const posError = document.getElementById('posError');
-        if (posError) posError.textContent = '';
-    });
-</script>
-<script src="~/js/public-actor-resource-filters.js"
-    asp-append-version="true"></script>
-    <script src="~/js/map-filter-button.js"
-        asp-append-version="true"></script>
+        if (Number.isFinite(selectedLat) && Number.isFinite(selectedLng) &&
+            (requestedLocation || selectedLat !== 0 || selectedLng !== 0)) {
+            setPosition(selectedLat, selectedLng);
+            map.setView([selectedLat, selectedLng], 13);
+        } else if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(position =>
+                map.setView([position.coords.latitude, position.coords.longitude], 13));
+        }
+        map.on('click', event => {
+            if (abMode === 'A') {
+                markerA = L.marker(event.latlng, { icon: createAbIcon('A') }).addTo(map);
+                abMode = 'B';
+                return;
+            }
+            if (abMode === 'B') {
+                markerB = L.marker(event.latlng, { icon: createAbIcon('B') }).addTo(map);
+                abLine = L.polyline([markerA.getLatLng(), markerB.getLatLng()], {
+                    color: '#ff8c00', weight: 4, dashArray: '8 6'
+                }).addTo(map);
+                map.fitBounds(abLine.getBounds(), { padding: [60, 60] });
+                abMode = null;
+                abButton.classList.remove('active');
+                return;
+            }
+            setPosition(event.latlng.lat, event.latlng.lng);
+            registrationLinks(event.latlng);
+        });
+        document.getElementById('needForm')?.addEventListener('submit', event => {
+            if (!latInput.value || latInput.value === '0') {
+                event.preventDefault();
+                document.getElementById('posError').textContent =
+                    'Position on the map is required.';
+            }
+        });
+        const modalElement = document.getElementById('registrationModal');
+        if (modalElement.dataset.openRegistrationModal === 'true') {
+            bootstrap.Modal.getOrCreateInstance(modalElement).show();
+        }
+    </script>
 }

@@ -16,6 +16,9 @@ public class AppDbContext : DbContext
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Incident> Incidents => Set<Incident>();
     public DbSet<MatchRecord> MatchRecords => Set<MatchRecord>();
+    public DbSet<User> Users => Set<User>();
+    public DbSet<CivilianProvider> CivilianProviders => Set<CivilianProvider>();
+    public DbSet<PublicActor> PublicActors => Set<PublicActor>();
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -61,6 +64,8 @@ public class AppDbContext : DbContext
             entity.HasKey(i => i.IncidentId);
             entity.Property(i => i.IncidentId).HasColumnName("IncidentID");
             entity.Property(i => i.PublicActorId).HasColumnName("PublicActorID");
+            entity.Property(i => i.NormalizedTitle).HasColumnName("NormalizedTitle");
+            entity.Property(i => i.IncidentType).HasColumnName("IncidentType");
             entity.Property(i => i.Latitude).HasPrecision(9, 6);
             entity.Property(i => i.Longitude).HasPrecision(9, 6);
         });
@@ -72,6 +77,29 @@ public class AppDbContext : DbContext
             entity.Property(m => m.NeedId).HasColumnName("NeedID");
             entity.Property(m => m.ResourceId).HasColumnName("ResourceID");
             entity.Property(m => m.PublicActorId).HasColumnName("PublicActorID");
+        });
+
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.ToTable("User");
+            entity.HasKey(u => u.Id);
+            entity.Property(u => u.Id).HasColumnName("UserID");
+            entity.Property(u => u.Role).HasConversion<string>();
+        });
+
+        modelBuilder.Entity<CivilianProvider>(entity =>
+        {
+            entity.ToTable("CivilianProvider");
+            entity.HasKey(p => p.ProviderId);
+            entity.Property(p => p.ProviderId).HasColumnName("ProviderID");
+        });
+
+        modelBuilder.Entity<PublicActor>(entity =>
+        {
+            entity.ToTable("PublicActor");
+            entity.HasKey(p => p.PublicActorId);
+            entity.Property(p => p.PublicActorId).HasColumnName("PublicActorID");
+            entity.Property(p => p.OrganizationId).HasColumnName("OrganizationID");
         });
             
     }

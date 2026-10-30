@@ -1,0 +1,91 @@
+@model H_st_2026_Gruppe_1.Models.ResourceNeed
+
+<form id="needForm" class="registration-form" asp-controller="PublicActor" asp-action="RegisterNeed" method="post">
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" name="OpenRegistrationModal" value="true" />
+
+    <div class="mb-3">
+        <label asp-for="Title" class="form-label">Title</label>
+        <input asp-for="Title" id="titleInput" class="form-control" placeholder="Need excavators for landslide clearing" required />
+        <span asp-validation-for="Title" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="ContactInfo" class="form-label">Contact information</label>
+        <input asp-for="ContactInfo" id="contactInput" class="form-control" placeholder="Phone number or email" required />
+        <span asp-validation-for="ContactInfo" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="CrisisEventId" class="form-label">Crisis incident</label>
+        <select asp-for="CrisisEventId" id="crisisEventInput" class="form-select" required>
+            <option value="">Select incident</option>
+            @foreach (var incident in (List<Incident>)ViewBag.Incidents)
+            {
+                <option value="@incident.IncidentId">@incident.Title</option>
+            }
+        </select>
+        <span asp-validation-for="CrisisEventId" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Category" class="form-label">Category</label>
+        <select asp-for="Category" id="categoryInput" class="form-select" required>
+            <option value="">Select category</option>
+            @foreach (var category in (List<Category>)ViewBag.Categories)
+            {
+                <option value="@category.CategoryId">@category.CategoryName</option>
+            }
+        </select>
+        <span asp-validation-for="Category" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Quantity" class="form-label">Quantity needed</label>
+        <input asp-for="Quantity" id="quantityInput" class="form-control" min="1" required />
+        <span asp-validation-for="Quantity" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Description" class="form-label">Detailed description</label>
+        <textarea asp-for="Description" id="descriptionInput" class="form-control" rows="3" placeholder="Describe the situation and specific requirements..."></textarea>
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+
+    <fieldset class="mb-3">
+        <legend class="form-label">Priority level</legend>
+        <div class="registration-priority" role="group" aria-label="Priority selection">
+            <input type="radio" class="btn-check" asp-for="Priority" id="priorityPlanned" value="Planned" />
+            <label class="btn btn-outline-secondary" for="priorityPlanned">Planned</label>
+            <input type="radio" class="btn-check" asp-for="Priority" id="priorityUrgent" value="Urgent" />
+            <label class="btn btn-outline-warning" for="priorityUrgent">Urgent</label>
+            <input type="radio" class="btn-check" asp-for="Priority" id="priorityCritical" value="Critical" />
+            <label class="btn btn-outline-danger" for="priorityCritical">Critical</label>
+        </div>
+        <span asp-validation-for="Priority" class="text-danger"></span>
+    </fieldset>
+
+    <div class="mb-3">
+        <label asp-for="RequiredFrom" class="form-label">Needed from</label>
+        <input type="date" asp-for="RequiredFrom" class="form-control" />
+        <span asp-validation-for="RequiredFrom" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Deadline" class="form-label">Needed until</label>
+        <input type="date" asp-for="Deadline" class="form-control" />
+        <span asp-validation-for="Deadline" class="text-danger"></span>
+    </div>
+
+    <input type="hidden" asp-for="Latitude" id="latInput" />
+    <input type="hidden" asp-for="Longitude" id="lngInput" />
+    <p id="posText" class="placeholder-text">
+        @(Model.Latitude != 0 && Model.Longitude != 0
+            ? $"Selected position: lat: {Model.Latitude:F5}, lng: {Model.Longitude:F5}"
+            : "No position marked on the map")
+    </p>
+    <span asp-validation-for="Latitude" class="text-danger d-block mb-2" id="posError"></span>
+
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+    <button type="submit" class="btn btn-primary w-100">Register need</button>
+</form>

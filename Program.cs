@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using H_st_2026_Gruppe_1.Data;
+using H_st_2026_Gruppe_1.Models;
 
 // App builder 
 var builder = WebApplication.CreateBuilder(args);
@@ -29,6 +30,14 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
     ?? throw new InvalidOperationException("The connection string 'DefaultConnection' is missing.");
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(connectionString, new MariaDbServerVersion(new Version(11, 4, 0))));
+
+//User registration
+builder.Services.AddIdentityCore<User>(options =>
+{
+    options.User.RequireUniqueEmail = true;
+    options.Password.RequiredLength = 8;
+})
+.AddEntityFrameworkStores<AppDbContext>();
 
 var app = builder.Build();
 
