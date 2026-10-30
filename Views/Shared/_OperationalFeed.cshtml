@@ -1,0 +1,106 @@
+@using H_st_2026_Gruppe_1.Models
+@{
+    var resources = (IReadOnlyList<OperationalFeedItem>)(ViewBag.FeedResources ?? new List<OperationalFeedItem>());
+    var needs = (IReadOnlyList<OperationalFeedItem>)(ViewBag.FeedNeeds ?? new List<OperationalFeedItem>());
+    var incidents = (IReadOnlyList<OperationalFeedItem>)(ViewBag.FeedIncidents ?? new List<OperationalFeedItem>());
+    var feedItems = resources.Concat(needs).Concat(incidents).OrderByDescending(item => item.CreatedAt).ToList();
+}
+
+<aside class="operational-feed" aria-label="Operational feed">
+    <div class="operational-feed-header">
+        <p class="section-label">Operational feed</p>
+        <div class="feed-search-row">
+            <label class="visually-hidden" for="feed-search">Search operational feed</label>
+            <div class="operational-feed-search">
+                <i class="bi bi-search" aria-hidden="true"></i>
+                <input id="feed-search" type="search" class="form-control"
+                       placeholder="Search needs, resources, incidents..." autocomplete="off" />
+            </div>
+            <button type="button" class="btn btn-outline-secondary feed-filter-toggle"
+                    data-feed-filter-toggle aria-expanded="false" aria-controls="feed-filter-controls">
+                <i class="bi bi-sliders me-1" aria-hidden="true"></i>Filter
+            </button>
+        </div>
+        <div id="feed-filter-controls" class="feed-filter-controls">
+            <div class="feed-filter-column">
+                <div class="operational-feed-tabs" role="group" aria-label="Filter feed">
+                    <button type="button" class="btn btn-primary active" data-feed-type="all">
+                        All (<span>@feedItems.Count</span>)
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" data-feed-type="need">
+                        Needs (<span>@needs.Count</span>)
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" data-feed-type="resource">
+                        Resources (<span>@resources.Count</span>)
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" data-feed-type="incident">
+                        Incidents (<span>@incidents.Count</span>)
+                    </button>
+                </div>
+            </div>
+            <div class="feed-location-column">
+                <div class="operational-feed-radius">
+                    <label for="feed-radius">Radius</label>
+                    <output id="feed-radius-value" for="feed-radius">All distances</output>
+                    <input id="feed-radius" type="range" class="form-range" min="0" max="100" step="5" value="0" />
+                </div>
+                <div class="feed-location-actions">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-feed-current-location
+                            aria-label="Show current location">
+                            <i class="bi bi-crosshair me-1" aria-hidden="true"></i>Current location
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-feed-reset-location
+                            aria-label="Reset filters and return to current location">
+                            <i class="bi bi-arrow-counterclockwise me-1" aria-hidden="true"></i>Reset filters
+                    </button>
+                </div>
+            </div>
+        </div>
+        <p id="feed-location-status" class="feed-status" role="status">
+            Showing all registered items. Allow location to sort by distance.
+        </p>
+        <button type="button" class="btn btn-outline-secondary feed-results-toggle"
+                data-feed-results-toggle aria-expanded="false" aria-controls="operational-feed-list">
+            <span data-feed-results-label>Show results</span>
+            <i class="bi bi-chevron-up ms-1" aria-hidden="true"></i>
+        </button>
+    </div>
+    <div id="operational-feed-list" class="operational-feed-list">
+        @foreach (var item in feedItems)
+        {
+            <article class="feed-card feed-card--interactive" data-feed-item data-feed-type="@item.Type"
+                     data-feed-search="@($"{item.Title} {item.Description} {item.Category} {item.Status}")"
+                     data-latitude="@item.Latitude" data-longitude="@item.Longitude"
+                     data-feed-title="@item.Title" role="button" tabindex="0"
+                     aria-label="Show @item.Title on map">
+                <div class="feed-card-heading">
+                    <span class="feed-card-type">@item.Type</span>
+                    <time datetime="@item.CreatedAt.ToString("O")">@item.CreatedAt.ToString("dd.MM.yyyy HH:mm")</time>
+                </div>
+                <h2>@item.Title</h2>
+                @if (!string.IsNullOrWhiteSpace(item.Description))
+                {
+                    <p>@item.Description</p>
+                }
+                <dl>
+                    @if (!string.IsNullOrWhiteSpace(item.Category))
+                    {
+                        <div><dt>Category</dt><dd>@item.Category</dd></div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(item.Status))
+                    {
+                        <div><dt>Status</dt><dd>@item.Status</dd></div>
+                    }
+                    <div><dt>Location</dt><dd>@item.Latitude.ToString("F4"), @item.Longitude.ToString("F4")</dd></div>
+                </dl>
+                <div class="feed-card-actions">
+                    @if (item.Type == "need")
+                    {
+                        <a asp-controller="PublicActor" asp-action="Matches" asp-route-needId="@item.Id" class="btn btn-primary btn-sm">Match resource</a>
+                    }
+                </div>
+            </article>
+        }
+        <p class="placeholder-copy feed-empty" hidden>No items match the current filters.</p>
+    </div>
+</aside>

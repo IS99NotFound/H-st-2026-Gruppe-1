@@ -30,7 +30,13 @@ public class PublicActorController : Controller
 
     public IActionResult DashboardIndex(int? id)
     {
+        if (!CanRegisterNeed())
+        {
+            return RedirectToAction("Index", "Home");
+        }
+
         LoadDropdowns();
+        LoadOperationalFeed();
         if (id.HasValue)
         {
             var need = _db.Needs.Find(id.Value);
@@ -42,6 +48,56 @@ public class PublicActorController : Controller
         }
 
         return View(new ResourceNeed());
+    }
+
+    private void LoadOperationalFeed()
+    {
+        ViewBag.FeedResources = _db.Resources
+            .Include(resource => resource.Category)
+            .AsEnumerable()
+            .Select(resource => new OperationalFeedItem
+            {
+                Type = "resource",
+                Id = resource.Id,
+                Title = resource.Name,
+                Description = resource.Description,
+                Status = resource.Status,
+                Category = resource.Category?.CategoryName,
+                Latitude = resource.Latitude ?? 0,
+                Longitude = resource.Longitude ?? 0,
+                CreatedAt = resource.RegisteredAt
+            })
+            .ToList();
+        ViewBag.FeedNeeds = _db.Needs
+            .Include(need => need.CategoryInfo)
+            .AsEnumerable()
+            .Select(need => new OperationalFeedItem
+            {
+                Type = "need",
+                Id = need.Id,
+                Title = need.Title,
+                Description = need.Description,
+                Status = need.Status,
+                Category = need.CategoryInfo?.CategoryName,
+                Latitude = need.Latitude,
+                Longitude = need.Longitude,
+                CreatedAt = need.RegisteredAt
+            })
+            .ToList();
+        ViewBag.FeedIncidents = _db.Incidents
+            .AsEnumerable()
+            .Select(incident => new OperationalFeedItem
+            {
+                Type = "incident",
+                Id = incident.IncidentId,
+                Title = incident.Title,
+                Description = incident.Description,
+                Status = incident.Status,
+                Latitude = (double)incident.Latitude,
+                Longitude = (double)incident.Longitude,
+                CreatedAt = incident.CreatedAt
+            })
+            .ToList();
     }
     
     
@@ -79,6 +135,12 @@ public class PublicActorController : Controller
             _ => 4
         };
     }
+
+    private bool CanRegisterNeed()
+    {
+        return User.IsInRole("PublicActor") || User.IsInRole("Administrator");
+    }
+
     [HttpGet]
     
 
@@ -86,9 +148,16 @@ public class PublicActorController : Controller
     [HttpPost]
     public IActionResult RegisterNeed(ResourceNeed need)
     {
+        if (!CanRegisterNeed())
+        {
+            return RedirectToAction("Index", "Home");
+        }
+
         if (!ModelState.IsValid)
         {
             LoadDropdowns();
+            LoadOperationalFeed();
+            ViewBag.OpenRegistrationModal = true;
             return View("DashboardIndex", need);
         }
         // Save to database
@@ -271,7 +340,13 @@ public class HomeController : Controller
 
     public IActionResult Index(int? id)
     {
+        if (!CanRegisterResource())
+        {
+            return RedirectToAction("DashboardIndex", "PublicActor");
+        }
+
         ViewBag.Categories = _db.Categories.OrderBy(c => c.CategoryId).ToList();
+        LoadOperationalFeed();
 
         if (id.HasValue)
         {
@@ -284,6 +359,56 @@ public class HomeController : Controller
         
         // Sends an empty model to the form the first time the page is opened.
         return View(new ResourceEntry());     
+    }
+
+    private void LoadOperationalFeed()
+    {
+        ViewBag.FeedResources = _db.Resources
+            .Include(resource => resource.Category)
+            .AsEnumerable()
+            .Select(resource => new OperationalFeedItem
+            {
+                Type = "resource",
+                Id = resource.Id,
+                Title = resource.Name,
+                Description = resource.Description,
+                Status = resource.Status,
+                Category = resource.Category?.CategoryName,
+                Latitude = resource.Latitude ?? 0,
+                Longitude = resource.Longitude ?? 0,
+                CreatedAt = resource.RegisteredAt
+            })
+            .ToList();
+        ViewBag.FeedNeeds = _db.Needs
+            .Include(need => need.CategoryInfo)
+            .AsEnumerable()
+            .Select(need => new OperationalFeedItem
+            {
+                Type = "need",
+                Id = need.Id,
+                Title = need.Title,
+                Description = need.Description,
+                Status = need.Status,
+                Category = need.CategoryInfo?.CategoryName,
+                Latitude = need.Latitude,
+                Longitude = need.Longitude,
+                CreatedAt = need.RegisteredAt
+            })
+            .ToList();
+        ViewBag.FeedIncidents = _db.Incidents
+            .AsEnumerable()
+            .Select(incident => new OperationalFeedItem
+            {
+                Type = "incident",
+                Id = incident.IncidentId,
+                Title = incident.Title,
+                Description = incident.Description,
+                Status = incident.Status,
+                Latitude = (double)incident.Latitude,
+                Longitude = (double)incident.Longitude,
+                CreatedAt = incident.CreatedAt
+            })
+            .ToList();
     }
     
     [HttpPost]
@@ -327,6 +452,11 @@ public class HomeController : Controller
     [HttpPost]
     public IActionResult RegisterResource(ResourceEntry resource)
     {
+        if (!CanRegisterResource())
+        {
+            return RedirectToAction(nameof(Index));
+        }
+
         var resourceType = _db.Categories.Find(resource.CategoryId)?.CategoryName ?? "";
         if (resource.ExpirationDate is null && !string.IsNullOrWhiteSpace(resourceType))
         {
@@ -338,6 +468,8 @@ public class HomeController : Controller
         {
             // sends the user to form with attributes and error messages filled out
             ViewBag.Categories = _db.Categories.OrderBy(c => c.CategoryId).ToList();
+            LoadOperationalFeed();
+            ViewBag.OpenRegistrationModal = true;
             return View("Index", resource);
         }
 
@@ -367,6 +499,16 @@ public class HomeController : Controller
         }
         _db.SaveChanges();
         return RedirectToAction("Index", "Resources");
+    }
+
+    private bool CanRegisterResource()
+    {
+        return User.IsInRole("ResourceProvider") || User.IsInRole("Administrator");
+    }
+
+    private bool CanRegisterNeed()
+    {
+        return User.IsInRole("PublicActor") || User.IsInRole("Administrator");
     }
 
     // Calculates the expiry date based on the resource category.

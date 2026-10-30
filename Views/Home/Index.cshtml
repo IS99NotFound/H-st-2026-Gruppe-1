@@ -1,235 +1,193 @@
-﻿@model H_st_2026_Gruppe_1.Models.ResourceEntry
+@model H_st_2026_Gruppe_1.Models.ResourceEntry
 @{
     ViewData["Title"] = "Home Page";
     ViewData["FullWidth"] = true;
+    ViewData["RegistrationType"] = "resource";
+    var canRegisterNeed = User.IsInRole("PublicActor") || User.IsInRole("Administrator");
+    var openRegistrationModal = ViewBag.OpenRegistrationModal is bool shouldOpen
+        ? shouldOpen
+        : Context.Request.Query["register"] == "resource" ||
+          Model.Id > 0;
 }
-<div class="main-layout">
 
-    <aside id="side-panel" class="side-panel" aria-label="Resource registration">
-        <div class="side-panel-header">
-            <div>
-                <h1>Register a resource</h1>
-            </div>
-            <button class="panel-toggle panel-close" type="button" aria-controls="side-panel" aria-expanded="false">
-                <span class="visually-hidden">Close resource panel</span>
-                <i class="bi bi-x-lg" aria-hidden="true"></i>
-            </button>
-        </div>
-
-        <!-- Form for registering a resource -->
-        <form id="resourceForm" asp-controller="Home" asp-action="RegisterResource" method="post">
-            <input type="hidden" asp-for="Id" />
-            <div class="mb-2">
-                <label for="nameInput">Full name</label>
-                <input type="text" name="Name" id="nameInput" value="@Model.Name" class="form-control" required />
-                <small id="nameError" class="text-danger"></small>
-                <span asp-validation-for="Name" class="text-warning"></span> 
-                <div asp-validation-summary="ModelOnly" class="text-danger"></div> 
-            </div>
-
-            <div class="mb-2">
-                <label for="contactInput">Contact information</label>
-                <input type="text" name="Phone" id="contactInput" value="@Model.Phone" class="form-control" placeholder="Phone number or email" required />
-                <small id="contactError" class="text-danger"></small>
-                <span asp-validation-for="Phone" class="text-warning"></span>
-            </div>
-
-            <div class="mb-2">
-                <label for="resourceType">Resource type</label>
-                <select name="CategoryId" id="resourceType" class="form-control" required>
-                    <option value="">Select an option</option>
-                    @foreach (var category in (List<Category>)ViewBag.Categories)
-                    {
-                        <option value="@category.CategoryId" selected="@(Model.CategoryId == category.CategoryId)">@category.CategoryName</option>
-                    }
-                </select>
-                <span asp-validation-for="CategoryId" class="text-danger"></span>
-            </div>
-
-            <div class="mb-2">
-                <label asp-for="Description">Description</label>
-                <textarea asp-for="Description" id="descriptionInput" class="form-control"></textarea>
-                <span asp-validation-for="Description" class="text-danger"></span>
-            </div>
-            
-            <div class="mb-2">
-                <label asp-for="AvailableFrom">Effective date</label>
-                <input type="date" asp-for="AvailableFrom" class="form-control" />
-                <span asp-validation-for="AvailableFrom" class="text-danger"></span>
-            </div>
-            
-            <div class="mb-2">
-                <label asp-for="ExpirationDate">Expiration date</label>
-                <input type="date" asp-for="ExpirationDate" id="expiryDate" class="form-control" />
-                <span asp-validation-for="ExpirationDate" class="text-danger"></span>
-
-            </div>
-
-            <!-- Filled by JavaScript when the user clicks the map -->
-            <input type="hidden" asp-for="Latitude" id="latInput"/>
-            <input type="hidden" asp-for="Longitude" id="lngInput"/>
-            <p id="posText" class="placeholder-text">
-                @(Model.Latitude != null && Model.Longitude != null
-                    ? $"Selected position: lat:{Model.Latitude:F5}, lng: {Model.Longitude:F5}"
-                    : "No position marked on the map")
-            </p>
-            <span asp-validation-for="Latitude" class="text-danger d-block mb-2" id="posError"></span>
-
-            <button type="submit" class="btn btn-primary">Register resource</button>
-        </form>
-    </aside>
-
-    <!-- Map area (2/3), filtering meny (legg inn flere senere)-->
+<div class="main-layout registration-modal-page">
+    <partial name="_OperationalFeed" />
+    <div class="feed-resizer" role="separator" aria-orientation="vertical"
+         aria-label="Resize operational feed" tabindex="0"></div>
     <section class="map-area">
-        <div class="map-filtering" id="survival-filter-panel">
+        <div id="map" role="application" aria-label="Interactive map"
+             data-resource-registration-url="@Url.Action("Index", "Home")"
+             data-need-registration-url="@(canRegisterNeed ? Url.Action("DashboardIndex", "PublicActor") : null)"
+             data-registration-type="resource"></div>
+        <div class="map-filtering is-collapsed" id="survival-filter-panel">
             <div class="map-filter-header">
-                 <strong class="map-filter-title">Find survial locations</strong>
-            
-                <button type="button"
-                    id="survival-filter-button"
-                    class="map-filter-button"
-                    aria-expanded="true"
-                    aria-controls="survival-filter-content"
-                    aria-label="Collapse survival location filters">
-                    <i class="bi bi-chevron-left" aria-hidden="true"></i>
+                <strong class="map-filter-title">Find survival locations</strong>
+                <button type="button" id="survival-filter-button" class="map-filter-button"
+                        aria-expanded="false" aria-controls="survival-filter-content"
+                        aria-label="Expand survival location filters">
+                    <i class="bi bi-chevron-right" aria-hidden="true"></i>
                 </button>
             </div>
-
-            <div id ="survival-filter-content">
+            <div id="survival-filter-content">
                 <div class="map-filter-options">
-                <label>
-                    <input type="checkbox" class="survival-filter"
-                    value="hospital" checked />
-                    Hospitals
-                </label>
-
-                <label>
-                    <input type="checkbox" class="survival-filter"
-                    value="drinking_water" checked />
-                    Drinking water
-                </label>
-
-                <label>
-                    <input type="checkbox" class="survival-filter"
-                    value="shelter" checked />
-                    Shelters/bunkers
-                </label>
+                    <label><input type="checkbox" class="survival-filter" value="hospital" checked /> Hospitals</label>
+                    <label><input type="checkbox" class="survival-filter" value="drinking_water" checked /> Drinking water</label>
+                    <label><input type="checkbox" class="survival-filter" value="shelter" checked /> Shelters/bunkers</label>
+                </div>
+                <p id="survival-filter-status" role="status">Loading existing locations...</p>
             </div>
-
-            <p id="survival-filter-status" role="status">
-                Loading existing locations...
-            </p>
         </div>
-        </div>
-        <div id="map" role="application" aria-label="Interactive map"></div>
         <p id="map-status" class="map-status" role="status" aria-live="polite">Loading map ...</p>
     </section>
+</div>
 
+<div class="modal fade registration-modal" id="registrationModal" tabindex="-1"
+     aria-labelledby="registrationModalTitle" aria-hidden="true" data-bs-backdrop="static"
+     data-registration-modal data-open-registration-modal="@(openRegistrationModal ? "true" : "false")">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg modal-fullscreen-md-down">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title fs-4" id="registrationModalTitle">
+                    <i class="bi bi-box-seam me-2" aria-hidden="true"></i>Register a resource
+                </h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close registration form"></button>
+            </div>
+            <div class="modal-body" data-registration-modal-body>
+                <partial name="_ResourceRegistrationForm" model="Model" />
+            </div>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    <script src="~/js/survival-location-filters.js"
-        asp-append-version="true"></script>
-
-    <script src="~/js/map-filter-button.js"
-        asp-append-version="true"></script>
-}
+    <script src="~/js/map-registration.js" asp-append-version="true"></script>
+    <script src="~/js/survival-location-filters.js" asp-append-version="true" defer></script>
+    <script src="~/js/map-filter-button.js" asp-append-version="true" defer></script>
+    <script>
+        window.operationalFeedIncidents = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+            ViewBag.FeedIncidents ?? new List<object>(),
+            new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }));
+    </script>
+    <script src="~/js/operational-feed.js" asp-append-version="true" defer></script>
     <script>
         const map = L.map('map').setView([58.4614, 8.7683], 13);
         window.resqMap = map;
-
+        const mapElement = document.getElementById('map');
+        const registrationLinks = window.resqMapRegistration.bind(map, {
+            resource: mapElement.dataset.resourceRegistrationUrl,
+            need: mapElement.dataset.needRegistrationUrl,
+            currentType: mapElement.dataset.registrationType
+        });
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
-
-        const mapStatus = document.getElementById('map-status');
-        mapStatus.textContent = 'The map is ready. Select a position or use your current location.';
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+        document.getElementById('map-status').textContent =
+            'The map is ready. Select a position or use your current location.';
 
         let selectedMarker = null;
+        let abMode = null;
+        let markerA = null;
+        let markerB = null;
+        let abLine = null;
+        let abButton = null;
+        const latInput = document.getElementById('latInput');
+        const lngInput = document.getElementById('lngInput');
+        const requestedLocation = window.resqMapRegistration.readRequestedLocation();
+        const initialLat = Number(latInput?.value);
+        const initialLng = Number(lngInput?.value);
+        const selectedLat = requestedLocation?.lat ?? initialLat;
+        const selectedLng = requestedLocation?.lng ?? initialLng;
 
-        // Check if position already exists (E.g., when editing)
-        const initialLat = parseFloat(document.getElementById('latInput').value);
-        const initialLng = parseFloat(document.getElementById('lngInput').value);
-        if (!isNaN(initialLat) && !isNaN(initialLng)) {
-        map.setView([initialLat, initialLng], 13);
-        selectedMarker = L.marker([initialLat, initialLng]).addTo(map)
-        .bindPopup('Selected position: ' + initialLat.toFixed(5) + ', ' + initialLng.toFixed(5))
-        .openPopup();
-    } else if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function (position) {
-            const lat = position.coords.latitude;
-            const lng = position.coords.longitude;
-            map.setView([lat, lng], 13);
-            L.marker([lat, lng]).addTo(map).bindPopup('You are here').openPopup();
-            mapStatus.textContent = 'The map is showing your current location.';
-        }, function (error) {
-            console.log('Could not get position:', error.message);
-            mapStatus.textContent = 'Your location could not be found. You can still select a position on the map.';
+        function setPosition(lat, lng) {
+            selectedMarker && map.removeLayer(selectedMarker);
+            selectedMarker = L.marker([lat, lng]).addTo(map)
+                .bindPopup('Selected position: ' + lat.toFixed(5) + ', ' + lng.toFixed(5))
+                .openPopup();
+            if (latInput) latInput.value = lat;
+            if (lngInput) lngInput.value = lng;
+            document.getElementById('posText').textContent =
+                'Selected position: lat: ' + lat.toFixed(5) + ', lng: ' + lng.toFixed(5);
+            document.getElementById('posError').textContent = '';
+        }
+
+        function createAbIcon(letter) {
+            return L.divIcon({
+                className: '',
+                html: '<div class="ab-marker"><span>' + letter + '</span></div>',
+                iconSize: [28, 28],
+                iconAnchor: [13, 34]
+            });
+        }
+
+        function resetAb() {
+            if (markerA) map.removeLayer(markerA);
+            if (markerB) map.removeLayer(markerB);
+            if (abLine) map.removeLayer(abLine);
+            markerA = markerB = abLine = null;
+        }
+
+        function setAbMode(mode) {
+            abMode = mode;
+            map.getContainer().classList.toggle('placing', mode !== null);
+            abButton?.classList.toggle('active', mode !== null);
+        }
+
+        const AbControl = L.Control.extend({
+            options: { position: 'topleft' },
+            onAdd: function () {
+                const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+                abButton = L.DomUtil.create('a', 'ab-button', container);
+                abButton.href = '#';
+                abButton.title = 'Mark point A and B';
+                abButton.setAttribute('role', 'button');
+                abButton.innerHTML = '<span aria-hidden="true">A-B</span>';
+                L.DomEvent.disableClickPropagation(container);
+                L.DomEvent.on(abButton, 'click', function (event) {
+                    L.DomEvent.preventDefault(event);
+                    if (abMode) {
+                        setAbMode(null);
+                    } else {
+                        resetAb();
+                        setAbMode('A');
+                    }
+                });
+                return container;
+            }
         });
-    }
+        new AbControl().addTo(map);
 
-        const resourceType = document.getElementById('resourceType');
-        const expiryDate = document.getElementById('expiryDate');
-        const resourceForm = document.getElementById('resourceForm');
-        const nameInput = document.getElementById('nameInput');
-        const contactInput = document.getElementById('contactInput');
-        const nameError = document.getElementById('nameError');
-        const contactError = document.getElementById('contactError');
-
-        // Validate form after submitting
-        resourceForm.addEventListener('submit', function (e) {
-        let hasErrors = false;
-
-        if (nameInput && !nameInput.value.trim()) {
-        if (nameError) {
-        nameError.textContent = 'Name is required.';
-        nameError.hidden = false;
-    }
-        hasErrors = true;
-    }
-
-        if (contactInput && !contactInput.value.trim()) {
-        if (contactError) {
-        contactError.textContent = 'A phone number or email address is required.';
-        contactError.hidden = false;
-    }
-        hasErrors = true;
-    }
-
-        const lat = document.getElementById('latInput').value;
-        const posError = document.getElementById('posError');
-        if (!lat) {
-        if (posError) {
-        posError.textContent = 'Position on the map must be filled out';
-    }
-        hasErrors = true;
-    }
-
-        // If error, cancel report
-        if (hasErrors) {
-        e.preventDefault();
-    }
-    });
-
-        // Hide error messages while user types 
-        if (nameInput) {
-        nameInput.addEventListener('input', function () {
-            if (nameError) nameError.hidden = nameInput.value.trim() !== '';
+        if (Number.isFinite(selectedLat) && Number.isFinite(selectedLng) &&
+            (requestedLocation || selectedLat !== 0 || selectedLng !== 0)) {
+            setPosition(selectedLat, selectedLng);
+            map.setView([selectedLat, selectedLng], 13);
+        } else if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(position =>
+                map.setView([position.coords.latitude, position.coords.longitude], 13));
+        }
+        map.on('click', event => {
+            if (abMode === 'A') {
+                markerA = L.marker(event.latlng, { icon: createAbIcon('A') }).addTo(map);
+                setAbMode('B');
+                return;
+            }
+            if (abMode === 'B') {
+                markerB = L.marker(event.latlng, { icon: createAbIcon('B') }).addTo(map);
+                abLine = L.polyline([markerA.getLatLng(), markerB.getLatLng()], {
+                    color: '#ff8c00', weight: 4, dashArray: '8 6'
+                }).addTo(map);
+                map.fitBounds(abLine.getBounds(), { padding: [60, 60] });
+                setAbMode(null);
+                return;
+            }
+            setPosition(event.latlng.lat, event.latlng.lng);
+            registrationLinks(event.latlng);
         });
-    }
 
-        if (contactInput) {
-        contactInput.addEventListener('input', function () {
-            if (contactError) contactError.hidden = contactInput.value.trim() !== '';
-        });
-    }
-
-        // Calculate expiration date when resource type changes 
-        if (resourceType) {
-        resourceType.addEventListener('change', function () {
+        document.getElementById('resourceType')?.addEventListener('change', event => {
+            const expiryDate = document.getElementById('expiryDate');
             const renewalDate = new Date();
-            switch (resourceType.value) {
+            switch (event.target.value) {
                 case 'Medical':
                     renewalDate.setMonth(renewalDate.getMonth() + 1);
                     break;
@@ -248,134 +206,18 @@
                     expiryDate.value = '';
                     return;
             }
-
-            const year = renewalDate.getFullYear();
-            const month = String(renewalDate.getMonth() + 1).padStart(2, '0');
-            const day = String(renewalDate.getDate()).padStart(2, '0');
-            expiryDate.value = `${year}-${month}-${day}`;
+            expiryDate.value = renewalDate.toISOString().slice(0, 10);
         });
-    }
-
-    // A to B line
-    let abMode = null;
-    let markerA = null;
-    let markerB = null;
-    let abLine = null;
-    let abButton = null;
-
-    function createAbIcon(letter) {
-        return L.divIcon({
-            className: '',
-            html: '<div class="ab-marker"><span>' + letter + '</span></div>',
-            iconSize: [28, 28],
-            iconAnchor: [13, 34]
+        document.getElementById('resourceForm')?.addEventListener('submit', event => {
+            if (!latInput?.value || !lngInput?.value) {
+                event.preventDefault();
+                document.getElementById('posError').textContent =
+                    'Position on the map is required.';
+            }
         });
-    }
-
-    function resetAb() {
-        if (markerA) map.removeLayer(markerA);
-        if (markerB) map.removeLayer(markerB);
-        if (abLine) map.removeLayer(abLine);
-        markerA = markerB = abLine = null;
-    }
-
-    function setAbMode(mode) {
-        abMode = mode;
-        const active = mode !== null;
-    
-
-    map.getContainer().classList.toggle('placing', active);
-        abButton.classList.toggle('active', active);
-    }
-
-    function showBothPoints() {
-        const bounds = abLine.getBounds();
-        if (!map.getBounds().pad(-0.1).contains(bounds))
-        {
-            map.fitBounds(bounds, { padding: [60, 60] });
+        const modalElement = document.getElementById('registrationModal');
+        if (modalElement.dataset.openRegistrationModal === 'true') {
+            bootstrap.Modal.getOrCreateInstance(modalElement).show();
         }
-    }
-
-    const AbControl = L.Control.extend({
-        options: { position: 'topleft' },
-
-        onAdd: function () {
-            const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
-            abButton = L.DomUtil.create('a', 'ab-button', container);
-            abButton.href = '#';
-            abButton.title = 'Mark point A and B'
-            abButton.setAttribute('role', 'button');
-            abButton.innerHTML = `
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-line">
-        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-        <path d="M4 18a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
-        <path d="M16 6a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
-        <path d="M7.5 16.5l9 -9" />
-    </svg>`;
-
-            L.DomEvent.disableClickPropagation(container);
-            L.DomEvent.on(abButton, 'click', function (e) {
-                L.DomEvent.preventDefault(e);
-                if (abMode) {
-                    setAbMode(null);
-                } else {
-                    resetAb();
-                    setAbMode('A');
-                }
-            });
-
-            return container;
-        }
-    });
-
-    new AbControl().addTo(map);
-
-        // Click on the map to choose a position
-        map.on('click', function (e) {
-            if (abMode == 'A') {
-                markerA = L.marker(e.latlng, { icon: createAbIcon('A') }).addTo(map);
-                setAbMode('B');
-                return;
-            }
-
-            if (abMode == 'B') {
-                markerB = L.marker(e.latlng, { icon: createAbIcon('B') }).addTo(map);
-                abLine = L.polyline([markerA.getLatLng(), markerB.getLatLng()], {
-                    color: '#ff8c00',
-                    weight: 4,
-                    dashArray: '8 6'
-                }).addTo(map);
-                showBothPoints();
-                setAbMode(null);
-                return;
-            }
-
-        const lat = e.latlng.lat;
-        const lng = e.latlng.lng;
-
-        if (selectedMarker) {
-        map.removeLayer(selectedMarker);
-    }
-
-        selectedMarker = L.marker([lat, lng]).addTo(map)
-        .bindPopup('Selected position: ' + lat.toFixed(5) + ', ' + lng.toFixed(5))
-        .openPopup();
-
-        document.getElementById('latInput').value = lat;
-        document.getElementById('lngInput').value = lng;
-        document.getElementById('posText').innerText = 'Selected position: ' + lat.toFixed(5) + ', ' + lng.toFixed(5);
-
-        const posError = document.getElementById('posError');
-        if (posError) {
-        posError.textContent = '';
-    }
-    });
-
-        // Open sidepanel automatically when editing
-        const resourceId = parseInt(document.getElementById('Id')?.value || '0');
-        const sidePanel = document.getElementById('side-panel');
-
-        if (resourceId > 0 && sidePanel) {
-        sidePanel.classList.add('open');
-    }
-</script>
+    </script>
+}
