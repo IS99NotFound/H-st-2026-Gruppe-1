@@ -20,6 +20,30 @@ public class PublicActorController : Controller
     {
         _db = db;
     }
+    private void LoadResourceMarkers()
+{
+    var resources = _db.Resources
+        .Include(r => r.Category)
+        .Where(r =>
+            r.Status == "available" &&
+            r.Latitude.HasValue &&
+            r.Longitude.HasValue)
+        .Select(r => new
+        {
+            name = r.Name,
+            resourceType = r.Category != null
+                ? r.Category.CategoryName
+                : "Other",
+            description = r.Description,
+            phone = r.Phone,
+            latitude = r.Latitude,
+            longitude = r.Longitude
+        })
+        .ToList();
+
+    ViewBag.ResourceMarkersJson =
+        System.Text.Json.JsonSerializer.Serialize(resources);
+}
 
     // Categories for the dropdown
     private void LoadDropdowns()
@@ -36,6 +60,7 @@ public class PublicActorController : Controller
         }
 
         LoadDropdowns();
+        LoadResourceMarkers();
         LoadOperationalFeed();
         if (id.HasValue)
         {
@@ -156,6 +181,7 @@ public class PublicActorController : Controller
         if (!ModelState.IsValid)
         {
             LoadDropdowns();
+            LoadResourceMarkers();
             LoadOperationalFeed();
             ViewBag.OpenRegistrationModal = true;
             return View("DashboardIndex", need);
