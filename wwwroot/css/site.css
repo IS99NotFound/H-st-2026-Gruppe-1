@@ -9,7 +9,7 @@ html {
 }
 
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+    box-shadow: 0 0 0 0.1rem var(--focus-background), 0 0 0 0.25rem var(--focus-ring);
 }
 
 html {
@@ -39,6 +39,51 @@ body {
     --text-muted: #8b9098;
     --accent: #4a9eff;
     --brand-red: #e53935;
+    --focus-background: #ffffff;
+    --focus-ring: #258cfb;
+    --button-text: #ffffff;
+    --primary-hover: #3689e8;
+    --map-overlay: rgb(15 17 21 / 85%);
+    --status-new-border: rgb(74 158 255 / 45%);
+    --status-new-background: rgb(74 158 255 / 12%);
+    --status-assigned-border: rgb(25 135 84 / 55%);
+    --status-assigned-background: rgb(25 135 84 / 18%);
+    --status-review-border: rgb(255 193 7 / 50%);
+    --status-review-background: rgb(255 193 7 / 13%);
+    --status-rejected-border: rgb(229 57 53 / 55%);
+    --status-rejected-background: rgb(229 57 53 / 14%);
+    --status-new-text: #b7d8ff;
+    --status-assigned-text: #b7e4c7;
+    --status-review-text: #ffe0a3;
+    --status-rejected-text: #ffc4c4;
+}
+
+[data-theme="light"] {
+    --bg-main: #eef1f5;
+    --bg-panel: #f8fafc;
+    --bg-hover: #e4ebf3;
+    --border: #d5dce5;
+    --text: #1d2733;
+    --text-muted: #5f6b78;
+    --accent: #1769aa;
+    --brand-red: #c62828;
+    --focus-background: #ffffff;
+    --focus-ring: #1769aa;
+    --button-text: #ffffff;
+    --primary-hover: #125487;
+    --map-overlay: rgb(255 255 255 / 90%);
+    --status-new-border: rgb(23 105 170 / 35%);
+    --status-new-background: rgb(23 105 170 / 10%);
+    --status-assigned-border: rgb(20 108 67 / 35%);
+    --status-assigned-background: rgb(20 108 67 / 10%);
+    --status-review-border: rgb(138 90 0 / 35%);
+    --status-review-background: rgb(138 90 0 / 10%);
+    --status-rejected-border: rgb(163 41 41 / 35%);
+    --status-rejected-background: rgb(163 41 41 / 10%);
+    --status-new-text: #145a8d;
+    --status-assigned-text: #146c43;
+    --status-review-text: #8a5a00;
+    --status-rejected-text: #a32929;
 }
 
 body {
@@ -476,7 +521,7 @@ body {
     border: 1px solid var(--border);
     border-radius: 8px;
     background: var(--bg-panel);
-    color: var (--text);
+    color: var(--text);
     box-shadow: 0 4px 14px rgb(0 0 0 / 25%);
     box-sizing: border-box;
     transition: width 0.2s ease, padding 0.2s ease;
@@ -550,7 +595,7 @@ body {
 }
 
 .map-filter-options input {
-    accent-color: var (--accent)
+    accent-color: var(--accent)
 }
 
 #survival-filter-status,
@@ -943,7 +988,7 @@ body {
         margin: 0;
         padding: 8px 10px;
         border-radius: 6px;
-        background-color: rgb(15 17 21 / 85%);
+        background-color: var(--map-overlay);
         color: var(--text);
         font-size: 0.8rem;
     }
@@ -1008,15 +1053,15 @@ body {
 .btn-primary {
     border: 0;
     background-color: var(--accent);
-    color: #fff;
+    color: var(--button-text);
     font-weight: 600;
 }
 
 .btn-primary:hover,
 .btn-primary:focus {
-    border-color: #3689e8;
-    background-color: #3689e8;
-    color: #fff;
+    border-color: var(--primary-hover);
+    background-color: var(--primary-hover);
+    color: var(--button-text);
 }
 
 .placeholder-copy {
@@ -1430,27 +1475,27 @@ body {
 
 .status-label.status-new,
 .status-label.status-available {
-    border-color: rgb(74 158 255 / 45%);
-    background-color: rgb(74 158 255 / 12%);
-    color: #b7d8ff;
+    border-color: var(--status-new-border);
+    background-color: var(--status-new-background);
+    color: var(--status-new-text);
 }
 
 .status-label.status-assigned {
-    border-color: rgb(25 135 84 / 55%);
-    background-color: rgb(25 135 84 / 18%);
-    color: #b7e4c7;
+    border-color: var(--status-assigned-border);
+    background-color: var(--status-assigned-background);
+    color: var(--status-assigned-text);
 }
 
 .status-label.status-under-review {
-    border-color: rgb(255 193 7 / 50%);
-    background-color: rgb(255 193 7 / 13%);
-    color: #ffe0a3;
+    border-color: var(--status-review-border);
+    background-color: var(--status-review-background);
+    color: var(--status-review-text);
 }
 
 .status-label.status-rejected {
-    border-color: rgb(229 57 53 / 55%);
-    background-color: rgb(229 57 53 / 14%);
-    color: #ffc4c4;
+    border-color: var(--status-rejected-border);
+    background-color: var(--status-rejected-background);
+    color: var(--status-rejected-text);
 }
 
 .status-label.status-unavailable,
@@ -1843,8 +1888,8 @@ body {
 
 .auth-submit:hover,
 .auth-submit:focus {
-    background-color: #3689e8;
-    color: #fff;
+    background-color: var(--primary-hover);
+    color: var(--button-text);
 }
 
 .auth-demo-note {
