@@ -20,6 +20,30 @@ public class PublicActorController : Controller
     {
         _db = db;
     }
+    private void LoadResourceMarkers()
+{
+    var resources = _db.Resources
+        .Include(r => r.Category)
+        .Where(r =>
+            r.Status == "available" &&
+            r.Latitude.HasValue &&
+            r.Longitude.HasValue)
+        .Select(r => new
+        {
+            name = r.Name,
+            resourceType = r.Category != null
+                ? r.Category.CategoryName
+                : "Other",
+            description = r.Description,
+            phone = r.Phone,
+            latitude = r.Latitude,
+            longitude = r.Longitude
+        })
+        .ToList();
+
+    ViewBag.ResourceMarkersJson =
+        System.Text.Json.JsonSerializer.Serialize(resources);
+}
 
     // Categories for the dropdown
     private void LoadDropdowns()
@@ -31,6 +55,7 @@ public class PublicActorController : Controller
     public IActionResult DashboardIndex(int? id)
     {
         LoadDropdowns();
+        LoadResourceMarkers();
         if (id.HasValue)
         {
             var need = _db.Needs.Find(id.Value);
@@ -89,6 +114,7 @@ public class PublicActorController : Controller
         if (!ModelState.IsValid)
         {
             LoadDropdowns();
+            LoadResourceMarkers();
             return View("DashboardIndex", need);
         }
         // Save to database

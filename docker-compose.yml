@@ -34,6 +34,8 @@ services:
       - ASPNETCORE_HTTP_PORTS=8080
       # Connects to the database service container ('db') over the internal Docker network on port 3306
       - ConnectionStrings__DefaultConnection=Server=db;Port=3306;Database=heimevernet;User=root;Password=root;
+      # Ny API-Key for kart og lokasjon
+      - Geoapify__ApiKey=${GEOAPIFY_API_KEY}
     depends_on:
       # Ensures the database container starts before the web application
       - db
