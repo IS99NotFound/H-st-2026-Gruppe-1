@@ -6,7 +6,7 @@
     var canRegisterResource = User.IsInRole("ResourceProvider") || User.IsInRole("Administrator");
     var openRegistrationModal = ViewBag.OpenRegistrationModal is bool shouldOpen
         ? shouldOpen
-        : Context.Request.Query["register"] == "need";
+        : Context.Request.Query["register"] == "need" || Model.Id > 0;
 }
 
 <div class="main-layout registration-modal-page">
@@ -47,8 +47,9 @@
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg modal-fullscreen-md-down">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title fs-4" id="registrationModalTitle">
-                    <i class="bi bi-clipboard-plus me-2" aria-hidden="true"></i>Register resource need
+                <h2 class="modal-title" id="registrationModalTitle">
+                    <i class="bi bi-clipboard-plus" aria-hidden="true"></i>
+                    <span>@(Model.Id > 0 ? "Edit resource need" : "Register resource need")</span>
                 </h2>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close registration form"></button>
             </div>
@@ -63,6 +64,10 @@
     <partial name="_ValidationScriptsPartial" />
     <script>
         window.publicActorResources = @Html.Raw(ViewBag.ResourceMarkersJson ?? "[]");
+        window.resqRegistration.initializeDateTimeFields('needForm', [
+            { dateId: 'requiredFromDate', timeId: 'requiredFromTime', valueId: 'requiredFromValue' },
+            { dateId: 'deadlineDate', timeId: 'deadlineTime', valueId: 'deadlineValue' }
+        ]);
     </script>
     <script src="~/js/map-registration.js" asp-append-version="true"></script>
     <script src="~/js/public-actor-resource-filters.js" asp-append-version="true" defer></script>
@@ -188,6 +193,12 @@
                 event.preventDefault();
                 document.getElementById('posError').textContent =
                     'Position on the map is required.';
+            }
+        });
+        window.resqRegistration.bindCurrentLocationButton('useCurrentLocation', {
+            onPosition: (latitude, longitude) => {
+                setPosition(latitude, longitude);
+                map.setView([latitude, longitude], 13);
             }
         });
         const modalElement = document.getElementById('registrationModal');

@@ -47,8 +47,9 @@
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg modal-fullscreen-md-down">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title fs-4" id="registrationModalTitle">
-                    <i class="bi bi-box-seam me-2" aria-hidden="true"></i>Register a resource
+                <h2 class="modal-title" id="registrationModalTitle">
+                    <i class="bi bi-box-seam" aria-hidden="true"></i>
+                    <span>@(Model.Id > 0 ? "Edit resource" : "Register a resource")</span>
                 </h2>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close registration form"></button>
             </div>
@@ -71,6 +72,11 @@
     </script>
     <script src="~/js/operational-feed.js" asp-append-version="true" defer></script>
     <script>
+        window.resqRegistration.initializeDateTimeFields('resourceForm', [
+            { dateId: 'availableFromDate', timeId: 'availableFromTime', valueId: 'availableFromValue' },
+            { dateId: 'expiryDate', timeId: 'expirationTime', valueId: 'expirationValue' }
+        ]);
+
         const map = L.map('map').setView([58.4614, 8.7683], 13);
         window.resqMap = map;
         const mapElement = document.getElementById('map');
@@ -213,6 +219,12 @@
                 event.preventDefault();
                 document.getElementById('posError').textContent =
                     'Position on the map is required.';
+            }
+        });
+        window.resqRegistration.bindCurrentLocationButton('useCurrentLocation', {
+            onPosition: (latitude, longitude) => {
+                setPosition(latitude, longitude);
+                map.setView([latitude, longitude], 13);
             }
         });
         const modalElement = document.getElementById('registrationModal');

@@ -42,8 +42,12 @@ public class PublicActorController : Controller
             var need = _db.Needs.Find(id.Value);
             if (need == null)
             {
-                return NotFound();
+                return RedirectToAction(nameof(MatchesIndex));
             }
+            var contactParts = (need.ContactInfo ?? string.Empty)
+                .Split(" / ", 2, StringSplitOptions.TrimEntries);
+            need.Email = contactParts.ElementAtOrDefault(0) ?? string.Empty;
+            need.PhoneNumber = contactParts.ElementAtOrDefault(1) ?? "+47 ";
             return View(need);
         }
 
@@ -101,7 +105,7 @@ public class PublicActorController : Controller
     }
     
     
-    public IActionResult NeedsIndex(NeedPriorityEnum? priority, int? category)
+    public IActionResult NeedsIndex(NeedPriorityEnum? priority, int? category, int? id)
     {
         var results = _db.Needs.Include(need => need.CategoryInfo).AsQueryable();
 
@@ -122,6 +126,21 @@ public class PublicActorController : Controller
             .ToList();
 
         ViewBag.Categories = _db.Categories.OrderBy(c => c.CategoryId).ToList();
+        ViewBag.Incidents = _db.Incidents.OrderBy(i => i.IncidentId).ToList();
+        if (id.HasValue)
+        {
+            var editNeed = sortedResults.FirstOrDefault(need => need.Id == id.Value);
+            if (editNeed == null)
+            {
+                return NotFound();
+            }
+
+            var contactParts = (editNeed.ContactInfo ?? string.Empty)
+                .Split(" / ", 2, StringSplitOptions.TrimEntries);
+            editNeed.Email = contactParts.ElementAtOrDefault(0) ?? string.Empty;
+            editNeed.PhoneNumber = contactParts.ElementAtOrDefault(1) ?? "+47 ";
+            ViewBag.EditNeed = editNeed;
+        }
         return View(sortedResults);
     }
     
@@ -152,6 +171,9 @@ public class PublicActorController : Controller
         {
             return RedirectToAction("Index", "Home");
         }
+
+        need.ContactInfo = $"{need.Email} / {need.PhoneNumber}";
+        ModelState.Remove(nameof(ResourceNeed.ContactInfo));
 
         if (!ModelState.IsValid)
         {
@@ -196,93 +218,77 @@ public class PublicActorController : Controller
         return RedirectToAction("NeedsIndex");
     }
 
-    public IActionResult MatchesIndex()
+    public IActionResult MatchesIndex(int? needId, double radiusKm = 0)
     {
-        var needs = _db.Needs.Include(need => need.CategoryInfo).ToList();
-        ViewBag.Categories = _db.Categories.OrderBy(c => c.CategoryId).ToList();
-        return View("NeedsIndex", needs);
+        return View("MatchesIndex", BuildMatchViewModel(needId, radiusKm));
     }
     
     // Shows the resources within radiusKm of a need, nearest first.
-    public IActionResult Matches(int? needId, double radiusKm = 50)
+    public IActionResult Matches(int? needId, double radiusKm = 0)
     {
-        ResourceNeed need = null;
-        
-        if (needId.HasValue)
+        var model = BuildMatchViewModel(needId, radiusKm);
+        if (model.Need.Id == 0)
         {
-            need = _db.Needs.Find(needId.Value);
-        }
-        // If theres no need redirect to dashboard
-        else
-        {
-            need = _db.Needs.OrderByDescending(n => n.Id).FirstOrDefault();
-            
-        }
-
-        if (need == null)
-        {
-            return NotFound();
-        }
-
-        if (!ModelState.IsValid || !double.IsFinite(radiusKm) || radiusKm <= 0)
-        {
-            radiusKm = 50;
-        }
-        
-        var model = new MatchViewModel
-        {
-            Need = need,
-            RadiusKm = radiusKm,
-            UserNeeds = _db.Needs.ToList(),
-            Matches = RadiusMatcher.FindResources(
-                need, radiusKm, 
-                _db.Resources.Include(r => r.Category).ToList())
-        };
-        // Add the saved decisions from the ResourceMatch table
-        var records = _db.MatchRecords.Where(m => m.NeedId == need.Id).ToList();
-        foreach (var match in model.Matches)
-        {
-            var record = records.FirstOrDefault(r => r.ResourceId == match.Resource.Id);
-            match.MatchStatus = record?.Status;
-            match.Comment = record?.Comment;
+            return RedirectToAction(nameof(MatchesIndex));
         }
 
         return View("MatchesIndex", model);
     }
     
-    public IActionResult ShowAllResourcesInMatches(int needId, double radiusKm = 50)
+    public IActionResult ShowAllResourcesInMatches(int needId, double radiusKm = 0)
     {
-        var need = _db.Needs.Find(needId);
-        if (need == null)
+        var model = BuildMatchViewModel(needId, radiusKm, allCategories: true);
+        if (model.Need.Id == 0)
         {
             return NotFound();
         }
-        if (!double.IsFinite(radiusKm) || radiusKm <= 0)
+
+        return View("MatchesIndex", model);
+
+    }
+
+    private MatchViewModel BuildMatchViewModel(int? needId, double radiusKm, bool allCategories = false)
+    {
+        var needs = _db.Needs.Include(need => need.CategoryInfo).ToList();
+        var selectedNeed = needId.HasValue
+            ? needs.FirstOrDefault(need => need.Id == needId.Value)
+            : needs.OrderByDescending(need => need.Id).FirstOrDefault();
+
+        if (!double.IsFinite(radiusKm) || radiusKm < 0)
         {
-            radiusKm = 50;
+            radiusKm = 0;
         }
+
         var model = new MatchViewModel
         {
-            Need = need,
+            Need = selectedNeed ?? new ResourceNeed(),
             RadiusKm = radiusKm,
-            AllCategories = true,
-            UserNeeds = _db.Needs.ToList(),
-            Matches = RadiusMatcher.FindResources(
-                need, radiusKm, 
-                _db.Resources.Include(r => r.Category).ToList(),
-                allCategories: true)
+            AllCategories = allCategories,
+            UserNeeds = needs
         };
-        // Add the saved decisions from the ResourceMatch table
-        var records = _db.MatchRecords.Where(m => m.NeedId == need.Id).ToList();
+
+        if (selectedNeed == null)
+        {
+            return model;
+        }
+
+        model.Matches = RadiusMatcher.FindResources(
+            selectedNeed,
+            radiusKm,
+            _db.Resources.Include(resource => resource.Category).ToList(),
+            allCategories);
+
+        var records = _db.MatchRecords
+            .Where(match => match.NeedId == selectedNeed.Id)
+            .ToList();
         foreach (var match in model.Matches)
         {
-            var record = records.FirstOrDefault(r => r.ResourceId == match.Resource.Id);
+            var record = records.FirstOrDefault(item => item.ResourceId == match.Resource.Id);
             match.MatchStatus = record?.Status;
             match.Comment = record?.Comment;
         }
 
-        return View("MatchesIndex", model);
-        
+        return model;
     }
 
     // Saves the decision about a resource for a need in the ResourceMatch table.
@@ -353,6 +359,10 @@ public class HomeController : Controller
             var existingResource = _db.Resources.Find(id.Value);
             if (existingResource != null)
             {
+                var contactParts = (existingResource.Phone ?? string.Empty)
+                    .Split(" / ", 2, StringSplitOptions.TrimEntries);
+                existingResource.Email = contactParts.ElementAtOrDefault(0) ?? string.Empty;
+                existingResource.PhoneNumber = contactParts.ElementAtOrDefault(1) ?? "+47 ";
                 return View(existingResource);
             }
         }
@@ -456,6 +466,9 @@ public class HomeController : Controller
         {
             return RedirectToAction(nameof(Index));
         }
+
+        resource.Phone = $"{resource.Email} / {resource.PhoneNumber}";
+        ModelState.Remove(nameof(ResourceEntry.Phone));
 
         var resourceType = _db.Categories.Find(resource.CategoryId)?.CategoryName ?? "";
         if (resource.ExpirationDate is null && !string.IsNullOrWhiteSpace(resourceType))

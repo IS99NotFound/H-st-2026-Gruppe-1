@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace H_st_2026_Gruppe_1.Models;
 
@@ -10,6 +11,16 @@ public class ResourceEntry
 	[Required(ErrorMessage = "Full Name is required.")]
 	[StringLength(80, MinimumLength = 1, ErrorMessage = "Full Name must be at least {2} and at most {1} characters long.")]
 	public string Name { get; set; } = "";
+
+	[Required(ErrorMessage = "Email is required.")]
+	[EmailAddress(ErrorMessage = "Please provide a valid email address.")]
+	[NotMapped]
+	public string Email { get; set; } = "";
+
+	[Required(ErrorMessage = "Phone number is required.")]
+	[Phone(ErrorMessage = "Please provide a valid phone number.")]
+	[NotMapped]
+	public string PhoneNumber { get; set; } = "+47 ";
 
 	[Required(ErrorMessage = "Contact information is required.")]
 	[RegularExpression(
@@ -38,6 +49,10 @@ public class ResourceEntry
 
 	[Required(ErrorMessage = "Position on the map must be filled out.")]
 	public double? Longitude { get; set; }
+
+	[StringLength(200)]
+	[NotMapped]
+	public string LocationName { get; set; } = "";
 
 	public DateTime RegisteredAt { get; set; }
 	public string Status { get; set; } = "available";
