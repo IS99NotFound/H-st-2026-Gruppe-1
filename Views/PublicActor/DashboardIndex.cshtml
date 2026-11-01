@@ -30,9 +30,9 @@
             </div>
             <div id="survival-filter-content">
                 <div class="map-filter-options">
-                    @foreach (var resourceType in new[] { "Drone", "ATV", "Tractor", "Generator", "Excavator", "Truck", "Boat", "Sand/Gravel", "Other" })
+                    @foreach (var category in (IEnumerable<Category>)(ViewBag.Categories ?? Array.Empty<Category>()))
                     {
-                        <label><input type="checkbox" class="registered-resources-filter" value="@resourceType" checked /> @resourceType</label>
+                        <label><input type="checkbox" class="registered-resources-filter" value="@category.CategoryName" checked /> @category.CategoryName</label>
                     }
                 </div>
                 <p id="registered-resources-status" role="status">Loading registered resources...</p>
