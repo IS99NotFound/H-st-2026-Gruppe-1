@@ -496,13 +496,6 @@ public class HomeController : Controller
         resource.Phone = $"{resource.Email} / {resource.PhoneNumber}";
         ModelState.Remove(nameof(ResourceEntry.Phone));
 
-        var resourceType = _db.Categories.Find(resource.CategoryId)?.CategoryName ?? "";
-        if (resource.ExpirationDate is null && !string.IsNullOrWhiteSpace(resourceType))
-        {
-            resource.ExpirationDate = GetExpiryDate(resourceType);
-        }
-
-
         if (!ModelState.IsValid)
         {
             // sends the user to form with attributes and error messages filled out
@@ -548,25 +541,6 @@ public class HomeController : Controller
     private bool CanRegisterNeed()
     {
         return User.IsInRole("PublicActor") || User.IsInRole("Administrator");
-    }
-
-    // Calculates the expiry date based on the resource category.
-    private static DateTime? GetExpiryDate(string resourceType)
-    {
-        return resourceType switch
-        {
-            "Shelter" or "Transport" or "Other" or
-                "Drone" or "ATV" or "Tractor" or "Excavator" or "Truck" or "Boat" or "Crew" or
-                "Transport/logistics" or "Evacuation / Shelter" or "Plowing & Snow Clearing" or "Manpower" or
-                "Drone observation" or "Evacuation" or "Snow clearing" or "Crew / personnel"
-                => DateTime.Today.AddYears(1),
-            "Food" => DateTime.Today.AddDays(14),
-            "Medical" => DateTime.Today.AddMonths(1),
-            "Materials" or "Generator" or "Sand/Gravel" or
-                "Heavy machinery" or "Power Supply / Generator" or "Power / generator" or "Sand / gravel"
-                => DateTime.Today.AddMonths(6),
-            _ => null
-        };
     }
 
     public IActionResult Privacy()

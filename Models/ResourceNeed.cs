@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace H_st_2026_Gruppe_1.Models
 {
-    public class ResourceNeed
+    public class ResourceNeed : IValidatableObject
     {
         public int Id { get; set; }
 
@@ -70,5 +70,15 @@ namespace H_st_2026_Gruppe_1.Models
         public double Longitude { get; set; }
 
         public string Status { get; set; } = "new";
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (RequiredFrom.HasValue && Deadline.HasValue && Deadline < RequiredFrom)
+            {
+                yield return new ValidationResult(
+                    "End date cannot be before start date.",
+                    new[] { nameof(Deadline) });
+            }
+        }
     }
 }

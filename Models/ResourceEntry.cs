@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace H_st_2026_Gruppe_1.Models;
 
 // The resources that are registered through the form.
-public class ResourceEntry
+public class ResourceEntry : IValidatableObject
 {
 	public int Id { get; set; }
 
@@ -40,7 +40,6 @@ public class ResourceEntry
 	[Required(ErrorMessage = "Description must be filled out.")]
 	public string Description { get; set; } = "";
 	
-	[Required(ErrorMessage = "Expiry date is required.")]
 	public DateTime? ExpirationDate { get; set; }
 	public DateTime AvailableFrom { get; set; } = DateTime.Now;
 
@@ -56,6 +55,16 @@ public class ResourceEntry
 
 	public DateTime RegisteredAt { get; set; }
 	public string Status { get; set; } = "available";
+
+	public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+	{
+		if (ExpirationDate.HasValue && ExpirationDate < AvailableFrom)
+		{
+			yield return new ValidationResult(
+				"End date cannot be before start date.",
+				new[] { nameof(ExpirationDate) });
+		}
+	}
 }
 
 //Attributes to save resources and show them in MyResources

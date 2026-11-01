@@ -5,10 +5,11 @@ window.resqRegistration = {
         const form = document.getElementById(formId);
         if (!form) return;
 
+        const findInput = id => form.querySelector(`#${id}`) || document.getElementById(id);
         const updateValue = mapping => {
-            const dateInput = document.getElementById(mapping.dateId);
-            const timeInput = document.getElementById(mapping.timeId);
-            const valueInput = document.getElementById(mapping.valueId);
+            const dateInput = findInput(mapping.dateId);
+            const timeInput = findInput(mapping.timeId);
+            const valueInput = findInput(mapping.valueId);
             if (!dateInput || !timeInput || !valueInput) return;
 
             valueInput.value = dateInput.value
@@ -19,9 +20,30 @@ window.resqRegistration = {
         const syncValues = () => mappings.forEach(updateValue);
         mappings.forEach(mapping => {
             [mapping.dateId, mapping.timeId].forEach(inputId =>
-                document.getElementById(inputId)?.addEventListener("input", syncValues));
+                findInput(inputId)?.addEventListener("input", syncValues));
         });
-        form.addEventListener("submit", syncValues);
+        form.addEventListener("submit", event => {
+            syncValues();
+            const start = findInput(mappings[0].valueId);
+            const end = findInput(mappings[1].valueId);
+            const endDate = findInput(mappings[1].dateId);
+            const rangeError = findInput(mappings[1].rangeErrorId);
+            const invalidRange = start?.value && end?.value && end.value < start.value;
+
+            if (endDate) {
+                endDate.setCustomValidity(invalidRange
+                    ? "End date cannot be before start date."
+                    : "");
+            }
+            if (rangeError) {
+                rangeError.textContent = invalidRange
+                    ? "End date cannot be before start date."
+                    : "";
+            }
+            if (invalidRange) {
+                event.preventDefault();
+            }
+        });
         syncValues();
     },
 

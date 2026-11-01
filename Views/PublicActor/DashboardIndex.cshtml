@@ -66,7 +66,8 @@
         window.publicActorResources = @Html.Raw(ViewBag.ResourceMarkersJson ?? "[]");
         window.resqRegistration.initializeDateTimeFields('needForm', [
             { dateId: 'requiredFromDate', timeId: 'requiredFromTime', valueId: 'requiredFromValue' },
-            { dateId: 'deadlineDate', timeId: 'deadlineTime', valueId: 'deadlineValue' }
+            { dateId: 'deadlineDate', timeId: 'deadlineTime', valueId: 'deadlineValue',
+              rangeErrorId: 'needDateRangeError' }
         ]);
     </script>
     <script src="~/js/map-registration.js" asp-append-version="true"></script>

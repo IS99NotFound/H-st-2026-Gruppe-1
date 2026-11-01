@@ -85,6 +85,7 @@
                            value="@Model.Deadline?.ToString("HH:mm")" />
                 </div>
                 <span asp-validation-for="Deadline" class="text-danger"></span>
+                <span id="needDateRangeError" class="text-danger"></span>
             </div>
         </div>
         <input type="hidden" asp-for="RequiredFrom" id="requiredFromValue" />

@@ -54,6 +54,7 @@
                            value="@Model.ExpirationDate?.ToString("HH:mm")" />
                 </div>
                 <span asp-validation-for="ExpirationDate" class="text-danger"></span>
+                <span id="resourceDateRangeError" class="text-danger"></span>
             </div>
         </div>
         <input type="hidden" asp-for="AvailableFrom" id="availableFromValue" />

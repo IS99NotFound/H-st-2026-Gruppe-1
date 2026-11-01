@@ -124,7 +124,8 @@ else
     <script>
         window.resqRegistration.initializeDateTimeFields('resourceForm', [
             { dateId: 'availableFromDate', timeId: 'availableFromTime', valueId: 'availableFromValue' },
-            { dateId: 'expiryDate', timeId: 'expirationTime', valueId: 'expirationValue' }
+            { dateId: 'expiryDate', timeId: 'expirationTime', valueId: 'expirationValue',
+              rangeErrorId: 'resourceDateRangeError' }
         ]);
         window.resqRegistration.bindCurrentLocationButton('useCurrentLocation', {
             onPosition: (latitude, longitude) => {

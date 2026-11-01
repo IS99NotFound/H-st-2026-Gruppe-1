@@ -165,7 +165,8 @@ else
     <script>
         window.resqRegistration.initializeDateTimeFields('needForm', [
             { dateId: 'requiredFromDate', timeId: 'requiredFromTime', valueId: 'requiredFromValue' },
-            { dateId: 'deadlineDate', timeId: 'deadlineTime', valueId: 'deadlineValue' }
+            { dateId: 'deadlineDate', timeId: 'deadlineTime', valueId: 'deadlineValue',
+              rangeErrorId: 'needDateRangeError' }
         ]);
         window.resqRegistration.bindCurrentLocationButton('useCurrentLocation', {
             onPosition: (latitude, longitude) => {
