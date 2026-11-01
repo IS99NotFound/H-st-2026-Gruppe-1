@@ -20,17 +20,22 @@
 
     if (!list || !search || !radius) return;
 
-    function addIncidentMarkers() {
+    function addFeedMarkers() {
         const map = window.resqMap;
-        const incidents = Array.isArray(window.operationalFeedIncidents)
-            ? window.operationalFeedIncidents
-            : [];
-        if (!map || !incidents.length) return;
+        const feedItems = window.operationalFeedItems || {};
+        const items = [
+            ...(Array.isArray(feedItems.needs) ? feedItems.needs : []),
+            ...(Array.isArray(feedItems.incidents) ? feedItems.incidents : [])
+        ];
+        if (!Array.isArray(window.publicActorResources)) {
+            items.push(...(Array.isArray(feedItems.resources) ? feedItems.resources : []));
+        }
+        if (!map || !items.length) return;
 
-        const incidentMarkers = L.layerGroup().addTo(map);
-        incidents.forEach(incident => {
-            const latitude = Number(incident.latitude);
-            const longitude = Number(incident.longitude);
+        const feedMarkers = L.layerGroup().addTo(map);
+        items.forEach(item => {
+            const latitude = Number(item.latitude);
+            const longitude = Number(item.longitude);
             if (!Number.isFinite(latitude) || !Number.isFinite(longitude) ||
                 latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
                 return;
@@ -38,18 +43,26 @@
 
             const popup = document.createElement("div");
             const title = document.createElement("strong");
-            title.textContent = incident.title || "Incident";
+            title.textContent = item.title || "Feed item";
             popup.appendChild(title);
-            if (incident.description) {
+            if (item.description) {
                 popup.appendChild(document.createElement("br"));
                 const description = document.createElement("span");
-                description.textContent = incident.description;
+                description.textContent = item.description;
                 popup.appendChild(description);
             }
 
-            L.marker([latitude, longitude])
+            const colorKey = item.colorKey || "public-team";
+            const markerIcon = L.divIcon({
+                className: "resq-map-marker-icon",
+                html: `<span class="resq-map-marker resq-map-marker--${colorKey}"></span>`,
+                iconSize: [18, 18],
+                iconAnchor: [9, 9]
+            });
+
+            L.marker([latitude, longitude], { icon: markerIcon })
                 .bindPopup(popup)
-                .addTo(incidentMarkers);
+                .addTo(feedMarkers);
         });
     }
 
@@ -128,7 +141,7 @@
     function render() {
         const query = search.value.trim().toLowerCase();
         const maxRadius = Number(radius.value);
-        radiusValue.textContent = maxRadius ? `${maxRadius} km` : "All distances";
+        radiusValue.textContent = window.resqRadius.format(maxRadius);
         let visible = 0;
         const sortedItems = items
             .map(item => ({ item, distance: distanceInKm(Number(item.dataset.latitude), Number(item.dataset.longitude)) }))
@@ -259,6 +272,6 @@
     }
 
     requestCurrentLocation();
-    addIncidentMarkers();
+    addFeedMarkers();
     render();
 })();

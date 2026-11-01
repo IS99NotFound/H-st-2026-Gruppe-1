@@ -4,88 +4,138 @@
     <input type="hidden" asp-for="Id" />
     <input type="hidden" name="OpenRegistrationModal" value="true" />
 
-    <div class="mb-3">
-        <label asp-for="Title" class="form-label">Title</label>
-        <input asp-for="Title" id="titleInput" class="form-control" placeholder="Need excavators for landslide clearing" required />
-        <span asp-validation-for="Title" class="text-danger"></span>
-    </div>
+    <section class="registration-section">
+        <h3 class="registration-section-title">Classification</h3>
+        <div class="registration-grid registration-grid--category">
+            <div class="registration-field">
+                <label asp-for="Category" class="form-label">Category</label>
+                <select asp-for="Category" id="categoryInput" class="form-select" required>
+                    <option value="">Select category</option>
+                    @foreach (var category in (List<Category>)ViewBag.Categories)
+                    {
+                        <option value="@category.CategoryId">@category.CategoryName</option>
+                    }
+                </select>
+                <span asp-validation-for="Category" class="text-danger"></span>
+            </div>
 
-    <div class="mb-3">
-        <label asp-for="ContactInfo" class="form-label">Contact information</label>
-        <input asp-for="ContactInfo" id="contactInput" class="form-control" placeholder="Phone number or email" required />
-        <span asp-validation-for="ContactInfo" class="text-danger"></span>
-    </div>
+            <div class="registration-field">
+                <label asp-for="Quantity" class="form-label">Quantity needed</label>
+                <input asp-for="Quantity" id="quantityInput" class="form-control" min="1" required />
+                <span asp-validation-for="Quantity" class="text-danger"></span>
+            </div>
 
-    <div class="mb-3">
-        <label asp-for="CrisisEventId" class="form-label">Crisis incident</label>
-        <select asp-for="CrisisEventId" id="crisisEventInput" class="form-select" required>
-            <option value="">Select incident</option>
-            @foreach (var incident in (List<Incident>)ViewBag.Incidents)
-            {
-                <option value="@incident.IncidentId">@incident.Title</option>
-            }
-        </select>
-        <span asp-validation-for="CrisisEventId" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="Category" class="form-label">Category</label>
-        <select asp-for="Category" id="categoryInput" class="form-select" required>
-            <option value="">Select category</option>
-            @foreach (var category in (List<Category>)ViewBag.Categories)
-            {
-                <option value="@category.CategoryId">@category.CategoryName</option>
-            }
-        </select>
-        <span asp-validation-for="Category" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="Quantity" class="form-label">Quantity needed</label>
-        <input asp-for="Quantity" id="quantityInput" class="form-control" min="1" required />
-        <span asp-validation-for="Quantity" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="Description" class="form-label">Detailed description</label>
-        <textarea asp-for="Description" id="descriptionInput" class="form-control" rows="3" placeholder="Describe the situation and specific requirements..."></textarea>
-        <span asp-validation-for="Description" class="text-danger"></span>
-    </div>
-
-    <fieldset class="mb-3">
-        <legend class="form-label">Priority level</legend>
-        <div class="registration-priority" role="group" aria-label="Priority selection">
-            <input type="radio" class="btn-check" asp-for="Priority" id="priorityPlanned" value="Planned" />
-            <label class="btn btn-outline-secondary" for="priorityPlanned">Planned</label>
-            <input type="radio" class="btn-check" asp-for="Priority" id="priorityUrgent" value="Urgent" />
-            <label class="btn btn-outline-warning" for="priorityUrgent">Urgent</label>
-            <input type="radio" class="btn-check" asp-for="Priority" id="priorityCritical" value="Critical" />
-            <label class="btn btn-outline-danger" for="priorityCritical">Critical</label>
+            <fieldset class="registration-field registration-priority-field">
+                <legend class="form-label">Priority level</legend>
+                <div class="registration-priority" role="group" aria-label="Priority selection">
+                    <input type="radio" class="btn-check" asp-for="Priority" id="priorityPlanned" value="Planned" />
+                    <label class="btn registration-priority-planned" for="priorityPlanned">Planned</label>
+                    <input type="radio" class="btn-check" asp-for="Priority" id="priorityCritical" value="Critical" />
+                    <label class="btn registration-priority-critical" for="priorityCritical">Critical</label>
+                </div>
+                <span asp-validation-for="Priority" class="text-danger"></span>
+            </fieldset>
         </div>
-        <span asp-validation-for="Priority" class="text-danger"></span>
-    </fieldset>
 
-    <div class="mb-3">
-        <label asp-for="RequiredFrom" class="form-label">Needed from</label>
-        <input type="date" asp-for="RequiredFrom" class="form-control" />
-        <span asp-validation-for="RequiredFrom" class="text-danger"></span>
+        <div class="registration-field">
+            <label asp-for="CrisisEventId" class="form-label">Crisis incident</label>
+            <select asp-for="CrisisEventId" id="crisisEventInput" class="form-select" required>
+                <option value="">Select incident</option>
+                @foreach (var incident in (List<Incident>)ViewBag.Incidents)
+                {
+                    <option value="@incident.IncidentId">@incident.Title</option>
+                }
+            </select>
+            <span asp-validation-for="CrisisEventId" class="text-danger"></span>
+        </div>
+    </section>
+
+    <section class="registration-section">
+        <h3 class="registration-section-title">Details &amp; timeframe</h3>
+        <div class="registration-field">
+            <label asp-for="Title" class="form-label">Title</label>
+            <input asp-for="Title" id="titleInput" class="form-control" placeholder="e.g. Emergency Water Tank 5000L" required />
+            <span asp-validation-for="Title" class="text-danger"></span>
+        </div>
+
+        <div class="registration-field">
+            <label asp-for="Description" class="form-label">Description</label>
+            <textarea asp-for="Description" id="descriptionInput" class="form-control" rows="3" placeholder="Provide details and operational background..." required></textarea>
+            <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
+
+        <div class="registration-grid registration-grid--details">
+            <div class="registration-field">
+                <label class="form-label" for="requiredFromDate">Start date/time</label>
+                <div class="registration-datetime">
+                    <input type="date" id="requiredFromDate" class="form-control"
+                           value="@Model.RequiredFrom?.ToString("yyyy-MM-dd")" />
+                    <input type="time" id="requiredFromTime" class="form-control"
+                           value="@Model.RequiredFrom?.ToString("HH:mm")" />
+                </div>
+                <span asp-validation-for="RequiredFrom" class="text-danger"></span>
+            </div>
+
+            <div class="registration-field">
+                <label class="form-label" for="deadlineDate">End date/time (optional)</label>
+                <div class="registration-datetime">
+                    <input type="date" id="deadlineDate" class="form-control"
+                           value="@Model.Deadline?.ToString("yyyy-MM-dd")" />
+                    <input type="time" id="deadlineTime" class="form-control"
+                           value="@Model.Deadline?.ToString("HH:mm")" />
+                </div>
+                <span asp-validation-for="Deadline" class="text-danger"></span>
+                <span id="needDateRangeError" class="text-danger"></span>
+            </div>
+        </div>
+        <input type="hidden" asp-for="RequiredFrom" id="requiredFromValue" />
+        <input type="hidden" asp-for="Deadline" id="deadlineValue" />
+    </section>
+
+    <section class="registration-section">
+        <h3 class="registration-section-title">Contact information</h3>
+        <div class="registration-grid registration-grid--details">
+            <div class="registration-field">
+                <label asp-for="Email" class="form-label">Email</label>
+                <input asp-for="Email" class="form-control" type="email" placeholder="name@example.com" required />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+            <div class="registration-field">
+                <label asp-for="PhoneNumber" class="form-label">Phone number</label>
+                <input asp-for="PhoneNumber" class="form-control" type="tel" placeholder="+47 00 00 00 00" required />
+                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+            </div>
+        </div>
+    </section>
+
+    <section class="registration-section registration-location">
+        <h3 class="registration-section-title">Location &amp; accuracy</h3>
+        <div class="registration-field">
+            <label asp-for="LocationName" class="form-label">Location name</label>
+            <div class="registration-location-input">
+                <input asp-for="LocationName" id="locationNameInput" class="form-control"
+                       placeholder="Search address or facility (e.g. Hellemyr Skole)" />
+                <button type="button" class="registration-icon-button" id="useCurrentLocation"
+                        title="Current location" aria-label="Use current location">
+                    <i class="bi bi-crosshair" aria-hidden="true"></i>
+                </button>
+            </div>
+            <span asp-validation-for="LocationName" class="text-danger"></span>
+        </div>
+        <input type="hidden" asp-for="Latitude" id="latInput" />
+        <input type="hidden" asp-for="Longitude" id="lngInput" />
+        <p id="posText" class="registration-help">
+            Select a point on the map to set the GPS coordinates.
+        </p>
+        <span asp-validation-for="Latitude" class="text-danger d-block" id="posError"></span>
+        <span asp-validation-for="Longitude" class="text-danger d-block"></span>
+    </section>
+
+    <div asp-validation-summary="ModelOnly" class="text-danger registration-validation"></div>
+    <div class="registration-actions">
+        <button type="button" class="btn registration-cancel" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-primary registration-submit">
+            @(Model.Id > 0 ? "Save changes" : "Register")
+        </button>
     </div>
-
-    <div class="mb-3">
-        <label asp-for="Deadline" class="form-label">Needed until</label>
-        <input type="date" asp-for="Deadline" class="form-control" />
-        <span asp-validation-for="Deadline" class="text-danger"></span>
-    </div>
-
-    <input type="hidden" asp-for="Latitude" id="latInput" />
-    <input type="hidden" asp-for="Longitude" id="lngInput" />
-    <p id="posText" class="placeholder-text">
-        @(Model.Latitude != 0 && Model.Longitude != 0
-            ? $"Selected position: lat: {Model.Latitude:F5}, lng: {Model.Longitude:F5}"
-            : "No position marked on the map")
-    </p>
-    <span asp-validation-for="Latitude" class="text-danger d-block mb-2" id="posError"></span>
-
-    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-    <button type="submit" class="btn btn-primary w-100">Register need</button>
 </form>

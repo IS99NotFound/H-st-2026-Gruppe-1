@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace H_st_2026_Gruppe_1.Models
 {
-    public class ResourceNeed
+    public class ResourceNeed : IValidatableObject
     {
         public int Id { get; set; }
 
@@ -12,12 +12,13 @@ namespace H_st_2026_Gruppe_1.Models
         [StringLength(100, ErrorMessage = "Title cannot exceed 100 characters.")]
         public string Title { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Contact information is required.")]
-        [RegularExpression(
-            @"^([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|(\+?[0-9\s]{8,15}))$",
-            ErrorMessage = "Please provide a valid email address or a valid phone number (at least 8 digits)."
-        )]
-        public string ContactInfo { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Email is required.")]
+        [EmailAddress(ErrorMessage = "Please provide a valid email address.")]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Phone number is required.")]
+        [Phone(ErrorMessage = "Please provide a valid phone number.")]
+        public string PhoneNumber { get; set; } = "+47 ";
 
         [Required(ErrorMessage = "Please select a crisis incident.")]
         [Range(1, int.MaxValue, ErrorMessage = "Please select a valid crisis incident.")]
@@ -46,6 +47,9 @@ namespace H_st_2026_Gruppe_1.Models
         
         [DataType(DataType.Date)]
         public DateTime? Deadline { get; set; }
+
+        [StringLength(200)]
+        public string LocationName { get; set; } = string.Empty;
         
         [Required(ErrorMessage = "Map location is required.")]
         [Range(-90.0, 90.0, ErrorMessage = "Invalid latitude value.")]
@@ -58,8 +62,15 @@ namespace H_st_2026_Gruppe_1.Models
         public double Longitude { get; set; }
 
         public string Status { get; set; } = "new";
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (RequiredFrom.HasValue && Deadline.HasValue && Deadline < RequiredFrom)
+            {
+                yield return new ValidationResult(
+                    "End date cannot be before start date.",
+                    new[] { nameof(Deadline) });
+            }
+        }
     }
 }
-
-
-

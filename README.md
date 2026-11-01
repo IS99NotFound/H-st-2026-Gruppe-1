@@ -104,6 +104,10 @@ Det responsive oppsettet er laget med CSS media queries og fleksible høyder og 
 
 Navigasjonen bruker Bootstrap Icons for å gjøre knappene og sidene lettere å kjenne igjen.
 
+## Tema
+
+Applikasjonen støtter darkmode og lightmode. Temaet endres fra brukerprofilmenyen og lagres lokalt i nettleseren, slik at valget beholdes når brukeren navigerer mellom sidene. Fargene styres av CSS-variabler i `wwwroot/css/site.css`.
+
 # KI bruk i prosjektet
 I prosjektet har vi brukt KI som et hjelpemiddel gjennom ulike deler av utviklingsprosessen. Verktøyene vi har tatt i bruk er blant annet ChatGPT, Copilot og andre ulike KI modeller. Disse har hovedsakelig blitt brukt til å forklare tekniske konsepter innenfor programmering, forstå feilmeldinger, strukturere tekster og videreutvikle ideer til systemets funksjonalitet. Vi har selv vurdert, tilpasset og testet forslagene fra KI før implementasjon. KI har dermed blitt brukt som et støtteverktøy for læring, ideutvikling og problemløsning.
 ### Noen prompts vi har brukt aktivt gjennom innleveringen er:

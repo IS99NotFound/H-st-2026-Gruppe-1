@@ -68,13 +68,23 @@
     <div id="operational-feed-list" class="operational-feed-list">
         @foreach (var item in feedItems)
         {
-            <article class="feed-card feed-card--interactive" data-feed-item data-feed-type="@item.Type"
+            <article class="feed-card feed-card--interactive feed-card--@item.ColorKey" data-feed-item data-feed-type="@item.Type"
                      data-feed-search="@($"{item.Title} {item.Description} {item.Category} {item.Status}")"
                      data-latitude="@item.Latitude" data-longitude="@item.Longitude"
                      data-feed-title="@item.Title" role="button" tabindex="0"
                      aria-label="Show @item.Title on map">
                 <div class="feed-card-heading">
-                    <span class="feed-card-type">@item.Type</span>
+                    <span class="feed-color-badge feed-color-badge--@item.ColorKey">
+                        @(item.Priority switch
+                        {
+                            "Critical" => "Critical need",
+                            "Urgent" => "Urgent need",
+                            "Planned" => "Planned need",
+                            _ when item.Type == "resource" => "Available resource",
+                            _ when item.Type == "incident" => "Incident",
+                            _ => "Public team"
+                        })
+                    </span>
                     <time datetime="@item.CreatedAt.ToString("O")">@item.CreatedAt.ToString("dd.MM.yyyy HH:mm")</time>
                 </div>
                 <h2>@item.Title</h2>

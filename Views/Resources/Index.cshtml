@@ -17,7 +17,7 @@
 else
 {
     <div class="table-wrapper resources-table-wrapper">
-    <table class="table table-dark table-striped resources-table">
+    <table class="table table-striped resources-table">
         <thead>
         <tr>
             <th>Name</th>
@@ -58,7 +58,7 @@ else
 
                 <tr>
                     <td>@r.Name</td>
-                    <td>@r.Phone</td>
+                    <td>@r.Email / @r.PhoneNumber</td>
                     <td>@r.Category?.CategoryName</td>
                     <td>@r.Description</td>
                     <td>@r.AvailableFrom.ToString("dd.MM.yyyy")</td>
@@ -81,7 +81,7 @@ else
                     <td>
                         <form class="resource-actions" asp-controller="Home" asp-action="DeleteResource" asp-route-id="@r.Id" method="post"
                               onsubmit="return confirm('Are you sure you want to delete this resource?');">
-                            <a asp-controller="Home" asp-action="Index" asp-route-id="@r.Id" class="btn btn-sm btn-primary">
+                            <a asp-controller="Resources" asp-action="Index" asp-route-id="@r.Id" class="btn btn-sm btn-primary">
                                 Edit
                             </a>
                             <button type="submit" class="btn btn-sm btn-danger">Delete</button>
@@ -95,3 +95,49 @@ else
     </div>
 }
 </section>
+
+@if (ViewBag.EditResource is H_st_2026_Gruppe_1.Models.ResourceEntry editResource)
+{
+    <div class="modal fade registration-modal" id="registrationModal" tabindex="-1"
+         aria-labelledby="registrationModalTitle" aria-hidden="true" data-bs-backdrop="static"
+         data-registration-modal data-open-registration-modal="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg modal-fullscreen-md-down">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title" id="registrationModalTitle">
+                        <i class="bi bi-box-seam" aria-hidden="true"></i>
+                        <span>Edit resource</span>
+                    </h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                            aria-label="Close registration form"></button>
+                </div>
+                <div class="modal-body" data-registration-modal-body>
+                    <partial name="~/Views/Home/_ResourceRegistrationForm.cshtml" model="editResource" />
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        window.resqRegistration.initializeDateTimeFields('resourceForm', [
+            { dateId: 'availableFromDate', timeId: 'availableFromTime', valueId: 'availableFromValue' },
+            { dateId: 'expiryDate', timeId: 'expirationTime', valueId: 'expirationValue',
+              rangeErrorId: 'resourceDateRangeError' }
+        ]);
+        window.resqRegistration.bindCurrentLocationButton('useCurrentLocation', {
+            onPosition: (latitude, longitude) => {
+                document.getElementById('latInput').value = latitude;
+                document.getElementById('lngInput').value = longitude;
+                document.getElementById('posText').textContent =
+                    'Selected position: lat: ' + latitude.toFixed(5) + ', lng: ' + longitude.toFixed(5);
+            }
+        });
+        const modalElement = document.getElementById('registrationModal');
+        if (modalElement?.dataset.openRegistrationModal === 'true') {
+            bootstrap.Modal.getOrCreateInstance(modalElement).show();
+        }
+    </script>
+}
