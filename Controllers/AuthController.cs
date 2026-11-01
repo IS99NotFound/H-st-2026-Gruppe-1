@@ -4,21 +4,30 @@ using H_st_2026_Gruppe_1.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace H_st_2026_Gruppe_1.Controllers;
 
 [AllowAnonymous]
 public class AuthController : Controller
 {
+    private readonly UserManager<User> _userManager;
+    private readonly IMemoryCache _memoryCache;
+
+    public AuthController(UserManager<User> userManager, IMemoryCache memoryCache)
+    {
+        _userManager = userManager;
+        _memoryCache = memoryCache;
+    }
+
     [HttpGet]
     public IActionResult Login()
     {
         if (User.Identity?.IsAuthenticated == true)
         {
-            var userType = User.FindFirst("UserType")?.Value;
-            
-            if (userType == "PublicActor")
+            if (User.IsInRole("PublicActor"))
             {
                 return RedirectToAction("DashboardIndex", "PublicActor");
             }
@@ -31,18 +40,47 @@ public class AuthController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Login(LoginViewModel model)
+    public async Task<IActionResult> Login(LoginViewModel model)
     {
-        if (model.UserType is not ("ResourceProvider" or "PublicActor"))
+        if (!ModelState.IsValid)
         {
-            ModelState.AddModelError(nameof(model.UserType), "Please select a valid user.");
             return View(model);
         }
 
+        // 1. Søk etter bruker i databasen
+        var user = await _userManager.FindByNameAsync(model.UserName);
+        
+        // 2. Sjekk passord (Bruker samme generiske feilmelding for å unngå brukernavn-enumeration)
+        if (user == null || !await _userManager.CheckPasswordAsync(user, model.Password))
+        {
+            ModelState.AddModelError(string.Empty, "Ugyldig brukernavn eller passord.");
+            return View(model);
+        }
+
+        // 3. Generer 6-sifret tofakto-kode (simulert SMS)
+        var code = RandomNumberGenerator.GetInt32(0, 1_000_000).ToString("D6");
+        var pendingId = Guid.NewGuid().ToString();
+
+        // 4. Lagre i IMemoryCache (Utløper etter 5 minutter, maks 3 forsøk logikk kan styres her)
+        var cacheEntryOptions = new MemoryCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5) 
+        };
+        
+        var pendingData = new PendingTwoFactorData
+        {
+            UserId = user.Id,
+            Code = code,
+            Attempts = 0
+        };
+
+        _memoryCache.Set(pendingId, pendingData, cacheEntryOptions);
+
+        // 5. Send til TwoFactor-visning (DemoCode viser koden for enklere testing)
         return View("TwoFactor", new TwoFactorViewModel
         {
-            UserType = model.UserType,
-            Code = RandomNumberGenerator.GetInt32(0, 1_000_000).ToString("D6")
+            PendingId = pendingId,
+            DemoCode = code // Fjern eller kommenter ut denne i ekte produksjon
         });
     }
 
@@ -56,22 +94,67 @@ public class AuthController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> VerifyTwoFactor(TwoFactorViewModel model)
     {
-        if (model.UserType is not ("ResourceProvider" or "PublicActor"))
+        if (string.IsNullOrEmpty(model.PendingId) || string.IsNullOrEmpty(model.Code))
+        {
+            ModelState.AddModelError(string.Empty, "Ugyldig forespørsel.");
+            return RedirectToAction(nameof(Login));
+        }
+
+        // Hent fra cache
+        if (!_memoryCache.TryGetValue(model.PendingId, out PendingTwoFactorData? pending) || pending == null)
+        {
+            ModelState.AddModelError(string.Empty, "Tofaktorkoden har utløpt. Logg inn på nytt.");
+            return RedirectToAction(nameof(Login));
+        }
+
+        // Sjekk antall forsøk (maks 3)
+        pending.Attempts++;
+        if (pending.Attempts > 3)
+        {
+            _memoryCache.Remove(model.PendingId);
+            ModelState.AddModelError(string.Empty, "For mange feilforsøk. Logg inn på nytt.");
+            return RedirectToAction(nameof(Login));
+        }
+
+        // Valider koden sikkert mot tidsangrep (FixedTimeEquals)
+        var codeBytesProvided = System.Text.Encoding.UTF8.GetBytes(model.Code);
+        var codeBytesExpected = System.Text.Encoding.UTF8.GetBytes(pending.Code);
+        var codeMatches = CryptographicOperations.FixedTimeEquals(
+            codeBytesProvided,
+            codeBytesExpected);
+
+        if (!codeMatches)
+        {
+            _memoryCache.Set(model.PendingId, pending); // Oppdater forsøk
+            ModelState.AddModelError(nameof(model.Code), "Feil kode. Prøv igjen.");
+            model.DemoCode = pending.Code; // Behold demo-koden på skjermen slik du planla!
+            return View("TwoFactor", model);
+        }
+
+        // Fjern koden fra cachen slik at den kun kan brukes én gang
+        _memoryCache.Remove(model.PendingId);
+
+        // Hent brukeren fra databasen basert på ID lagret i cachen
+        var user = await _userManager.FindByIdAsync(pending.UserId.ToString());
+        if (user == null)
         {
             return RedirectToAction(nameof(Login));
         }
 
-        var displayName = model.UserType == "PublicActor" ? "Public Actor" : "Resource Provider";
+        // Bygg sikre claims fra databasen
         var claims = new List<Claim>
         {
-            new(ClaimTypes.Name, displayName),
-            new(ClaimTypes.Role, model.UserType),
-            new("UserType", model.UserType)
+            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new(ClaimTypes.Name, user.Name ?? user.UserName ?? "Bruker"),
+            new(ClaimTypes.Role, user.Role.ToString()),
+            new("UserType", user.Role.ToString())
         };
+
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         var properties = new AuthenticationProperties
         {
-            IsPersistent = true
+            IsPersistent = true,
+            ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8) // Sikrere levetid enn 365 dager
         };
 
         await HttpContext.SignInAsync(
@@ -79,7 +162,7 @@ public class AuthController : Controller
             new ClaimsPrincipal(identity),
             properties);
 
-        if (model.UserType == "PublicActor")
+        if (user.Role.ToString() == "PublicActor")
         {
             return RedirectToAction("DashboardIndex", "PublicActor");
         }
@@ -94,4 +177,12 @@ public class AuthController : Controller
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         return RedirectToAction(nameof(Login));
     }
+}
+
+// Hjelpeklasse for cachen
+public class PendingTwoFactorData
+{
+    public int UserId { get; set; }
+    public string Code { get; set; } = string.Empty;
+    public int Attempts { get; set; }
 }

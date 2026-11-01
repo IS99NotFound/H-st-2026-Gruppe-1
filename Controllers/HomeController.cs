@@ -1,19 +1,29 @@
 using System.Diagnostics;
 using System.Reflection.Metadata.Ecma335;
+using System.Runtime.InteropServices.JavaScript;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using H_st_2026_Gruppe_1.Data;
 using H_st_2026_Gruppe_1.Models;
-
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace H_st_2026_Gruppe_1.Controllers;
 
 public class PublicActorController : Controller
 {
+    private int? GetCurrentUserId()
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        return int.TryParse(userIdClaim, out var userId)
+            ? userId
+            : null;
+    }
+    
     private readonly AppDbContext _db;
 
     public PublicActorController (AppDbContext db)
@@ -27,7 +37,7 @@ public class PublicActorController : Controller
         ViewBag.Categories = _db.Categories.OrderBy(c => c.CategoryId).ToList();
         ViewBag.Incidents = _db.Incidents.OrderBy(i => i.IncidentId).ToList();
     }
-
+    
     public IActionResult DashboardIndex(int? id)
     {
         if (!CanRegisterNeed())
@@ -40,10 +50,24 @@ public class PublicActorController : Controller
         if (id.HasValue)
         {
             var need = _db.Needs.Find(id.Value);
+
             if (need == null)
             {
                 return NotFound();
             }
+
+            var currentUserId = GetCurrentUserId();
+
+            if (currentUserId is null)
+            {
+                return Unauthorized();
+            }
+
+            if (!User.IsInRole("Administrator") && need.PublicActorId != currentUserId.Value)
+            {
+                return Forbid();
+            }
+
             return View(need);
         }
 
@@ -101,9 +125,22 @@ public class PublicActorController : Controller
     }
     
     
+    [Authorize(Roles = "PublicActor,Administrator")]
     public IActionResult NeedsIndex(NeedPriorityEnum? priority, int? category)
     {
         var results = _db.Needs.Include(need => need.CategoryInfo).AsQueryable();
+
+        if (!User.IsInRole("Administrator"))
+        {
+            var currentUserId = GetCurrentUserId();
+
+            if (currentUserId is null)
+            {
+                return Unauthorized();
+            }
+
+            results = results.Where(need => need.PublicActorId == currentUserId.Value);
+        }
 
         if (priority.HasValue)
         {
@@ -141,11 +178,10 @@ public class PublicActorController : Controller
         return User.IsInRole("PublicActor") || User.IsInRole("Administrator");
     }
 
-    [HttpGet]
-    
 
-    
-    [HttpPost]
+    [HttpPost] 
+    [Authorize(Roles = "PublicActor,Administrator")] 
+    [ValidateAntiForgeryToken]
     public IActionResult RegisterNeed(ResourceNeed need)
     {
         if (!CanRegisterNeed())
@@ -161,11 +197,29 @@ public class PublicActorController : Controller
             return View("DashboardIndex", need);
         }
         // Save to database
-        need.PublicActorId = DemoDefaults.PublicActorId;
         need.RegisteredAt = DateTime.Now;
         if (need.Id > 0)
         {
             var existingNeed = _db.Needs.Find(need.Id);
+
+            if (existingNeed == null)
+            {
+                return NotFound();
+            }
+
+            var currentUserId = GetCurrentUserId();
+
+            if (currentUserId is null)
+            {
+                return Unauthorized();
+            }
+
+            if (!User.IsInRole("Administrator") &&
+                existingNeed.PublicActorId != currentUserId.Value)
+            {
+                return Forbid();
+            }
+            
             if (existingNeed != null)
             {
                 existingNeed.Title = need.Title;
@@ -186,7 +240,19 @@ public class PublicActorController : Controller
         }
         else
         {
-            need.PublicActorId = DemoDefaults.PublicActorId;
+            if (!User.IsInRole("PublicActor"))
+            {
+                return Forbid();
+            }
+
+            var currentUserId = GetCurrentUserId();
+
+            if (currentUserId is null)
+            {
+                return Unauthorized();
+            }
+
+            need.PublicActorId = currentUserId.Value;
             need.RegisteredAt = DateTime.Now;
             _db.Needs.Add(need);
             _db.SaveChanges();
@@ -288,6 +354,8 @@ public class PublicActorController : Controller
     // Saves the decision about a resource for a need in the ResourceMatch table.
     // newStatus: accepted = assigned, proposed = under review, declined = rejected
     [HttpPost]
+    [Authorize(Roles = "PublicActor")]
+    [ValidateAntiForgeryToken]
     public IActionResult UpdateResourceStatus(int resourceId, int needId, string newStatus, string? statusComment)
     {
         if (newStatus is not ("proposed" or "accepted" or "declined"))
@@ -295,9 +363,22 @@ public class PublicActorController : Controller
             return BadRequest();
         }
 
-        if (_db.Needs.Find(needId) == null || _db.Resources.Find(resourceId) == null)
+        var need = _db.Needs.Find(needId);
+        if (need == null || _db.Resources.Find(resourceId) == null)
         {
             return NotFound();
+        }
+
+        var currentUserId = GetCurrentUserId();
+
+        if (currentUserId is null)
+        {
+            return Unauthorized();
+        }
+
+        if (need.PublicActorId != currentUserId.Value)
+        {
+            return Forbid();
         }
 
         var comment = string.IsNullOrWhiteSpace(statusComment) ? null : statusComment.Trim();
@@ -317,7 +398,7 @@ public class PublicActorController : Controller
             _db.MatchRecords.Add(record);
         }
 
-        record.PublicActorId = DemoDefaults.PublicActorId;
+        record.PublicActorId = need.PublicActorId;
         record.Status = newStatus;
         record.Comment = comment;
         record.MatchDate = DateTime.Now;
@@ -330,7 +411,16 @@ public class PublicActorController : Controller
 
 
 public class HomeController : Controller
+
 {
+    private int? GetCurrentUserId()
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        return int.TryParse(userIdClaim, out var userId)
+            ? userId
+            : null;
+    }
+    
     private readonly AppDbContext _db;
 
     public HomeController(AppDbContext db)
@@ -338,6 +428,7 @@ public class HomeController : Controller
         _db = db;
     }
 
+    [Authorize(Roles = "CivilianProvider,Administrator")]
     public IActionResult Index(int? id)
     {
         if (!CanRegisterResource())
@@ -353,8 +444,21 @@ public class HomeController : Controller
             var existingResource = _db.Resources.Find(id.Value);
             if (existingResource != null)
             {
-                return View(existingResource);
+                var currentUserId = GetCurrentUserId();
+
+                if (currentUserId is null)
+                {
+                    return Unauthorized();
+                }
+
+                if (!User.IsInRole("Administrator") &&
+                    existingResource.ProviderId != currentUserId.Value)
+                {
+                    return Forbid();
+                }
             }
+            return View(existingResource);
+
         }
         
         // Sends an empty model to the form the first time the page is opened.
@@ -411,45 +515,11 @@ public class HomeController : Controller
             .ToList();
     }
     
-    [HttpPost]
-    public async Task<IActionResult> SelectRole(string userType)
-    {
-        if (userType is not ("ResourceProvider" or "PublicActor"))
-        {
-            userType = "ResourceProvider";
-        }
-
-        var displayName = userType == "PublicActor" ? "Public Actor" : "Resource Provider";
-        var claims = User.Claims
-            .Where(claim => claim.Type is not (ClaimTypes.Name or ClaimTypes.Role or "UserType"))
-            .ToList();
-        claims.Add(new Claim(ClaimTypes.Name, displayName));
-        claims.Add(new Claim(ClaimTypes.Role, userType));
-        claims.Add(new Claim("UserType", userType));
-
-        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-        await HttpContext.SignInAsync(
-            CookieAuthenticationDefaults.AuthenticationScheme,
-            new ClaimsPrincipal(identity),
-            new AuthenticationProperties
-            {
-                IsPersistent = true
-            });
-
-        if (userType == "PublicActor")
-        {
-            // Route user to dashboard for Public Actor 
-            return RedirectToAction("DashboardIndex", "PublicActor");
-        }
-
-        // Standard fallback: Route to civilian/resource provider page
-        return RedirectToAction("Index", "Home");
-    }
-
     
-
     // Runs when the form is submitted, saves the resource, and redirects to the Resources page.
     [HttpPost]
+    [Authorize(Roles = "CivilianProvider,Administrator")]  
+    [ValidateAntiForgeryToken] 
     public IActionResult RegisterResource(ResourceEntry resource)
     {
         if (!CanRegisterResource())
@@ -472,6 +542,12 @@ public class HomeController : Controller
             ViewBag.OpenRegistrationModal = true;
             return View("Index", resource);
         }
+        
+        var currentUserId = GetCurrentUserId();
+        if (currentUserId is null)
+        {
+            return Unauthorized();
+        }
 
         //save and update only when evrything is valid
         if (resource.Id > 0)
@@ -479,6 +555,12 @@ public class HomeController : Controller
             var existingResource = _db.Resources.Find(resource.Id);
             if (existingResource != null)
             {
+                if (!User.IsInRole("Administrator") &&
+                    existingResource.ProviderId != currentUserId.Value)
+                {
+                    return Forbid();
+                }
+                
                 existingResource.Name = resource.Name;
                 existingResource.Description = resource.Description;
                 existingResource.CategoryId = resource.CategoryId;
@@ -492,7 +574,13 @@ public class HomeController : Controller
         }
         else
         {
-            resource.ProviderId = DemoDefaults.ProviderId;
+            if (!User.IsInRole("CivilianProvider"))
+            {
+                return Forbid();
+            }
+            
+            
+            resource.ProviderId = currentUserId.Value;
             resource.RegionId = DemoDefaults.RegionId;
             resource.RegisteredAt = DateTime.Now;
             _db.Resources.Add(resource);
@@ -501,15 +589,12 @@ public class HomeController : Controller
         return RedirectToAction("Index", "Resources");
     }
 
+    [Authorize(Roles = "CivilianProvider, Administrator")]
     private bool CanRegisterResource()
     {
-        return User.IsInRole("ResourceProvider") || User.IsInRole("Administrator");
+        return User.IsInRole("CivilianProvider") || User.IsInRole("Administrator");
     }
-
-    private bool CanRegisterNeed()
-    {
-        return User.IsInRole("PublicActor") || User.IsInRole("Administrator");
-    }
+    
 
     // Calculates the expiry date based on the resource category.
     private static DateTime? GetExpiryDate(string resourceType)
@@ -542,34 +627,62 @@ public class HomeController : Controller
     }
 
     [HttpPost]
-    public IActionResult DeleteResource(int id)
+    [Authorize(Roles = "CivilianProvider, Administrator")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteResource(int id)
     {
-        var resource = _db.Resources.Find(id);
-        if (resource != null)
+        var resource = await _db.Resources.FindAsync(id);
+        if (resource == null)
         {
-            _db.Resources.Remove(resource);
-            _db.SaveChanges();
+            return NotFound();
         }
-        return RedirectToAction("index", "Resources");
+        
+        var currentUserId = GetCurrentUserId();
+
+        if (currentUserId is null)
+        {
+            return Unauthorized();
+        }
+        
+        bool isAdmin = User.IsInRole("Administrator");
+
+        if (!isAdmin && resource.ProviderId != (currentUserId))
+        {
+            return Forbid();
+        }
+        
+        _db.Resources.Remove(resource);
+        await _db.SaveChangesAsync();
+        return RedirectToAction(nameof(Index));
     }
 
     [HttpPost]
-    public IActionResult DeleteNeed(int id)
+    [Authorize(Roles = "PublicActor, Administrator")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteNeed(int id)
     {
-        var need = _db.Needs.Find(id);
-        if (need != null)
+        var Need = await _db.Needs.FindAsync(id);
+        if (Need == null)
         {
-            _db.Needs.Remove(need);
-            _db.SaveChanges();
+            return NotFound();
         }
-        return RedirectToAction("NeedsIndex", "PublicActor");
-    }
-    
-    // [Authorize(Roles = "PublicActor")]
-    // public IActionResult CreateIncident()
-    //{
-        // Show form for creating an incident 
-    //}
-    
+        
+        var currentUserId = GetCurrentUserId();
+
+        if (currentUserId is null)
+        {
+            return Unauthorized();
+        }
+        
+        bool isAdmin = User.IsInRole("Administrator");
+
+        if (!isAdmin && Need.PublicActorId != (currentUserId))
+        {
+            return Forbid();
+        }
+        
+        _db.Needs.Remove(Need);
+        await _db.SaveChangesAsync();
+        return RedirectToAction("NeedsIndex", "PublicActor");    }
     
 }

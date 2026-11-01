@@ -8,6 +8,7 @@ using H_st_2026_Gruppe_1.Models;
 
 // App builder 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddMemoryCache();
 
 // Controllers and views (MVC)
 builder.Services.AddControllersWithViews(options =>
@@ -24,6 +25,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.SlidingExpiration = true;
     });
 builder.Services.AddAuthorization();
+
 
 // Database connection (from docker-compose, or appsettings.Development.json outside Docker)
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
