@@ -45,6 +45,7 @@ body {
     --button-text: #ffffff;
     --primary-hover: #3689e8;
     --map-overlay: rgb(15 17 21 / 85%);
+    --feed-text: #ffffff;
     --status-new-border: rgb(74 158 255 / 45%);
     --status-new-background: rgb(74 158 255 / 12%);
     --status-assigned-border: rgb(25 135 84 / 55%);
@@ -77,6 +78,7 @@ body {
     --button-text: #ffffff;
     --primary-hover: #125487;
     --map-overlay: rgb(255 255 255 / 90%);
+    --feed-text: #000000;
     --status-new-border: rgb(23 105 170 / 35%);
     --status-new-background: rgb(23 105 170 / 10%);
     --status-assigned-border: rgb(20 108 67 / 35%);
@@ -249,6 +251,7 @@ body {
     flex-direction: column;
     min-width: 0;
     background-color: var(--bg-panel);
+    color: var(--feed-text);
     border-right: 1px solid var(--border);
     overflow: hidden;
 }
@@ -257,6 +260,11 @@ body {
     flex-shrink: 0;
     padding: 16px;
     border-bottom: 1px solid var(--border);
+}
+
+.operational-feed .section-label,
+.operational-feed .feed-card h2 {
+    color: var(--feed-text);
 }
 
 .operational-feed-header .section-label {
@@ -621,6 +629,10 @@ body {
     color: var(--text);
 }
 
+.registration-modal {
+    z-index: 1400;
+}
+
 .registration-modal .modal-header {
     align-items: center;
     padding: 10px 18px;
@@ -966,8 +978,15 @@ html[data-theme="light"] .registration-modal .btn-close {
     color: var(--text-muted);
 }
 
-.leaflet-popup-content-wrapper {
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
     border-radius: 10px;
+    background-color: var(--bg-hover) !important;
+    color: var(--text) !important;
+}
+
+.leaflet-popup-close-button {
+    color: var(--text) !important;
 }
 
 .leaflet-popup-content {
@@ -986,7 +1005,7 @@ html[data-theme="light"] .registration-modal .btn-close {
 }
 
 .map-register-popup-coordinates {
-    color: #595959;
+    color: var(--text-muted);
     font-size: 0.8rem;
 }
 
