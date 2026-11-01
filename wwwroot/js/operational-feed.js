@@ -128,7 +128,7 @@
     function render() {
         const query = search.value.trim().toLowerCase();
         const maxRadius = Number(radius.value);
-        radiusValue.textContent = maxRadius ? `${maxRadius} km` : "All distances";
+        radiusValue.textContent = window.resqRadius.format(maxRadius);
         let visible = 0;
         const sortedItems = items
             .map(item => ({ item, distance: distanceInKm(Number(item.dataset.latitude), Number(item.dataset.longitude)) }))

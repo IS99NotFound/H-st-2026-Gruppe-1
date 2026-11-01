@@ -1,102 +1,149 @@
 @model H_st_2026_Gruppe_1.Models.MatchViewModel
 
 @{
-    ViewData["Title"] = "Matching overview";
+    ViewData["Title"] = "Match resources";
     ViewData["WideContent"] = true;
+    var hasSelectedNeed = Model.UserNeeds.Any() && Model.Need.Id > 0;
 }
 
 <section class="subpage matches-page">
-    <div class="match-heading">
-        <h1>Resource match near:</h1>
-        <form method="get" asp-action="Matches">
-            <select name="needId" id="needId" class="form-select" onchange="this.form.submit()">
-                @foreach (var need in Model.UserNeeds)
-                {
-                    if (need.Id == Model.Need.Id)
-                    {
-                        <option value="@need.Id" selected="selected">@need.Title (incident ID: @need.CrisisEventId)</option>
-                    }
-                    
-                    else
-                    {
-                        <option value="@need.Id">@need.Title (incident ID: @need.CrisisEventId)</option>
-                    }
-                }
-            </select>
-        </form>
+    <div class="subpage-header">
+        <h1>Match resources</h1>
     </div>
-    
-    
 
-    <!-- Both buttons submit the selected need and radius; the second uses a different action. -->
-    <form asp-controller="PublicActor" asp-action="Matches" method="get" class="match-controls">
-        <input type="hidden" name="needId" value="@Model.Need.Id" />
-        <div>
-            <label for="radiusKm">Radius (km)</label>
-            <input type="number" name="radiusKm" id="radiusKm" value="@Model.RadiusKm" min="1" class="form-control" />
+    @if (!Model.UserNeeds.Any())
+    {
+        <div class="empty-state-panel">
+            <i class="bi bi-link-45deg" aria-hidden="true"></i>
+            <h2>No needs to match</h2>
+            <p>Register a need before looking for matching resources.</p>
+            <a asp-controller="PublicActor" asp-action="DashboardIndex" asp-route-register="need"
+               class="btn btn-primary">Register need</a>
         </div>
-        <button type="submit" class="btn btn-primary">Find matches </button>
-        <button type="submit"
-                formaction="@Url.Action("ShowAllResourcesInMatches", "PublicActor")"
-                class="btn btn-outline-primary">
-           View all resources within radius
-        </button>
-    </form>
-    
-    @if (!Model.Matches.Any())
-{
-    <p class="match-empty-state">No resources found within @Model.RadiusKm km@(Model.AllCategories ? "." : " in the need's category.")</p>
-}
-else
-{
-    <div class="table-wrapper matches-table-wrapper">
-    <table class="table table-dark table-striped matches-table">
-        <thead>
-        <tr>
-            <th>Distance (km)</th>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Contact</th>
-            <th>Description</th>
-            <th>Expiry date</th>
-            <th> Actions </th>
-        </tr>
-        </thead>
+    }
+    else
+    {
+        <div class="match-toolbar">
+            <div class="match-selection">
+                <form method="get" asp-controller="PublicActor" asp-action="MatchesIndex" class="match-need-selector">
+                    <label for="needId" class="form-label match-selector-label">Select need</label>
+                    <select name="needId" id="needId" class="form-select" onchange="this.form.submit()">
+                        @foreach (var need in Model.UserNeeds)
+                        {
+                            <option value="@need.Id" selected="@(need.Id == Model.Need.Id)">
+                                @need.Title (incident ID: @need.CrisisEventId)
+                            </option>
+                        }
+                    </select>
+                </form>
 
-        <tbody>
-        @foreach (var match in Model.Matches)
+                @if (hasSelectedNeed)
+                {
+                    <div class="match-need-summary">
+                        <strong>@Model.Need.Title</strong>
+                        <span>@Model.Need.Description</span>
+                        <span>Location: @Model.Need.Latitude.ToString("F5"), @Model.Need.Longitude.ToString("F5")</span>
+                        <span>Contact: @Model.Need.ContactInfo</span>
+                    </div>
+                }
+            </div>
+
+            @if (hasSelectedNeed)
+            {
+                <form asp-controller="PublicActor" asp-action="Matches" method="get" class="match-controls">
+                    <input type="hidden" name="needId" value="@Model.Need.Id" />
+                    <div class="match-radius-field">
+                        <label for="radiusKm" class="form-label">Distance</label>
+                        <input type="range" name="radiusKm" id="radiusKm" value="@Model.RadiusKm"
+                               min="0" max="100" step="5" class="form-range" />
+                        <span id="radiusKmValue" class="match-radius-value">
+                            @(Model.RadiusKm <= 0 ? "All distances" : $"{Model.RadiusKm} km")
+                        </span>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-primary">Find matches</button>
+                    <button type="submit"
+                            formaction="@Url.Action("ShowAllResourcesInMatches", "PublicActor")"
+                            class="btn btn-sm btn-outline-secondary">
+                        View all resources
+                    </button>
+                </form>
+            }
+        </div>
+
+        @if (hasSelectedNeed)
         {
-                <tr>
-                    <td>@match.DistanceKm.ToString("F1")</td>
-                    <td>@match.Resource.Name</td>
-                    <td>@match.Resource.Category?.CategoryName</td>
-                    <td>@match.Resource.Phone</td>
-                    <td>@match.Resource.Description</td>
-                    <td>@match.Resource.ExpirationDate?.ToString("dd.MM.yyyy")</td>
-                    <td>
-                        <form asp-controller="PublicActor" asp-action="UpdateResourceStatus" method="post" class="match-status-form">
-                            <input type="hidden" name="resourceId" value="@match.Resource.Id"/>
-                            <input type="hidden" name="needId" value="@Model.Need.Id"/>
-
-                            <label for="comment-@match.Resource.Id">Comment</label>
-                            <textarea id="comment-@match.Resource.Id" name="statusComment" class="form-control" placeholder="Write a comment">@match.Comment</textarea>
-                            <div class="match-status-buttons">
-                                <button type="submit" name="newStatus" value="accepted" class="btn btn-success @(match.MatchStatus == "accepted" ? "status-selected" : "")">
-                                    Assign
-                                </button>
-                                <button type="submit" name="newStatus" value="proposed" class="btn btn-warning @(match.MatchStatus == "proposed" ? "status-selected" : "")">
-                                    Under review
-                                </button>
-                                <button type="submit" name="newStatus" value="declined" class="btn btn-danger @(match.MatchStatus == "declined" ? "status-selected" : "")">
-                                    Reject
-                                </button>
-                            </div>
-                        </form>
-                    </td>
-                </tr>
+            @if (!Model.Matches.Any())
+            {
+                <div class="empty-state-panel empty-state-panel--compact">
+                    <i class="bi bi-box-seam" aria-hidden="true"></i>
+                    <p>
+                        No resources found
+                        @(Model.RadiusKm <= 0 ? "for this need" : $"within {Model.RadiusKm} km").
+                    </p>
+                </div>
+            }
+            else
+            {
+                <div class="table-wrapper matches-table-wrapper">
+                    <table class="table table-striped matches-table">
+                        <thead>
+                        <tr>
+                            <th>Distance (km)</th>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Contact</th>
+                            <th>Description</th>
+                            <th>Expiry date</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var match in Model.Matches)
+                        {
+                            <tr>
+                                <td>@match.DistanceKm.ToString("F1")</td>
+                                <td>@match.Resource.Name</td>
+                                <td>@match.Resource.Category?.CategoryName</td>
+                                <td>@match.Resource.Phone</td>
+                                <td>@match.Resource.Description</td>
+                                <td>@match.Resource.ExpirationDate?.ToString("dd.MM.yyyy")</td>
+                                <td>
+                                    <form asp-controller="PublicActor" asp-action="UpdateResourceStatus"
+                                          method="post" class="match-status-form">
+                                        <input type="hidden" name="resourceId" value="@match.Resource.Id" />
+                                        <input type="hidden" name="needId" value="@Model.Need.Id" />
+                                        <label for="comment-@match.Resource.Id">Comment</label>
+                                        <textarea id="comment-@match.Resource.Id" name="statusComment"
+                                                  class="form-control" placeholder="Write a comment">@match.Comment</textarea>
+                                        <div class="match-status-buttons">
+                                            <button type="submit" name="newStatus" value="accepted"
+                                                    class="btn btn-success @(match.MatchStatus == "accepted" ? "status-selected" : "")">
+                                                Assign
+                                            </button>
+                                            <button type="submit" name="newStatus" value="proposed"
+                                                    class="btn btn-warning @(match.MatchStatus == "proposed" ? "status-selected" : "")">
+                                                Under review
+                                            </button>
+                                            <button type="submit" name="newStatus" value="declined"
+                                                    class="btn btn-danger @(match.MatchStatus == "declined" ? "status-selected" : "")">
+                                                Reject
+                                            </button>
+                                        </div>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
         }
-        </tbody>
-    </table>
-    </div>
-}
+    }
 </section>
+
+@if (hasSelectedNeed)
+{
+    <script>
+        window.resqRadius.initialize('radiusKm', 'radiusKmValue');
+    </script>
+}
