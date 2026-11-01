@@ -88,6 +88,7 @@ public class PublicActorController : Controller
                 Description = resource.Description,
                 Status = resource.Status,
                 Category = resource.Category?.CategoryName,
+                ColorKey = "available-resource",
                 Latitude = resource.Latitude ?? 0,
                 Longitude = resource.Longitude ?? 0,
                 CreatedAt = resource.RegisteredAt
@@ -104,6 +105,10 @@ public class PublicActorController : Controller
                 Description = need.Description,
                 Status = need.Status,
                 Category = need.CategoryInfo?.CategoryName,
+                Priority = need.Priority.ToString(),
+                ColorKey = need.Priority == NeedPriorityEnum.Critical
+                    ? "critical-need"
+                    : "planned-need",
                 Latitude = need.Latitude,
                 Longitude = need.Longitude,
                 CreatedAt = need.RegisteredAt
@@ -118,6 +123,7 @@ public class PublicActorController : Controller
                 Title = incident.Title,
                 Description = incident.Description,
                 Status = incident.Status,
+                ColorKey = "public-team",
                 Latitude = (double)incident.Latitude,
                 Longitude = (double)incident.Longitude,
                 CreatedAt = incident.CreatedAt
@@ -397,6 +403,7 @@ public class HomeController : Controller
                 Description = resource.Description,
                 Status = resource.Status,
                 Category = resource.Category?.CategoryName,
+                ColorKey = "available-resource",
                 Latitude = resource.Latitude ?? 0,
                 Longitude = resource.Longitude ?? 0,
                 CreatedAt = resource.RegisteredAt
@@ -413,6 +420,10 @@ public class HomeController : Controller
                 Description = need.Description,
                 Status = need.Status,
                 Category = need.CategoryInfo?.CategoryName,
+                Priority = need.Priority.ToString(),
+                ColorKey = need.Priority == NeedPriorityEnum.Critical
+                    ? "critical-need"
+                    : "planned-need",
                 Latitude = need.Latitude,
                 Longitude = need.Longitude,
                 CreatedAt = need.RegisteredAt
@@ -427,6 +438,7 @@ public class HomeController : Controller
                 Title = incident.Title,
                 Description = incident.Description,
                 Status = incident.Status,
+                ColorKey = "public-team",
                 Latitude = (double)incident.Latitude,
                 Longitude = (double)incident.Longitude,
                 CreatedAt = incident.CreatedAt

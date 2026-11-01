@@ -19,9 +19,10 @@
              data-resource-registration-url="@Url.Action("Index", "Home")"
              data-need-registration-url="@(canRegisterNeed ? Url.Action("DashboardIndex", "PublicActor") : null)"
              data-registration-type="resource"></div>
+        <partial name="_MapColorLegend" />
         <div class="map-filtering is-collapsed" id="survival-filter-panel">
             <div class="map-filter-header">
-                <strong class="map-filter-title">Find survival locations</strong>
+                <strong class="map-filter-title">Filter location</strong>
                 <button type="button" id="survival-filter-button" class="map-filter-button"
                         aria-expanded="false" aria-controls="survival-filter-content"
                         aria-label="Expand survival location filters">
@@ -66,9 +67,17 @@
     <script src="~/js/survival-location-filters.js" asp-append-version="true" defer></script>
     <script src="~/js/map-filter-button.js" asp-append-version="true" defer></script>
     <script>
-        window.operationalFeedIncidents = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
-            ViewBag.FeedIncidents ?? new List<object>(),
-            new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }));
+        window.operationalFeedItems = {
+            resources: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                ViewBag.FeedResources ?? new List<object>(),
+                new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase })),
+            needs: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                ViewBag.FeedNeeds ?? new List<object>(),
+                new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase })),
+            incidents: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                ViewBag.FeedIncidents ?? new List<object>(),
+                new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }))
+        };
     </script>
     <script src="~/js/operational-feed.js" asp-append-version="true" defer></script>
     <script>

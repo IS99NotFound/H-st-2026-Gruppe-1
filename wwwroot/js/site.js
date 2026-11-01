@@ -1,5 +1,25 @@
 window.addEventListener("resize", () => window.resqMap?.invalidateSize());
 
+window.resqMapColors = {
+    "critical-need": "#ef4444",
+    "planned-need": "#f59e0b",
+    "available-resource": "#22c55e",
+    "public-team": "#3b82f6"
+};
+
+document.querySelectorAll("[data-map-legend-toggle]").forEach(toggle => {
+    toggle.addEventListener("click", () => {
+        const legend = toggle.closest("[data-map-legend]");
+        const content = legend?.querySelector(".map-color-legend-content");
+        if (!content) return;
+
+        const isExpanded = !content.classList.toggle("is-collapsed");
+        toggle.setAttribute("aria-expanded", String(isExpanded));
+        toggle.querySelector("i")?.classList.toggle("bi-chevron-down", isExpanded);
+        toggle.querySelector("i")?.classList.toggle("bi-chevron-up", !isExpanded);
+    });
+});
+
 window.resqRegistration = {
     initializeDateTimeFields(formId, mappings) {
         const form = document.getElementById(formId);

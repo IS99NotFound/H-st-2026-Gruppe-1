@@ -56,6 +56,10 @@ body {
     --status-assigned-text: #b7e4c7;
     --status-review-text: #ffe0a3;
     --status-rejected-text: #ffc4c4;
+    --map-critical-need: #ef4444;
+    --map-planned-need: #f59e0b;
+    --map-available-resource: #22c55e;
+    --map-public-team: #3b82f6;
 }
 
 [data-theme="light"] {
@@ -84,6 +88,10 @@ body {
     --status-assigned-text: #146c43;
     --status-review-text: #8a5a00;
     --status-rejected-text: #a32929;
+    --map-critical-need: #dc2626;
+    --map-planned-need: #d97706;
+    --map-available-resource: #16a34a;
+    --map-public-team: #2563eb;
 }
 
 body {
@@ -427,12 +435,6 @@ body {
     font-size: 0.72rem;
 }
 
-.feed-card-type {
-    color: var(--accent);
-    font-weight: 700;
-    text-transform: uppercase;
-}
-
 .feed-card h2 {
     margin: 8px 0 5px;
     font-size: 1rem;
@@ -483,6 +485,119 @@ body {
 .map-area {
     flex: 2;
     position:relative; /* Plasserer filter-panelen over kartet*/
+}
+
+.map-color-legend {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    z-index: 500;
+    width: 220px;
+    min-width: 220px;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--map-overlay);
+    color: var(--text);
+    box-shadow: 0 2px 8px rgb(0 0 0 / 25%);
+    font-size: 0.72rem;
+}
+
+.map-color-legend-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    font-size: inherit;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-align: left;
+}
+
+.map-color-legend-toggle i {
+    margin-left: 12px;
+}
+
+.map-color-legend-content {
+    display: grid;
+    gap: 5px;
+    margin-top: 7px;
+}
+
+.map-color-legend-content.is-collapsed {
+    display: none;
+}
+
+.map-color-legend-item,
+.feed-color-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.map-color-dot {
+    display: inline-block;
+    flex: 0 0 8px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--map-public-team);
+}
+
+.map-color-dot--critical-need,
+.resq-map-marker--critical-need {
+    background-color: var(--map-critical-need);
+}
+
+.map-color-dot--planned-need,
+.resq-map-marker--planned-need {
+    background-color: var(--map-planned-need);
+}
+
+.map-color-dot--available-resource,
+.resq-map-marker--available-resource {
+    background-color: var(--map-available-resource);
+}
+
+.map-color-dot--public-team,
+.resq-map-marker--public-team {
+    background-color: var(--map-public-team);
+}
+
+.feed-color-badge {
+    padding: 2px 6px;
+    border: 1px solid currentColor;
+    border-radius: 999px;
+    color: var(--text-muted);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.feed-color-badge--critical-need { color: var(--map-critical-need); }
+.feed-color-badge--planned-need { color: var(--map-planned-need); }
+.feed-color-badge--available-resource { color: var(--map-available-resource); }
+.feed-color-badge--public-team { color: var(--map-public-team); }
+
+.resq-map-marker-icon {
+    border: 0;
+    background: transparent;
+}
+
+.resq-map-marker {
+    display: block;
+    width: 18px;
+    height: 18px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    box-shadow: 0 1px 5px rgb(0 0 0 / 45%);
 }
 
 #map {
@@ -663,17 +778,17 @@ html[data-theme="light"] .registration-modal .btn-close {
 .registration-priority .registration-priority-planned:hover,
 .registration-priority .registration-priority-planned:focus-visible,
 .registration-priority .btn-check:checked + .registration-priority-planned {
-    border-color: var(--status-new-border);
-    background-color: var(--status-new-background);
-    color: var(--status-new-text);
+    border-color: var(--map-planned-need);
+    background-color: rgb(245 158 11 / 14%);
+    color: var(--map-planned-need);
 }
 
 .registration-priority .registration-priority-critical:hover,
 .registration-priority .registration-priority-critical:focus-visible,
 .registration-priority .btn-check:checked + .registration-priority-critical {
-    border-color: var(--status-rejected-border);
-    background-color: var(--status-rejected-background);
-    color: var(--status-rejected-text);
+    border-color: var(--map-critical-need);
+    background-color: rgb(239 68 68 / 14%);
+    color: var(--map-critical-need);
 }
 
 .registration-help {
@@ -738,16 +853,17 @@ html[data-theme="light"] .registration-modal .btn-close {
     right: 12px;
     left: auto;
     z-index: 1000;
-    width: min(360px, calc(100% - 70px));
+    width: min(220px, calc(100% - 70px));
     max-height: 70%;
     overflow-y: auto;
     padding: 12px;
     border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--bg-panel);
+    border-radius: 6px;
+    background: var(--map-overlay);
     color: var(--text);
     box-shadow: 0 4px 14px rgb(0 0 0 / 25%);
     box-sizing: border-box;
+    font-size: 0.72rem;
     transition: width 0.2s ease, padding 0.2s ease;
 }
 
@@ -761,9 +877,12 @@ html[data-theme="light"] .registration-modal .btn-close {
 
 .map-filter-title {
     flex: 1;
-    order: 2;
     margin: 0;
-    text-align: right;
+    font-size: inherit;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-align: left;
 }
 
 .map-filter-header > strong {
@@ -775,8 +894,8 @@ html[data-theme="light"] .registration-modal .btn-close {
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    width: 32px;
-    height: 32px;
+    width: 24px;
+    height: 24px;
     padding: 0;
     border: 1px solid var(--border);
     border-radius: 6px;
@@ -785,10 +904,14 @@ html[data-theme="light"] .registration-modal .btn-close {
     cursor: pointer;
 }
 
+.map-filter-header .map-filter-button {
+    order: 2;
+}
+
 /*Holder en liten knapp synlig når panelet lukkes*/
 .map-filtering.is-collapsed {
-    width: 48px;
-    padding: 6px;
+    width: 34px;
+    padding: 4px;
     overflow: hidden;
 }
 
@@ -808,24 +931,27 @@ html[data-theme="light"] .registration-modal .btn-close {
     outline-offset: 2px;
 }
 .map-filter-options {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px 14px;
-    justify-content: flex-start;
+    display: grid;
+    gap: 8px;
+    justify-items: start;
 }
 
 .map-filter-options label {
     display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    line-height: 1.2;
 }
 
 .map-filter-options input {
-    accent-color: var(--accent)
+    accent-color: var(--accent);
+    margin: 0;
 }
 
 #survival-filter-status,
-#reistered-resource-status {
+#registered-resources-status {
     margin: 10px 0 0;
-    font-size: 0.85rem;
+    font-size: inherit;
     color: var(--text-muted);
 }
 
@@ -1793,11 +1919,16 @@ html[data-theme="light"] .registration-modal .btn-close {
     white-space: nowrap;
 }
 
-.status-label.status-new,
-.status-label.status-available {
+.status-label.status-new {
     border-color: var(--status-new-border);
     background-color: var(--status-new-background);
     color: var(--status-new-text);
+}
+
+.status-label.status-available {
+    border-color: var(--map-available-resource);
+    background-color: rgb(34 197 94 / 14%);
+    color: var(--map-available-resource);
 }
 
 .status-label.status-assigned {
