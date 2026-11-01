@@ -126,15 +126,6 @@
                 </button>
                 <div class="dropdown-divider"></div>
 
-                <form asp-controller="Home" asp-action="SelectRole" method="post" class="user-menu-role">
-                    <label for="UserType">Switch user</label>
-                    <select name="UserType" id="UserType" class="form-select form-select-sm" onchange="this.form.submit()">
-                        <option value="ResourceProvider" selected="@(userType == "ResourceProvider")">Resource Provider</option>
-                        <option value="PublicActor" selected="@(userType == "PublicActor")">Public Actor</option>
-                    </select>
-                </form>
-                <div class="dropdown-divider"></div>
-
                 <form asp-controller="Auth" asp-action="Logout" method="post">
                     <button type="submit" class="dropdown-item user-menu-item logout-item">
                         <i class="bi bi-box-arrow-right" aria-hidden="true"></i>

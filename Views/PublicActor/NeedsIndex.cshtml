@@ -83,14 +83,7 @@ else
                     <td>@(need.RequiredFrom?.ToString("dd.MM.yyyy") ?? "Not specified")</td>
                     <td>@(need.Deadline?.ToString("dd.MM.yyyy") ?? "Not specified")</td>
                     <td>
-                    @if (need.Latitude != null && need.Longitude != null)
-                    {
-                        @($"{need.Latitude:F5}, {need.Longitude:F5}")
-                    }
-                    else
-                    {
-                        <span>No position selected</span>
-                    }
+                    @($"{need.Latitude:F5}, {need.Longitude:F5}")
                     </td>
                     <td>@need.RegisteredAt.ToString("dd.MM.yyyy HH:mm")</td>
                     <td>

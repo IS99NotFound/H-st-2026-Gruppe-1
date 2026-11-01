@@ -40,7 +40,6 @@ public class ResourcesController : Controller
             .OrderBy(resource => resource.Id)
             .ToList();
         ViewBag.Categories = _db.Categories.OrderBy(category => category.CategoryId).ToList();
-        var allResources = _db.Resources.Include(r => r.Category).OrderBy(r => r.Id).ToList();
         var dashboardModel = new ResourceDashboard
         {
             TotalResources = allResources.Count,
