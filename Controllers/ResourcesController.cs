@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using H_st_2026_Gruppe_1.Data;
@@ -18,8 +19,27 @@ public class ResourcesController : Controller
     {
         var now = DateTime.Today;
         var fiveDaysAhead = now.AddDays(5);
+        var resourcesQuery = _db.Resources
+            .Include(resource => resource.Category)
+            .AsQueryable();
+
+        if (User.IsInRole("CivilianProvider"))
+        {
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (!int.TryParse(userIdClaim, out var currentUserId))
+            {
+                return Unauthorized();
+            }
+
+            resourcesQuery = resourcesQuery
+                .Where(resource => resource.ProviderId == currentUserId);
+        }
+
+        var allResources = resourcesQuery
+            .OrderBy(resource => resource.Id)
+            .ToList();
         ViewBag.Categories = _db.Categories.OrderBy(category => category.CategoryId).ToList();
-        var allResources = _db.Resources.Include(r => r.Category).OrderBy(r => r.Id).ToList();
         var dashboardModel = new ResourceDashboard
         {
             TotalResources = allResources.Count,

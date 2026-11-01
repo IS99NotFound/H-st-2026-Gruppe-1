@@ -19,18 +19,34 @@
             <h2>Welcome back</h2>
             <p class="auth-description">Sign in to access ResQ.</p>
 
+            @if (TempData["RegisterMessage"] != null)
+            {
+                <p class="text-success">@TempData["RegisterMessage"]</p>
+            }
+
             <form asp-controller="Auth" asp-action="Login" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
                 <div class="auth-field">
-                    <label asp-for="UserType">User</label>
-                    <select asp-for="UserType" class="form-select">
-                        <option value="ResourceProvider">Resource Provider</option>
-                        <option value="PublicActor">Public Actor</option>
-                    </select>
-                    <span asp-validation-for="UserType" class="text-danger"></span>
+                    <label asp-for="UserName">Username</label>
+                    <input asp-for="UserName" class="form-control" autocomplete="username" />
+                    <span asp-validation-for="UserName" class="text-danger"></span>
                 </div>
+
+                <div class="auth-field">
+                    <label asp-for="Password">Password</label>
+                    <input asp-for="Password" class="form-control" autocomplete="current-password" />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+
                 <button type="submit" class="btn auth-submit">Sign in</button>
             </form>
-            <p class="auth-demo-note">Demo sign-in: no password or account validation is used.</p>
+
+            <a class="auth-back-link" asp-controller="Register" asp-action="Index">Create account</a>
         </div>
     </section>
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

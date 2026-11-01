@@ -2,6 +2,7 @@ using H_st_2026_Gruppe_1.Data;
 using H_st_2026_Gruppe_1.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace H_st_2026_Gruppe_1.Controllers;
 
@@ -31,7 +32,7 @@ public class IncidentsController : Controller
     }
 
     [HttpPost]
-    [Authorize(Roles = "PublicActor")]
+    [Authorize(Roles = "PublicActor, Administrator")]
     [ValidateAntiForgeryToken]
     public IActionResult Create(IncidentIndexViewModel model)
     {
@@ -42,9 +43,20 @@ public class IncidentsController : Controller
             return View("Index", model);
         }
 
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (!int.TryParse(userIdClaim, out var currentUserId))
+        {
+            return Unauthorized();
+        }
+
+        var publicActorId = User.IsInRole("Administrator")
+            ? DemoDefaults.PublicActorId
+            : currentUserId;
+
         var incident = new Incident
         {
-            PublicActorId = DemoDefaults.PublicActorId,
+            PublicActorId = publicActorId,
             Title = createModel.Title.Trim(),
             NormalizedTitle = NormalizeTitle(createModel.Title),
             IncidentType = createModel.IncidentType,
@@ -65,7 +77,7 @@ public class IncidentsController : Controller
     }
 
     [HttpPost]
-    [Authorize(Roles = "PublicActor")]
+    [Authorize(Roles = "PublicActor, Administrator")]
     [ValidateAntiForgeryToken]
     public IActionResult MarkAsResolved(int incidentId)
     {
@@ -73,6 +85,18 @@ public class IncidentsController : Controller
         if (incident == null)
         {
             return NotFound();
+        }
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (!int.TryParse(userIdClaim, out var currentUserId))
+        {
+            return Unauthorized();
+        }
+
+        if (!User.IsInRole("Administrator") &&
+            incident.PublicActorId != currentUserId)
+        {
+            return Forbid();
         }
 
         incident.Status = "resolved";
@@ -83,7 +107,7 @@ public class IncidentsController : Controller
     }
 
     [HttpPost]
-    [Authorize(Roles = "PublicActor")]
+    [Authorize(Roles = "PublicActor, Administrator")]
     [ValidateAntiForgeryToken]
     public IActionResult Reactivate(int incidentId)
     {
@@ -91,6 +115,19 @@ public class IncidentsController : Controller
         if (incident == null)
         {
             return NotFound();
+        }
+        
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (!int.TryParse(userIdClaim, out var currentUserId))
+        {
+            return Unauthorized();
+        }
+
+        if (!User.IsInRole("Administrator") &&
+            incident.PublicActorId != currentUserId)
+        {
+            return Forbid();
         }
 
         incident.Status = "active";

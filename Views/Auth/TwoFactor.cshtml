@@ -18,22 +18,38 @@
             <p class="auth-step-label">STEP 2 OF 2</p>
             <div class="auth-shield"><i class="bi bi-shield-check" aria-hidden="true"></i></div>
             <h2>Verify it's you</h2>
-            <p class="auth-description">Use the demo code below to continue to ResQ.</p>
+            <p class="auth-description">Enter the six-digit code to continue to ResQ.</p>
 
-            <form asp-controller="Auth" asp-action="VerifyTwoFactor" method="post">
-                <input asp-for="UserType" type="hidden" />
-                <input asp-for="Code" type="hidden" />
+            @* DEMO: in a real system the code is sent by SMS or e-mail and never shown on the page *@
+            @if (!string.IsNullOrEmpty(Model.DemoCode))
+            {
                 <label class="auth-code-label">Six-digit demo code</label>
-                <div class="auth-code-display" aria-label="Your demo code is @Model.Code">
-                    @foreach (var digit in Model.Code)
+                <div class="auth-code-display" aria-label="Your demo code is @Model.DemoCode">
+                    @foreach (var digit in Model.DemoCode)
                     {
                         <span>@digit</span>
                     }
                 </div>
-                <p class="auth-demo-note">This code is shown for demonstration only. You can continue without entering it.</p>
+                <p class="auth-demo-note">This code is shown for demonstration only. In production it would be sent by SMS or e-mail.</p>
+            }
+
+            <form asp-controller="Auth" asp-action="VerifyTwoFactor" method="post">
+                <input asp-for="PendingId" type="hidden" />
+
+                <div class="auth-field">
+                    <label asp-for="Code">Code</label>
+                    <input asp-for="Code" class="form-control" value="" inputmode="numeric"
+                           autocomplete="one-time-code" maxlength="6" />
+                    <span asp-validation-for="Code" class="text-danger"></span>
+                </div>
+
                 <button type="submit" class="btn auth-submit">Verify code</button>
             </form>
             <a class="auth-back-link" asp-controller="Auth" asp-action="Login">Back to sign in</a>
         </div>
     </section>
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

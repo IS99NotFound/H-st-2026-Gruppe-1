@@ -39,7 +39,7 @@ services:
     depends_on:
       # Ensures the database container starts before the web application
       - db
-
+      
 # Named volumes for data storage
 volumes:
   mariadb_data:
