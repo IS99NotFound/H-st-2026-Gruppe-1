@@ -30,6 +30,30 @@ public class PublicActorController : Controller
     {
         _db = db;
     }
+    private void LoadResourceMarkers()
+{
+    var resources = _db.Resources
+        .Include(r => r.Category)
+        .Where(r =>
+            r.Status == "available" &&
+            r.Latitude.HasValue &&
+            r.Longitude.HasValue)
+        .Select(r => new
+        {
+            name = r.Name,
+            resourceType = r.Category != null
+                ? r.Category.CategoryName
+                : "Other",
+            description = r.Description,
+            phone = r.PhoneNumber,
+            latitude = r.Latitude,
+            longitude = r.Longitude
+        })
+        .ToList();
+
+    ViewBag.ResourceMarkersJson =
+        System.Text.Json.JsonSerializer.Serialize(resources);
+}
 
     // Categories for the dropdown
     private void LoadDropdowns()
@@ -46,6 +70,7 @@ public class PublicActorController : Controller
         }
 
         LoadDropdowns();
+        LoadResourceMarkers();
         LoadOperationalFeed();
         if (id.HasValue)
         {
@@ -53,7 +78,7 @@ public class PublicActorController : Controller
 
             if (need == null)
             {
-                return NotFound();
+                return RedirectToAction(nameof(MatchesIndex));
             }
 
             var currentUserId = GetCurrentUserId();
@@ -87,6 +112,7 @@ public class PublicActorController : Controller
                 Description = resource.Description,
                 Status = resource.Status,
                 Category = resource.Category?.CategoryName,
+                ColorKey = "available-resource",
                 Latitude = resource.Latitude ?? 0,
                 Longitude = resource.Longitude ?? 0,
                 CreatedAt = resource.RegisteredAt
@@ -103,6 +129,10 @@ public class PublicActorController : Controller
                 Description = need.Description,
                 Status = need.Status,
                 Category = need.CategoryInfo?.CategoryName,
+                Priority = need.Priority.ToString(),
+                ColorKey = need.Priority == NeedPriorityEnum.Critical
+                    ? "critical-need"
+                    : "planned-need",
                 Latitude = need.Latitude,
                 Longitude = need.Longitude,
                 CreatedAt = need.RegisteredAt
@@ -117,6 +147,7 @@ public class PublicActorController : Controller
                 Title = incident.Title,
                 Description = incident.Description,
                 Status = incident.Status,
+                ColorKey = "public-team",
                 Latitude = (double)incident.Latitude,
                 Longitude = (double)incident.Longitude,
                 CreatedAt = incident.CreatedAt
@@ -126,7 +157,7 @@ public class PublicActorController : Controller
     
     
     [Authorize(Roles = "PublicActor,Administrator")]
-    public IActionResult NeedsIndex(NeedPriorityEnum? priority, int? category)
+    public IActionResult NeedsIndex(NeedPriorityEnum? priority, int? category, int? id)
     {
         var results = _db.Needs.Include(need => need.CategoryInfo).AsQueryable();
 
@@ -159,6 +190,17 @@ public class PublicActorController : Controller
             .ToList();
 
         ViewBag.Categories = _db.Categories.OrderBy(c => c.CategoryId).ToList();
+        ViewBag.Incidents = _db.Incidents.OrderBy(i => i.IncidentId).ToList();
+        if (id.HasValue)
+        {
+            var editNeed = sortedResults.FirstOrDefault(need => need.Id == id.Value);
+            if (editNeed == null)
+            {
+                return NotFound();
+            }
+
+            ViewBag.EditNeed = editNeed;
+        }
         return View(sortedResults);
     }
     
@@ -192,6 +234,7 @@ public class PublicActorController : Controller
         if (!ModelState.IsValid)
         {
             LoadDropdowns();
+            LoadResourceMarkers();
             LoadOperationalFeed();
             ViewBag.OpenRegistrationModal = true;
             return View("DashboardIndex", need);
@@ -223,7 +266,9 @@ public class PublicActorController : Controller
             if (existingNeed != null)
             {
                 existingNeed.Title = need.Title;
-                existingNeed.ContactInfo = need.ContactInfo;
+                existingNeed.Email = need.Email;
+                existingNeed.PhoneNumber = need.PhoneNumber;
+                existingNeed.LocationName = need.LocationName;
                 existingNeed.CrisisEventId = need.CrisisEventId;
                 existingNeed.Latitude = need.Latitude;
                 existingNeed.Longitude = need.Longitude;
@@ -262,93 +307,77 @@ public class PublicActorController : Controller
         return RedirectToAction("NeedsIndex");
     }
 
-    public IActionResult MatchesIndex()
+    public IActionResult MatchesIndex(int? needId, double radiusKm = 0)
     {
-        var needs = _db.Needs.Include(need => need.CategoryInfo).ToList();
-        ViewBag.Categories = _db.Categories.OrderBy(c => c.CategoryId).ToList();
-        return View("NeedsIndex", needs);
+        return View("MatchesIndex", BuildMatchViewModel(needId, radiusKm));
     }
     
     // Shows the resources within radiusKm of a need, nearest first.
-    public IActionResult Matches(int? needId, double radiusKm = 50)
+    public IActionResult Matches(int? needId, double radiusKm = 0)
     {
-        ResourceNeed need = null;
-        
-        if (needId.HasValue)
+        var model = BuildMatchViewModel(needId, radiusKm);
+        if (model.Need.Id == 0)
         {
-            need = _db.Needs.Find(needId.Value);
-        }
-        // If theres no need redirect to dashboard
-        else
-        {
-            need = _db.Needs.OrderByDescending(n => n.Id).FirstOrDefault();
-            
-        }
-
-        if (need == null)
-        {
-            return NotFound();
-        }
-
-        if (!ModelState.IsValid || !double.IsFinite(radiusKm) || radiusKm <= 0)
-        {
-            radiusKm = 50;
-        }
-        
-        var model = new MatchViewModel
-        {
-            Need = need,
-            RadiusKm = radiusKm,
-            UserNeeds = _db.Needs.ToList(),
-            Matches = RadiusMatcher.FindResources(
-                need, radiusKm, 
-                _db.Resources.Include(r => r.Category).ToList())
-        };
-        // Add the saved decisions from the ResourceMatch table
-        var records = _db.MatchRecords.Where(m => m.NeedId == need.Id).ToList();
-        foreach (var match in model.Matches)
-        {
-            var record = records.FirstOrDefault(r => r.ResourceId == match.Resource.Id);
-            match.MatchStatus = record?.Status;
-            match.Comment = record?.Comment;
+            return RedirectToAction(nameof(MatchesIndex));
         }
 
         return View("MatchesIndex", model);
     }
     
-    public IActionResult ShowAllResourcesInMatches(int needId, double radiusKm = 50)
+    public IActionResult ShowAllResourcesInMatches(int needId, double radiusKm = 0)
     {
-        var need = _db.Needs.Find(needId);
-        if (need == null)
+        var model = BuildMatchViewModel(needId, radiusKm, allCategories: true);
+        if (model.Need.Id == 0)
         {
             return NotFound();
         }
-        if (!double.IsFinite(radiusKm) || radiusKm <= 0)
+
+        return View("MatchesIndex", model);
+
+    }
+
+    private MatchViewModel BuildMatchViewModel(int? needId, double radiusKm, bool allCategories = false)
+    {
+        var needs = _db.Needs.Include(need => need.CategoryInfo).ToList();
+        var selectedNeed = needId.HasValue
+            ? needs.FirstOrDefault(need => need.Id == needId.Value)
+            : needs.OrderByDescending(need => need.Id).FirstOrDefault();
+
+        if (!double.IsFinite(radiusKm) || radiusKm < 0)
         {
-            radiusKm = 50;
+            radiusKm = 0;
         }
+
         var model = new MatchViewModel
         {
-            Need = need,
+            Need = selectedNeed ?? new ResourceNeed(),
             RadiusKm = radiusKm,
-            AllCategories = true,
-            UserNeeds = _db.Needs.ToList(),
-            Matches = RadiusMatcher.FindResources(
-                need, radiusKm, 
-                _db.Resources.Include(r => r.Category).ToList(),
-                allCategories: true)
+            AllCategories = allCategories,
+            UserNeeds = needs
         };
-        // Add the saved decisions from the ResourceMatch table
-        var records = _db.MatchRecords.Where(m => m.NeedId == need.Id).ToList();
+
+        if (selectedNeed == null)
+        {
+            return model;
+        }
+
+        model.Matches = RadiusMatcher.FindResources(
+            selectedNeed,
+            radiusKm,
+            _db.Resources.Include(resource => resource.Category).ToList(),
+            allCategories);
+
+        var records = _db.MatchRecords
+            .Where(match => match.NeedId == selectedNeed.Id)
+            .ToList();
         foreach (var match in model.Matches)
         {
-            var record = records.FirstOrDefault(r => r.ResourceId == match.Resource.Id);
+            var record = records.FirstOrDefault(item => item.ResourceId == match.Resource.Id);
             match.MatchStatus = record?.Status;
             match.Comment = record?.Comment;
         }
 
-        return View("MatchesIndex", model);
-        
+        return model;
     }
 
     // Saves the decision about a resource for a need in the ResourceMatch table.
@@ -478,6 +507,7 @@ public class HomeController : Controller
                 Description = resource.Description,
                 Status = resource.Status,
                 Category = resource.Category?.CategoryName,
+                ColorKey = "available-resource",
                 Latitude = resource.Latitude ?? 0,
                 Longitude = resource.Longitude ?? 0,
                 CreatedAt = resource.RegisteredAt
@@ -494,6 +524,10 @@ public class HomeController : Controller
                 Description = need.Description,
                 Status = need.Status,
                 Category = need.CategoryInfo?.CategoryName,
+                Priority = need.Priority.ToString(),
+                ColorKey = need.Priority == NeedPriorityEnum.Critical
+                    ? "critical-need"
+                    : "planned-need",
                 Latitude = need.Latitude,
                 Longitude = need.Longitude,
                 CreatedAt = need.RegisteredAt
@@ -508,6 +542,7 @@ public class HomeController : Controller
                 Title = incident.Title,
                 Description = incident.Description,
                 Status = incident.Status,
+                ColorKey = "public-team",
                 Latitude = (double)incident.Latitude,
                 Longitude = (double)incident.Longitude,
                 CreatedAt = incident.CreatedAt
@@ -526,13 +561,6 @@ public class HomeController : Controller
         {
             return RedirectToAction(nameof(Index));
         }
-
-        var resourceType = _db.Categories.Find(resource.CategoryId)?.CategoryName ?? "";
-        if (resource.ExpirationDate is null && !string.IsNullOrWhiteSpace(resourceType))
-        {
-            resource.ExpirationDate = GetExpiryDate(resourceType);
-        }
-
 
         if (!ModelState.IsValid)
         {
@@ -566,7 +594,9 @@ public class HomeController : Controller
                 existingResource.CategoryId = resource.CategoryId;
                 existingResource.Latitude = resource.Latitude;
                 existingResource.Longitude = resource.Longitude;
-                existingResource.Phone = resource.Phone;
+                existingResource.Email = resource.Email;
+                existingResource.PhoneNumber = resource.PhoneNumber;
+                existingResource.LocationName = resource.LocationName;
                 existingResource.ExpirationDate = resource.ExpirationDate;
                 existingResource.AvailableFrom = resource.AvailableFrom;
                 existingResource.RegisteredAt = DateTime.Now;
@@ -595,25 +625,6 @@ public class HomeController : Controller
         return User.IsInRole("CivilianProvider") || User.IsInRole("Administrator");
     }
     
-
-    // Calculates the expiry date based on the resource category.
-    private static DateTime? GetExpiryDate(string resourceType)
-    {
-        return resourceType switch
-        {
-            "Shelter" or "Transport" or "Other" or
-                "Drone" or "ATV" or "Tractor" or "Excavator" or "Truck" or "Boat" or "Crew" or
-                "Transport/logistics" or "Evacuation / Shelter" or "Plowing & Snow Clearing" or "Manpower" or
-                "Drone observation" or "Evacuation" or "Snow clearing" or "Crew / personnel"
-                => DateTime.Today.AddYears(1),
-            "Food" => DateTime.Today.AddDays(14),
-            "Medical" => DateTime.Today.AddMonths(1),
-            "Materials" or "Generator" or "Sand/Gravel" or
-                "Heavy machinery" or "Power Supply / Generator" or "Power / generator" or "Sand / gravel"
-                => DateTime.Today.AddMonths(6),
-            _ => null
-        };
-    }
 
     public IActionResult Privacy()
     {

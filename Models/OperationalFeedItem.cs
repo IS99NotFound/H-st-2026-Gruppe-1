@@ -8,6 +8,8 @@ public class OperationalFeedItem
     public string? Description { get; set; }
     public string Status { get; set; } = "";
     public string? Category { get; set; }
+    public string Priority { get; set; } = "";
+    public string ColorKey { get; set; } = "public-team";
     public double Latitude { get; set; }
     public double Longitude { get; set; }
     public DateTime CreatedAt { get; set; }

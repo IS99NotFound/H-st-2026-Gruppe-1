@@ -19,9 +19,10 @@
              data-resource-registration-url="@Url.Action("Index", "Home")"
              data-need-registration-url="@(canRegisterNeed ? Url.Action("DashboardIndex", "PublicActor") : null)"
              data-registration-type="resource"></div>
+        <partial name="_MapColorLegend" />
         <div class="map-filtering is-collapsed" id="survival-filter-panel">
             <div class="map-filter-header">
-                <strong class="map-filter-title">Find survival locations</strong>
+                <strong class="map-filter-title">Filter location</strong>
                 <button type="button" id="survival-filter-button" class="map-filter-button"
                         aria-expanded="false" aria-controls="survival-filter-content"
                         aria-label="Expand survival location filters">
@@ -47,8 +48,9 @@
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg modal-fullscreen-md-down">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title fs-4" id="registrationModalTitle">
-                    <i class="bi bi-box-seam me-2" aria-hidden="true"></i>Register a resource
+                <h2 class="modal-title" id="registrationModalTitle">
+                    <i class="bi bi-box-seam" aria-hidden="true"></i>
+                    <span>@(Model.Id > 0 ? "Edit resource" : "Register a resource")</span>
                 </h2>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close registration form"></button>
             </div>
@@ -65,12 +67,26 @@
     <script src="~/js/survival-location-filters.js" asp-append-version="true" defer></script>
     <script src="~/js/map-filter-button.js" asp-append-version="true" defer></script>
     <script>
-        window.operationalFeedIncidents = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
-            ViewBag.FeedIncidents ?? new List<object>(),
-            new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }));
+        window.operationalFeedItems = {
+            resources: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                ViewBag.FeedResources ?? new List<object>(),
+                new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase })),
+            needs: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                ViewBag.FeedNeeds ?? new List<object>(),
+                new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase })),
+            incidents: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                ViewBag.FeedIncidents ?? new List<object>(),
+                new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }))
+        };
     </script>
     <script src="~/js/operational-feed.js" asp-append-version="true" defer></script>
     <script>
+        window.resqRegistration.initializeDateTimeFields('resourceForm', [
+            { dateId: 'availableFromDate', timeId: 'availableFromTime', valueId: 'availableFromValue' },
+            { dateId: 'expiryDate', timeId: 'expirationTime', valueId: 'expirationValue',
+              rangeErrorId: 'resourceDateRangeError' }
+        ]);
+
         const map = L.map('map').setView([58.4614, 8.7683], 13);
         window.resqMap = map;
         const mapElement = document.getElementById('map');
@@ -213,6 +229,12 @@
                 event.preventDefault();
                 document.getElementById('posError').textContent =
                     'Position on the map is required.';
+            }
+        });
+        window.resqRegistration.bindCurrentLocationButton('useCurrentLocation', {
+            onPosition: (latitude, longitude) => {
+                setPosition(latitude, longitude);
+                map.setView([latitude, longitude], 13);
             }
         });
         const modalElement = document.getElementById('registrationModal');

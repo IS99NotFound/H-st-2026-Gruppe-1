@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 namespace H_st_2026_Gruppe_1.Models;
 
 // The resources that are registered through the form.
-public class ResourceEntry
+public class ResourceEntry : IValidatableObject
 {
 	public int Id { get; set; }
 
@@ -11,12 +11,13 @@ public class ResourceEntry
 	[StringLength(80, MinimumLength = 1, ErrorMessage = "Full Name must be at least {2} and at most {1} characters long.")]
 	public string Name { get; set; } = "";
 
-	[Required(ErrorMessage = "Contact information is required.")]
-	[RegularExpression(
-		@"^([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|(\+?[0-9\s]{8,15}))$",
-		ErrorMessage = "Please provide a valid email address or a valid phone number (at least 8 digits)."
-	)]
-	public string Phone { get; set; } = "";
+	[Required(ErrorMessage = "Email is required.")]
+	[EmailAddress(ErrorMessage = "Please provide a valid email address.")]
+	public string Email { get; set; } = "";
+
+	[Required(ErrorMessage = "Phone number is required.")]
+	[Phone(ErrorMessage = "Please provide a valid phone number.")]
+	public string PhoneNumber { get; set; } = "+47 ";
 
 	[Range(1, int.MaxValue, ErrorMessage = "Select a resource type.")]
 	public int CategoryId { get; set; }
@@ -29,7 +30,6 @@ public class ResourceEntry
 	[Required(ErrorMessage = "Description must be filled out.")]
 	public string Description { get; set; } = "";
 	
-	[Required(ErrorMessage = "Expiry date is required.")]
 	public DateTime? ExpirationDate { get; set; }
 	public DateTime AvailableFrom { get; set; } = DateTime.Now;
 
@@ -39,8 +39,21 @@ public class ResourceEntry
 	[Required(ErrorMessage = "Position on the map must be filled out.")]
 	public double? Longitude { get; set; }
 
+	[StringLength(200)]
+	public string LocationName { get; set; } = "";
+
 	public DateTime RegisteredAt { get; set; }
 	public string Status { get; set; } = "available";
+
+	public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+	{
+		if (ExpirationDate.HasValue && ExpirationDate < AvailableFrom)
+		{
+			yield return new ValidationResult(
+				"End date cannot be before start date.",
+				new[] { nameof(ExpirationDate) });
+		}
+	}
 }
 
 //Attributes to save resources and show them in MyResources

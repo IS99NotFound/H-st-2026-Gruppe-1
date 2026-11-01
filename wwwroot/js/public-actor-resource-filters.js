@@ -55,7 +55,13 @@
                 return;
             }
         
-            const marker = L.marker([latitude, longitude]);
+            const markerIcon = L.divIcon({
+                className: "resq-map-marker-icon",
+                html: '<span class="resq-map-marker resq-map-marker--available-resource"></span>',
+                iconSize: [18, 18],
+                iconAnchor: [9, 9]
+            });
+            const marker = L.marker([latitude, longitude], { icon: markerIcon });
 
             const popup = document.createElement("div");
             const title = document.createElement("strong");
@@ -96,7 +102,7 @@
     }
 }
 
-    document.querySelectorAll(".registered-resource-filter")
+    document.querySelectorAll(".registered-resources-filter")
         .forEach(input => {
             input.addEventListener("change", renderResources);
         });

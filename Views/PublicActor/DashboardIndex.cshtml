@@ -6,7 +6,7 @@
     var canRegisterResource = User.IsInRole("ResourceProvider") || User.IsInRole("Administrator");
     var openRegistrationModal = ViewBag.OpenRegistrationModal is bool shouldOpen
         ? shouldOpen
-        : Context.Request.Query["register"] == "need";
+        : Context.Request.Query["register"] == "need" || Model.Id > 0;
 }
 
 <div class="main-layout registration-modal-page">
@@ -18,6 +18,7 @@
              data-resource-registration-url="@(canRegisterResource ? Url.Action("Index", "Home") : null)"
              data-need-registration-url="@Url.Action("DashboardIndex", "PublicActor")"
              data-registration-type="need"></div>
+        <partial name="_MapColorLegend" />
         <div class="map-filtering is-collapsed" id="survival-filter-panel">
             <div class="map-filter-header">
                 <button type="button" id="survival-filter-button" class="map-filter-button"
@@ -25,13 +26,13 @@
                         aria-label="Collapse registered resource filters">
                     <i class="bi bi-chevron-right" aria-hidden="true"></i>
                 </button>
-                <strong class="map-filter-title">Filter registered resources</strong>
+                <strong class="map-filter-title">Filter resource</strong>
             </div>
             <div id="survival-filter-content">
                 <div class="map-filter-options">
-                    @foreach (var resourceType in new[] { "Drone", "ATV", "Tractor", "Generator", "Excavator", "Truck", "Boat", "Sand/Gravel", "Other" })
+                    @foreach (var category in (IEnumerable<Category>)(ViewBag.Categories ?? Array.Empty<Category>()))
                     {
-                        <label><input type="checkbox" class="registered-resources-filter" value="@resourceType" checked /> @resourceType</label>
+                        <label><input type="checkbox" class="registered-resources-filter" value="@category.CategoryName" checked /> @category.CategoryName</label>
                     }
                 </div>
                 <p id="registered-resources-status" role="status">Loading registered resources...</p>
@@ -47,8 +48,9 @@
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg modal-fullscreen-md-down">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title fs-4" id="registrationModalTitle">
-                    <i class="bi bi-clipboard-plus me-2" aria-hidden="true"></i>Register resource need
+                <h2 class="modal-title" id="registrationModalTitle">
+                    <i class="bi bi-clipboard-plus" aria-hidden="true"></i>
+                    <span>@(Model.Id > 0 ? "Edit resource need" : "Register resource need")</span>
                 </h2>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close registration form"></button>
             </div>
@@ -63,14 +65,27 @@
     <partial name="_ValidationScriptsPartial" />
     <script>
         window.publicActorResources = @Html.Raw(ViewBag.ResourceMarkersJson ?? "[]");
+        window.resqRegistration.initializeDateTimeFields('needForm', [
+            { dateId: 'requiredFromDate', timeId: 'requiredFromTime', valueId: 'requiredFromValue' },
+            { dateId: 'deadlineDate', timeId: 'deadlineTime', valueId: 'deadlineValue',
+              rangeErrorId: 'needDateRangeError' }
+        ]);
     </script>
     <script src="~/js/map-registration.js" asp-append-version="true"></script>
     <script src="~/js/public-actor-resource-filters.js" asp-append-version="true" defer></script>
     <script src="~/js/map-filter-button.js" asp-append-version="true" defer></script>
     <script>
-        window.operationalFeedIncidents = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
-            ViewBag.FeedIncidents ?? new List<object>(),
-            new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }));
+        window.operationalFeedItems = {
+            resources: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                ViewBag.FeedResources ?? new List<object>(),
+                new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase })),
+            needs: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                ViewBag.FeedNeeds ?? new List<object>(),
+                new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase })),
+            incidents: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                ViewBag.FeedIncidents ?? new List<object>(),
+                new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }))
+        };
     </script>
     <script src="~/js/operational-feed.js" asp-append-version="true" defer></script>
     <script>
@@ -188,6 +203,12 @@
                 event.preventDefault();
                 document.getElementById('posError').textContent =
                     'Position on the map is required.';
+            }
+        });
+        window.resqRegistration.bindCurrentLocationButton('useCurrentLocation', {
+            onPosition: (latitude, longitude) => {
+                setPosition(latitude, longitude);
+                map.setView([latitude, longitude], 13);
             }
         });
         const modalElement = document.getElementById('registrationModal');

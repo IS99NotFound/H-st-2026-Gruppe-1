@@ -32,7 +32,6 @@ public class AppDbContext : DbContext
             entity.Property(r => r.ProviderId).HasColumnName("ProviderID");
             entity.Property(r => r.CategoryId).HasColumnName("CategoryID");
             entity.Property(r => r.RegionId).HasColumnName("RegionID");
-            entity.Property(r => r.Phone).HasColumnName("ContactInfo");
             entity.Property(r => r.RegisteredAt).HasColumnName("CreatedAt");
             entity.HasOne(r => r.Category).WithMany().HasForeignKey(r => r.CategoryId);
         });

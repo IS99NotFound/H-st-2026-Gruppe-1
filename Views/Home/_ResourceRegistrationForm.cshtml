@@ -4,57 +4,111 @@
     <input type="hidden" asp-for="Id" />
     <input type="hidden" name="OpenRegistrationModal" value="true" />
 
-    <div class="mb-3">
-        <label asp-for="Name" class="form-label">Full name</label>
-        <input asp-for="Name" id="nameInput" class="form-control" required />
-        <span asp-validation-for="Name" class="text-danger"></span>
+    <section class="registration-section">
+        <h3 class="registration-section-title">Classification</h3>
+        <div class="registration-field">
+            <label asp-for="CategoryId" class="form-label">Resource type</label>
+            <select asp-for="CategoryId" id="resourceType" class="form-select" required>
+                <option value="">Select an option</option>
+                @foreach (var category in (List<Category>)ViewBag.Categories)
+                {
+                    <option value="@category.CategoryId">@category.CategoryName</option>
+                }
+            </select>
+            <span asp-validation-for="CategoryId" class="text-danger"></span>
+        </div>
+    </section>
+
+    <section class="registration-section">
+        <h3 class="registration-section-title">Details &amp; timeframe</h3>
+        <div class="registration-field">
+            <label asp-for="Name" class="form-label">Title</label>
+            <input asp-for="Name" id="nameInput" class="form-control" required />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+
+        <div class="registration-field">
+            <label asp-for="Description" class="form-label">Description</label>
+            <textarea asp-for="Description" id="descriptionInput" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
+
+        <div class="registration-grid registration-grid--details">
+            <div class="registration-field">
+                <label class="form-label" for="availableFromDate">Start date/time</label>
+                <div class="registration-datetime">
+                    <input type="date" id="availableFromDate" class="form-control"
+                           value="@Model.AvailableFrom.ToString("yyyy-MM-dd")" />
+                    <input type="time" id="availableFromTime" class="form-control"
+                           value="@Model.AvailableFrom.ToString("HH:mm")" />
+                </div>
+                <span asp-validation-for="AvailableFrom" class="text-danger"></span>
+            </div>
+
+            <div class="registration-field">
+                <label class="form-label" for="expiryDate">End date/time (optional)</label>
+                <div class="registration-datetime">
+                    <input type="date" id="expiryDate" class="form-control"
+                           value="@Model.ExpirationDate?.ToString("yyyy-MM-dd")" />
+                    <input type="time" id="expirationTime" class="form-control"
+                           value="@Model.ExpirationDate?.ToString("HH:mm")" />
+                </div>
+                <span asp-validation-for="ExpirationDate" class="text-danger"></span>
+                <span id="resourceDateRangeError" class="text-danger"></span>
+            </div>
+        </div>
+        <input type="hidden" asp-for="AvailableFrom" id="availableFromValue" />
+        <input type="hidden" asp-for="ExpirationDate" id="expirationValue" />
+    </section>
+
+    <section class="registration-section">
+        <h3 class="registration-section-title">Contact information</h3>
+        <div class="registration-grid registration-grid--details">
+            <div class="registration-field">
+                <label asp-for="Email" class="form-label">Email</label>
+                <input asp-for="Email" class="form-control" type="email"
+                       placeholder="name@example.com" required />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+            <div class="registration-field">
+                <label asp-for="PhoneNumber" class="form-label">Phone number</label>
+                <input asp-for="PhoneNumber" class="form-control" type="tel"
+                       placeholder="+47 00 00 00 00" required />
+                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+            </div>
+        </div>
+    </section>
+
+    <section class="registration-section registration-location">
+        <h3 class="registration-section-title">Location &amp; accuracy</h3>
+        <div class="registration-field">
+            <label asp-for="LocationName" class="form-label">Location name</label>
+            <div class="registration-location-input">
+                <input asp-for="LocationName" id="locationNameInput" class="form-control"
+                       placeholder="Search address or facility (e.g. Hellemyr Skole)" />
+                <button type="button" class="registration-icon-button" id="useCurrentLocation"
+                        title="Current location" aria-label="Use current location">
+                    <i class="bi bi-crosshair" aria-hidden="true"></i>
+                </button>
+            </div>
+            <span asp-validation-for="LocationName" class="text-danger"></span>
+        </div>
+        <input type="hidden" asp-for="Latitude" id="latInput" />
+        <input type="hidden" asp-for="Longitude" id="lngInput" />
+        <p id="posText" class="registration-help">
+            @(Model.Latitude.HasValue && Model.Longitude.HasValue
+                ? $"Selected position: lat: {Model.Latitude:F5}, lng: {Model.Longitude:F5}"
+                : "No position marked on the map")
+        </p>
+        <span asp-validation-for="Latitude" class="text-danger d-block" id="posError"></span>
+        <span asp-validation-for="Longitude" class="text-danger d-block"></span>
+    </section>
+
+    <div asp-validation-summary="ModelOnly" class="text-danger registration-validation"></div>
+    <div class="registration-actions">
+        <button type="button" class="btn registration-cancel" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-primary registration-submit">
+            @(Model.Id > 0 ? "Save changes" : "Register resource")
+        </button>
     </div>
-
-    <div class="mb-3">
-        <label asp-for="Phone" class="form-label">Contact information</label>
-        <input asp-for="Phone" id="contactInput" class="form-control" placeholder="Phone number or email" required />
-        <span asp-validation-for="Phone" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="CategoryId" class="form-label">Resource type</label>
-        <select asp-for="CategoryId" id="resourceType" class="form-select" required>
-            <option value="">Select an option</option>
-            @foreach (var category in (List<Category>)ViewBag.Categories)
-            {
-                <option value="@category.CategoryId">@category.CategoryName</option>
-            }
-        </select>
-        <span asp-validation-for="CategoryId" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="Description" class="form-label">Description</label>
-        <textarea asp-for="Description" id="descriptionInput" class="form-control" rows="3"></textarea>
-        <span asp-validation-for="Description" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="AvailableFrom" class="form-label">Effective date</label>
-        <input type="date" asp-for="AvailableFrom" class="form-control" />
-        <span asp-validation-for="AvailableFrom" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="ExpirationDate" class="form-label">Expiration date</label>
-        <input type="date" asp-for="ExpirationDate" id="expiryDate" class="form-control" />
-        <span asp-validation-for="ExpirationDate" class="text-danger"></span>
-    </div>
-
-    <input type="hidden" asp-for="Latitude" id="latInput" />
-    <input type="hidden" asp-for="Longitude" id="lngInput" />
-    <p id="posText" class="placeholder-text">
-        @(Model.Latitude.HasValue && Model.Longitude.HasValue
-            ? $"Selected position: lat: {Model.Latitude:F5}, lng: {Model.Longitude:F5}"
-            : "No position marked on the map")
-    </p>
-    <span asp-validation-for="Latitude" class="text-danger d-block mb-2" id="posError"></span>
-
-    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-    <button type="submit" class="btn btn-primary w-100">Register resource</button>
 </form>

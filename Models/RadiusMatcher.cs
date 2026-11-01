@@ -31,7 +31,7 @@ public static class RadiusMatcher
 
             var distance = DistanceKm(need.Latitude, need.Longitude, resource.Latitude.Value, resource.Longitude.Value);
 
-            if (distance <= radiusKm)
+            if (radiusKm <= 0 || distance <= radiusKm)
             {
                 matches.Add(new ResourceMatch { Resource = resource, DistanceKm = distance });
             }
