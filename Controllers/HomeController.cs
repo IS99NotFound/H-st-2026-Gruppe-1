@@ -35,7 +35,7 @@ public class PublicActorController : Controller
                 ? r.Category.CategoryName
                 : "Other",
             description = r.Description,
-            phone = r.Phone,
+            phone = r.PhoneNumber,
             latitude = r.Latitude,
             longitude = r.Longitude
         })
@@ -69,10 +69,6 @@ public class PublicActorController : Controller
             {
                 return RedirectToAction(nameof(MatchesIndex));
             }
-            var contactParts = (need.ContactInfo ?? string.Empty)
-                .Split(" / ", 2, StringSplitOptions.TrimEntries);
-            need.Email = contactParts.ElementAtOrDefault(0) ?? string.Empty;
-            need.PhoneNumber = contactParts.ElementAtOrDefault(1) ?? "+47 ";
             return View(need);
         }
 
@@ -160,10 +156,6 @@ public class PublicActorController : Controller
                 return NotFound();
             }
 
-            var contactParts = (editNeed.ContactInfo ?? string.Empty)
-                .Split(" / ", 2, StringSplitOptions.TrimEntries);
-            editNeed.Email = contactParts.ElementAtOrDefault(0) ?? string.Empty;
-            editNeed.PhoneNumber = contactParts.ElementAtOrDefault(1) ?? "+47 ";
             ViewBag.EditNeed = editNeed;
         }
         return View(sortedResults);
@@ -197,9 +189,6 @@ public class PublicActorController : Controller
             return RedirectToAction("Index", "Home");
         }
 
-        need.ContactInfo = $"{need.Email} / {need.PhoneNumber}";
-        ModelState.Remove(nameof(ResourceNeed.ContactInfo));
-
         if (!ModelState.IsValid)
         {
             LoadDropdowns();
@@ -217,7 +206,9 @@ public class PublicActorController : Controller
             if (existingNeed != null)
             {
                 existingNeed.Title = need.Title;
-                existingNeed.ContactInfo = need.ContactInfo;
+                existingNeed.Email = need.Email;
+                existingNeed.PhoneNumber = need.PhoneNumber;
+                existingNeed.LocationName = need.LocationName;
                 existingNeed.CrisisEventId = need.CrisisEventId;
                 existingNeed.Latitude = need.Latitude;
                 existingNeed.Longitude = need.Longitude;
@@ -385,10 +376,6 @@ public class HomeController : Controller
             var existingResource = _db.Resources.Find(id.Value);
             if (existingResource != null)
             {
-                var contactParts = (existingResource.Phone ?? string.Empty)
-                    .Split(" / ", 2, StringSplitOptions.TrimEntries);
-                existingResource.Email = contactParts.ElementAtOrDefault(0) ?? string.Empty;
-                existingResource.PhoneNumber = contactParts.ElementAtOrDefault(1) ?? "+47 ";
                 return View(existingResource);
             }
         }
@@ -493,9 +480,6 @@ public class HomeController : Controller
             return RedirectToAction(nameof(Index));
         }
 
-        resource.Phone = $"{resource.Email} / {resource.PhoneNumber}";
-        ModelState.Remove(nameof(ResourceEntry.Phone));
-
         if (!ModelState.IsValid)
         {
             // sends the user to form with attributes and error messages filled out
@@ -516,7 +500,9 @@ public class HomeController : Controller
                 existingResource.CategoryId = resource.CategoryId;
                 existingResource.Latitude = resource.Latitude;
                 existingResource.Longitude = resource.Longitude;
-                existingResource.Phone = resource.Phone;
+                existingResource.Email = resource.Email;
+                existingResource.PhoneNumber = resource.PhoneNumber;
+                existingResource.LocationName = resource.LocationName;
                 existingResource.ExpirationDate = resource.ExpirationDate;
                 existingResource.AvailableFrom = resource.AvailableFrom;
                 existingResource.RegisteredAt = DateTime.Now;

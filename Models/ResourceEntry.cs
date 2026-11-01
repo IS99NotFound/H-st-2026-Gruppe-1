@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace H_st_2026_Gruppe_1.Models;
 
@@ -14,20 +13,11 @@ public class ResourceEntry : IValidatableObject
 
 	[Required(ErrorMessage = "Email is required.")]
 	[EmailAddress(ErrorMessage = "Please provide a valid email address.")]
-	[NotMapped]
 	public string Email { get; set; } = "";
 
 	[Required(ErrorMessage = "Phone number is required.")]
 	[Phone(ErrorMessage = "Please provide a valid phone number.")]
-	[NotMapped]
 	public string PhoneNumber { get; set; } = "+47 ";
-
-	[Required(ErrorMessage = "Contact information is required.")]
-	[RegularExpression(
-		@"^([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|(\+?[0-9\s]{8,15}))$",
-		ErrorMessage = "Please provide a valid email address or a valid phone number (at least 8 digits)."
-	)]
-	public string Phone { get; set; } = "";
 
 	[Range(1, int.MaxValue, ErrorMessage = "Select a resource type.")]
 	public int CategoryId { get; set; }
@@ -50,7 +40,6 @@ public class ResourceEntry : IValidatableObject
 	public double? Longitude { get; set; }
 
 	[StringLength(200)]
-	[NotMapped]
 	public string LocationName { get; set; } = "";
 
 	public DateTime RegisteredAt { get; set; }

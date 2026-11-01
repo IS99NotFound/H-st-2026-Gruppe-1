@@ -1,6 +1,5 @@
 using System;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 
 namespace H_st_2026_Gruppe_1.Models
@@ -13,18 +12,12 @@ namespace H_st_2026_Gruppe_1.Models
         [StringLength(100, ErrorMessage = "Title cannot exceed 100 characters.")]
         public string Title { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Contact information is required.")]
-        public string ContactInfo { get; set; } = string.Empty;
-
-        // Design-only fields. They will be mapped to the database after the form design is approved.
         [Required(ErrorMessage = "Email is required.")]
         [EmailAddress(ErrorMessage = "Please provide a valid email address.")]
-        [NotMapped]
         public string Email { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Phone number is required.")]
         [Phone(ErrorMessage = "Please provide a valid phone number.")]
-        [NotMapped]
         public string PhoneNumber { get; set; } = "+47 ";
 
         [Required(ErrorMessage = "Please select a crisis incident.")]
@@ -56,7 +49,6 @@ namespace H_st_2026_Gruppe_1.Models
         public DateTime? Deadline { get; set; }
 
         [StringLength(200)]
-        [NotMapped]
         public string LocationName { get; set; } = string.Empty;
         
         [Required(ErrorMessage = "Map location is required.")]

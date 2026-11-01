@@ -46,10 +46,6 @@ public class ResourcesController : Controller
                 return NotFound();
             }
 
-            var contactParts = (resource.Phone ?? string.Empty)
-                .Split(" / ", 2, StringSplitOptions.TrimEntries);
-            resource.Email = contactParts.ElementAtOrDefault(0) ?? string.Empty;
-            resource.PhoneNumber = contactParts.ElementAtOrDefault(1) ?? "+47 ";
             ViewBag.EditResource = resource;
         }
 
