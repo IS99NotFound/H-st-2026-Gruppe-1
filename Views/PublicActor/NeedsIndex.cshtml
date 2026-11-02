@@ -17,7 +17,6 @@
         <select name="priority" id="priorityFilter" class="form-select">
             <option value="">All Priorities</option>
             <option value="Critical" selected="@(Context.Request.Query["priority"] == "Critical")">Critical</option>
-            <option value="Urgent" selected="@(Context.Request.Query["priority"] == "Urgent")">Urgent</option>
             <option value="Planned" selected="@(Context.Request.Query["priority"] == "Planned")">Planned</option>
         </select>
     </div>
@@ -95,13 +94,6 @@ else
                                     <span>Planned</span>
                                 </span>
                                 break;
-                            case NeedPriorityEnum.Urgent:
-                                <span class="feed-color-badge feed-color-badge--planned-need" title="Urgent">
-                                    <i class="bi bi-exclamation-triangle"></i>
-                                    <span>Urgent</span>
-                                </span>
-                                break;
-
                             case NeedPriorityEnum.Critical:
                                 <span class="feed-color-badge feed-color-badge--critical-need" title="Critical">
                                     <i class="bi bi-fire"></i>

@@ -206,9 +206,8 @@ public class PublicActorController : Controller
         return priority switch
         {
             NeedPriorityEnum.Critical => 1,
-            NeedPriorityEnum.Urgent => 2,
-            NeedPriorityEnum.Planned => 3,
-            _ => 4
+            NeedPriorityEnum.Planned => 2,
+            _ => 3
         };
     }
 

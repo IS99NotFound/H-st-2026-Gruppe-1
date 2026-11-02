@@ -78,7 +78,6 @@
                         @(item.Priority switch
                         {
                             "Critical" => "Critical need",
-                            "Urgent" => "Urgent need",
                             "Planned" => "Planned need",
                             _ when item.Type == "resource" => "Available resource",
                             _ when item.Type == "incident" => "Incident",
