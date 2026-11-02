@@ -2739,7 +2739,7 @@ html[data-theme="light"] .registration-modal .btn-close {
 
 /* ==== A to B line function for map ==== */
 :root {
-    --ab-orange: #ff8c00;
+    --ab-blue: var(--accent);
 }
 
 .ab-button {
@@ -2749,20 +2749,30 @@ html[data-theme="light"] .registration-modal .btn-close {
     cursor: pointer;
 }
 
+.leaflet-bar a.ab-button:hover {
+    background-color: #f4f4f4;
+    color: #000;
+}
+
 .ab-button svg {
     width: 18px;
     height: 18px;
 }
 
-.ab-button.active{
-    background-color: var(--ab-orange) !important;
-    color: #fff !important
+.ab-button.active {
+    background-color: var(--ab-blue) !important;
+    color: #fff !important;
+}
+
+.ab-button.active:hover {
+    background-color: var(--primary-hover) !important;
+    color: #fff !important;
 }
 
 .ab-marker {
     width: 28px;
     height: 28px;
-    background-color: var(--ab-orange);
+    background-color: #fff;
     border: 2px solid #fff;
     border-radius: 50% 50% 50% 0;
     transform: rotate(-45deg);
@@ -2774,9 +2784,29 @@ html[data-theme="light"] .registration-modal .btn-close {
 
 .ab-marker span {
     transform: rotate(45deg);
-    color: #fff;
+    color: #000;
     font-weight: 700;
     font-size: 14px;
+}
+
+.ab-distance-label {
+    display: block;
+    width: max-content;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+
+.ab-distance-label span {
+    display: block;
+    padding: 3px 7px;
+    border: 1px solid rgb(255 255 255 / 35%);
+    border-radius: 6px;
+    background-color: rgb(15 17 21 / 85%);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
 }
 
 #map.placing {

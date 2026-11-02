@@ -107,6 +107,8 @@
         let markerB = null;
         let abLine = null;
         let abButton = null;
+        let abDistanceMarker = null;
+        let abActive = false;
         const latInput = document.getElementById('latInput');
         const lngInput = document.getElementById('lngInput');
         const requestedLocation = window.resqMapRegistration.readRequestedLocation();
@@ -117,9 +119,21 @@
 
         function setPosition(lat, lng) {
             selectedMarker && map.removeLayer(selectedMarker);
-            selectedMarker = L.marker([lat, lng]).addTo(map)
-                .bindPopup('Selected position: ' + lat.toFixed(5) + ', ' + lng.toFixed(5))
+            const marker = L.marker([lat, lng]).addTo(map);
+            selectedMarker = marker;
+            marker.bindPopup('Selected position: ' + lat.toFixed(5) + ', ' + lng.toFixed(5))
                 .openPopup();
+            marker.on('popupclose', () => {
+                if (selectedMarker !== marker) {
+                    return;
+                }
+
+                map.removeLayer(marker);
+                selectedMarker = null;
+                if (latInput) latInput.value = '';
+                if (lngInput) lngInput.value = '';
+                document.getElementById('posText').textContent = 'No position selected.';
+            });
             if (latInput) latInput.value = lat;
             if (lngInput) lngInput.value = lng;
             document.getElementById('posText').textContent =
@@ -140,13 +154,27 @@
             if (markerA) map.removeLayer(markerA);
             if (markerB) map.removeLayer(markerB);
             if (abLine) map.removeLayer(abLine);
-            markerA = markerB = abLine = null;
+            if (abDistanceMarker) map.removeLayer(abDistanceMarker);
+            markerA = markerB = abLine = abDistanceMarker = null;
+        }
+
+        function distanceInKilometres(pointA, pointB) {
+            const earthRadius = 6371;
+            const latitudeDifference = (pointB.lat - pointA.lat) * Math.PI / 180;
+            const longitudeDifference = (pointB.lng - pointA.lng) * Math.PI / 180;
+            const firstLatitude = pointA.lat * Math.PI / 180;
+            const secondLatitude = pointB.lat * Math.PI / 180;
+            const haversine = Math.sin(latitudeDifference / 2) ** 2
+                + Math.cos(firstLatitude) * Math.cos(secondLatitude)
+                * Math.sin(longitudeDifference / 2) ** 2;
+
+            return earthRadius * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
         }
 
         function setAbMode(mode) {
             abMode = mode;
             map.getContainer().classList.toggle('placing', mode !== null);
-            abButton?.classList.toggle('active', mode !== null);
+            abButton?.classList.toggle('active', abActive);
         }
 
         const AbControl = L.Control.extend({
@@ -161,10 +189,13 @@
                 L.DomEvent.disableClickPropagation(container);
                 L.DomEvent.on(abButton, 'click', function (event) {
                     L.DomEvent.preventDefault(event);
-                    if (abMode) {
+                    if (abActive) {
+                        resetAb();
+                        abActive = false;
                         setAbMode(null);
                     } else {
                         resetAb();
+                        abActive = true;
                         setAbMode('A');
                     }
                 });
@@ -182,6 +213,10 @@
                 map.setView([position.coords.latitude, position.coords.longitude], 13));
         }
         map.on('click', event => {
+            if (abActive && abMode === null) {
+                resetAb();
+                setAbMode('A');
+            }
             if (abMode === 'A') {
                 markerA = L.marker(event.latlng, { icon: createAbIcon('A') }).addTo(map);
                 setAbMode('B');
@@ -189,8 +224,23 @@
             }
             if (abMode === 'B') {
                 markerB = L.marker(event.latlng, { icon: createAbIcon('B') }).addTo(map);
-                abLine = L.polyline([markerA.getLatLng(), markerB.getLatLng()], {
-                    color: '#ff8c00', weight: 4, dashArray: '8 6'
+                const pointA = markerA.getLatLng();
+                const pointB = markerB.getLatLng();
+                const distance = distanceInKilometres(pointA, pointB);
+                abLine = L.polyline([pointA, pointB], {
+                    color: '#fff', weight: 4, dashArray: '8 6'
+                }).addTo(map);
+                const midpoint = L.latLng(
+                    (pointA.lat + pointB.lat) / 2,
+                    (pointA.lng + pointB.lng) / 2
+                );
+                abDistanceMarker = L.marker(midpoint, {
+                    icon: L.divIcon({
+                        className: 'ab-distance-label',
+                        html: `<span> ${distance.toFixed(2)} km </span>`,
+                        iconSize: null
+                    }),
+                    interactive: false
                 }).addTo(map);
                 map.fitBounds(abLine.getBounds(), { padding: [60, 60] });
                 setAbMode(null);
