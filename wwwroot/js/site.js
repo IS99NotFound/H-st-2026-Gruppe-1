@@ -142,3 +142,20 @@ if (themeToggle) {
 
     updateThemeToggle();
 }
+
+// onsubmit and onchange written in the HTML are blocked by the Content Security Policy, so they are handled here
+
+// A form with data-confirm asks the user before it is sent
+document.addEventListener("submit", event => {
+    const message = event.target.dataset?.confirm;
+    if (message && !window.confirm(message)) {
+        event.preventDefault();
+    }
+});
+
+// A select with data-auto-submit sends its form when the value changes
+document.addEventListener("change", event => {
+    if (event.target.matches?.("[data-auto-submit]")) {
+        event.target.form?.submit();
+    }
+});
