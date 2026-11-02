@@ -64,6 +64,7 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script src="~/js/map-registration.js" asp-append-version="true"></script>
+    <script src="~/js/map-ab.js" asp-append-version="true"></script>
     <script src="~/js/survival-location-filters.js" asp-append-version="true" defer></script>
     <script src="~/js/map-filter-button.js" asp-append-version="true" defer></script>
     <script nonce="@Context.Items["CspNonce"]">
@@ -101,108 +102,20 @@
         document.getElementById('map-status').textContent =
             'The map is ready. Select a position or use your current location.';
 
-        let selectedMarker = null;
-        let abMode = null;
-        let markerA = null;
-        let markerB = null;
-        let abLine = null;
-        let abButton = null;
-        let abDistanceMarker = null;
-        let abActive = false;
         const latInput = document.getElementById('latInput');
         const lngInput = document.getElementById('lngInput');
+        const setPosition = window.resqMapRegistration.bindSelectedPosition(map, {
+            latInput: latInput,
+            lngInput: lngInput,
+            positionText: document.getElementById('posText'),
+            positionError: document.getElementById('posError'),
+            popupText: 'Selected position'
+        });
         const requestedLocation = window.resqMapRegistration.readRequestedLocation();
         const initialLat = Number(latInput?.value);
         const initialLng = Number(lngInput?.value);
         const selectedLat = requestedLocation?.lat ?? initialLat;
         const selectedLng = requestedLocation?.lng ?? initialLng;
-
-        function setPosition(lat, lng) {
-            selectedMarker && map.removeLayer(selectedMarker);
-            const marker = L.marker([lat, lng]).addTo(map);
-            selectedMarker = marker;
-            marker.bindPopup('Selected position: ' + lat.toFixed(5) + ', ' + lng.toFixed(5))
-                .openPopup();
-            marker.on('popupclose', () => {
-                if (selectedMarker !== marker) {
-                    return;
-                }
-
-                map.removeLayer(marker);
-                selectedMarker = null;
-                if (latInput) latInput.value = '';
-                if (lngInput) lngInput.value = '';
-                document.getElementById('posText').textContent = 'No position selected.';
-            });
-            if (latInput) latInput.value = lat;
-            if (lngInput) lngInput.value = lng;
-            document.getElementById('posText').textContent =
-                'Selected position: lat: ' + lat.toFixed(5) + ', lng: ' + lng.toFixed(5);
-            document.getElementById('posError').textContent = '';
-        }
-
-        function createAbIcon(letter) {
-            return L.divIcon({
-                className: '',
-                html: '<div class="ab-marker"><span>' + letter + '</span></div>',
-                iconSize: [28, 28],
-                iconAnchor: [13, 34]
-            });
-        }
-
-        function resetAb() {
-            if (markerA) map.removeLayer(markerA);
-            if (markerB) map.removeLayer(markerB);
-            if (abLine) map.removeLayer(abLine);
-            if (abDistanceMarker) map.removeLayer(abDistanceMarker);
-            markerA = markerB = abLine = abDistanceMarker = null;
-        }
-
-        function distanceInKilometres(pointA, pointB) {
-            const earthRadius = 6371;
-            const latitudeDifference = (pointB.lat - pointA.lat) * Math.PI / 180;
-            const longitudeDifference = (pointB.lng - pointA.lng) * Math.PI / 180;
-            const firstLatitude = pointA.lat * Math.PI / 180;
-            const secondLatitude = pointB.lat * Math.PI / 180;
-            const haversine = Math.sin(latitudeDifference / 2) ** 2
-                + Math.cos(firstLatitude) * Math.cos(secondLatitude)
-                * Math.sin(longitudeDifference / 2) ** 2;
-
-            return earthRadius * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
-        }
-
-        function setAbMode(mode) {
-            abMode = mode;
-            map.getContainer().classList.toggle('placing', mode !== null);
-            abButton?.classList.toggle('active', abActive);
-        }
-
-        const AbControl = L.Control.extend({
-            options: { position: 'topleft' },
-            onAdd: function () {
-                const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
-                abButton = L.DomUtil.create('a', 'ab-button', container);
-                abButton.href = '#';
-                abButton.title = 'Mark point A and B';
-                abButton.setAttribute('role', 'button');
-                abButton.innerHTML = '<span aria-hidden="true">A-B</span>';
-                L.DomEvent.disableClickPropagation(container);
-                L.DomEvent.on(abButton, 'click', function (event) {
-                    L.DomEvent.preventDefault(event);
-                    if (abActive) {
-                        resetAb();
-                        abActive = false;
-                        setAbMode(null);
-                    } else {
-                        resetAb();
-                        abActive = true;
-                        setAbMode('A');
-                    }
-                });
-                return container;
-            }
-        });
-        new AbControl().addTo(map);
 
         if (Number.isFinite(selectedLat) && Number.isFinite(selectedLng) &&
             (requestedLocation || selectedLat !== 0 || selectedLng !== 0)) {
@@ -212,42 +125,11 @@
             navigator.geolocation.getCurrentPosition(position =>
                 map.setView([position.coords.latitude, position.coords.longitude], 13));
         }
-        map.on('click', event => {
-            if (abActive && abMode === null) {
-                resetAb();
-                setAbMode('A');
+        window.resqAbMap.initialize(map, {
+            onMapClick: event => {
+                setPosition(event.latlng.lat, event.latlng.lng);
+                registrationLinks(event.latlng);
             }
-            if (abMode === 'A') {
-                markerA = L.marker(event.latlng, { icon: createAbIcon('A') }).addTo(map);
-                setAbMode('B');
-                return;
-            }
-            if (abMode === 'B') {
-                markerB = L.marker(event.latlng, { icon: createAbIcon('B') }).addTo(map);
-                const pointA = markerA.getLatLng();
-                const pointB = markerB.getLatLng();
-                const distance = distanceInKilometres(pointA, pointB);
-                abLine = L.polyline([pointA, pointB], {
-                    color: '#fff', weight: 4, dashArray: '8 6'
-                }).addTo(map);
-                const midpoint = L.latLng(
-                    (pointA.lat + pointB.lat) / 2,
-                    (pointA.lng + pointB.lng) / 2
-                );
-                abDistanceMarker = L.marker(midpoint, {
-                    icon: L.divIcon({
-                        className: 'ab-distance-label',
-                        html: `<span> ${distance.toFixed(2)} km </span>`,
-                        iconSize: null
-                    }),
-                    interactive: false
-                }).addTo(map);
-                map.fitBounds(abLine.getBounds(), { padding: [60, 60] });
-                setAbMode(null);
-                return;
-            }
-            setPosition(event.latlng.lat, event.latlng.lng);
-            registrationLinks(event.latlng);
         });
 
         document.getElementById('resourceType')?.addEventListener('change', event => {

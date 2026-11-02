@@ -154,7 +154,12 @@ public class PublicActorController : Controller
     
     
     [Authorize(Roles = "PublicActor,Administrator")]
-    public IActionResult NeedsIndex(NeedPriorityEnum? priority, int? category, int? id)
+    public IActionResult NeedsIndex(
+        NeedPriorityEnum? priority,
+        int? category,
+        DateTime? startDate,
+        DateTime? endDate,
+        int? id)
     {
         var results = _db.Needs.Include(need => need.CategoryInfo).AsQueryable();
 
@@ -178,6 +183,20 @@ public class PublicActorController : Controller
         if (category.HasValue)
         {
             results = results.Where(need => need.Category == category.Value);
+        }
+
+        if (startDate.HasValue)
+        {
+            results = results.Where(need =>
+                need.RequiredFrom.HasValue &&
+                need.RequiredFrom.Value >= startDate.Value.Date);
+        }
+
+        if (endDate.HasValue)
+        {
+            results = results.Where(need =>
+                need.RequiredFrom.HasValue &&
+                need.RequiredFrom.Value < endDate.Value.Date.AddDays(1));
         }
 
         // GetPriorityOrder cannot be translated to SQL, so the list is fetched first and sorted in memory

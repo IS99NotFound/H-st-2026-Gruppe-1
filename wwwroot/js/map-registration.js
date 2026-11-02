@@ -53,6 +53,39 @@ window.resqMapRegistration = {
             !Number.isFinite(lng) || lng < -180 || lng > 180) return null;
 
         return { lat, lng };
+    },
+
+    bindSelectedPosition(map, { latInput, lngInput, positionText, positionError, popupText }) {
+        let selectedMarker = null;
+
+        return function setSelectedPosition(lat, lng) {
+            if (selectedMarker) {
+                map.removeLayer(selectedMarker);
+            }
+
+            const marker = L.marker([lat, lng]).addTo(map)
+                .bindPopup(popupText + ': ' + lat.toFixed(5) + ', ' + lng.toFixed(5))
+                .openPopup();
+            selectedMarker = marker;
+
+            marker.on('popupclose', () => {
+                if (selectedMarker !== marker) {
+                    return;
+                }
+
+                map.removeLayer(marker);
+                selectedMarker = null;
+                latInput.value = '';
+                lngInput.value = '';
+                positionText.textContent = 'No position selected.';
+            });
+
+            latInput.value = lat;
+            lngInput.value = lng;
+            positionText.textContent =
+                'Selected position: lat: ' + lat.toFixed(5) + ', lng: ' + lng.toFixed(5);
+            positionError.textContent = '';
+        };
     }
 };
 

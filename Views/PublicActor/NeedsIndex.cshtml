@@ -2,124 +2,152 @@
 
 @{
     ViewData["Title"] = "Needs";
-    ViewData["WideContent"] = true;
+    var categories = ViewBag.Categories as List<H_st_2026_Gruppe_1.Models.Category> ?? new();
+    var incidents = ViewBag.Incidents as List<H_st_2026_Gruppe_1.Models.Incident> ?? new();
 }
 
-<section class="subpage needs-page">
+<section class="subpage">
     <div class="subpage-header">
         <h1>Needs</h1>
     </div>
-   <form method="get" asp-controller="PublicActor" asp-action="NeedsIndex" class="needs-filter-bar">
-    
-    <!-- Filter på Prioritet -->
-    <div class="needs-filter-field">
-        <label for="priorityFilter" class="form-label text-muted small fw-bold">Filter by Priority</label>
-        <select name="priority" id="priorityFilter" class="form-select">
-            <option value="">All Priorities</option>
-            <option value="Critical" selected="@(Context.Request.Query["priority"] == "Critical")">Critical</option>
-            <option value="Planned" selected="@(Context.Request.Query["priority"] == "Planned")">Planned</option>
-        </select>
-    </div>
 
-    <!-- Filter på Kategori -->
-    <div class="needs-filter-field">
-        <label for="categoryFilter" class="form-label text-muted small fw-bold">Filter by Category</label>
-        <select name="category" id="categoryFilter" class="form-select">
-            <option value="">All Categories</option>
-            @foreach (var category in (List<Category>)ViewBag.Categories)
-            {
-                <option value="@category.CategoryId" selected="@(Context.Request.Query["category"] == category.CategoryId.ToString())">@category.CategoryName</option>
-            }
-        </select>
-    </div>
+    <form id="needFilterForm" method="get" asp-controller="PublicActor" asp-action="NeedsIndex" class="dashboard-filter-bar">
+        <div class="dashboard-filter-field">
+            <label for="priorityFilter" class="form-label text-muted small fw-bold">Filter by priority</label>
+            <select name="priority" id="priorityFilter" class="form-select">
+                <option value="">All priorities</option>
+                <option value="Critical" selected="@(Context.Request.Query["priority"] == "Critical")">Critical</option>
+                <option value="Planned" selected="@(Context.Request.Query["priority"] == "Planned")">Planned</option>
+            </select>
+        </div>
 
-    <!-- Knapper -->
-    <div class="needs-filter-actions">
-        <button type="submit" class="btn btn-primary">Filter</button>
-        <a asp-controller="PublicActor" asp-action="NeedsIndex" class="btn btn-outline-secondary">Reset</a>
-    </div>
-</form>
-    
+        <div class="dashboard-filter-field">
+            <label for="categoryFilter" class="form-label text-muted small fw-bold">Filter by category</label>
+            <select name="category" id="categoryFilter" class="form-select">
+                <option value="">All categories</option>
+                @foreach (var category in categories)
+                {
+                    <option value="@category.CategoryId"
+                            selected="@(Context.Request.Query["category"] == category.CategoryId.ToString())">
+                        @category.CategoryName
+                    </option>
+                }
+            </select>
+        </div>
+
+        <div class="dashboard-filter-field">
+            <label for="needStartDate" class="form-label text-muted small fw-bold">Date from</label>
+            <input type="date" name="startDate" id="needStartDate" class="form-control"
+                   value="@Context.Request.Query["startDate"]" />
+        </div>
+
+        <div class="dashboard-filter-field">
+            <label for="needEndDate" class="form-label text-muted small fw-bold">Date to</label>
+            <input type="date" name="endDate" id="needEndDate" class="form-control"
+                   value="@Context.Request.Query["endDate"]" />
+        </div>
+
+        <div class="dashboard-filter-field dashboard-distance-field">
+            <label for="needRadiusFilter" class="form-label text-muted small fw-bold">Distance</label>
+            <input id="needRadiusFilter" type="range" class="form-range" min="0" max="100" step="5" value="0" />
+            <div class="dashboard-radius-value" id="needRadiusValue">All distances</div>
+        </div>
+
+        <div class="dashboard-filter-actions">
+            <button type="submit" class="btn btn-primary">Filter</button>
+            <a asp-controller="PublicActor" asp-action="NeedsIndex"
+               class="btn btn-outline-secondary">Reset</a>
+        </div>
+    </form>
+    <p id="need-location-error" class="dashboard-location-error" role="alert" aria-live="polite" hidden>
+        Location access is required to use the distance filter.
+    </p>
+
     @if (!Model.Any())
-{
-    <p class="placeholder-copy needs-empty-state">No needs are registered right now</p>
-}
-else
-{
-    
-    <div class="table-wrapper needs-table-wrapper">
-    <table class="table table-striped needs-table">
-        <thead>
-        <tr>
-            <th>Title</th>
-            <th>Contact info</th>
-            <th>Crisis incident</th>
-            <th>Category</th>
-            <th>Quantity</th>
-            <th>Description</th>
-            <th>Needed from</th>
-            <th>Needed until</th>
-            <th>Lat/Lng</th>
-            <th>Registered</th>
-            <th>Priority</th>
-            <th>Status</th>
-            <th>Actions</th>
-            
-            
-        </tr>
-        </thead>
-        
-        <tbody>
+    {
+        <p class="placeholder-copy needs-empty-state">No needs are registered right now.</p>
+    }
+    else
+    {
+        <div class="need-list">
             @foreach (var need in Model)
             {
-                <tr>
-                    <td>@need.Title</td>
-                    <td>@need.Email / @need.PhoneNumber</td>
-                    <td>@need.CrisisEventId</td>
-                    <td>@(need.CategoryInfo?.CategoryName ?? "Unspecified")</td>
-                    <td>@need.Quantity</td>
-                    <td>@need.Description</td>
-                    <td>@(need.RequiredFrom?.ToString("dd.MM.yyyy") ?? "Not specified")</td>
-                    <td>@(need.Deadline?.ToString("dd.MM.yyyy") ?? "Not specified")</td>
-                    <td>
-                    @($"{need.Latitude:F5}, {need.Longitude:F5}")
-                    </td>
-                    <td>@need.RegisteredAt.ToString("dd.MM.yyyy HH:mm")</td>
-                    <td>
-                        @switch (need.Priority)
-                        {
-                            case  NeedPriorityEnum.Planned:
+                var incident = incidents.FirstOrDefault(item => item.IncidentId == need.CrisisEventId);
+
+                <article class="dashboard-card need-card"
+                         data-latitude="@need.Latitude"
+                         data-longitude="@need.Longitude">
+                    <div class="dashboard-card-header">
+                        <h2>@need.Title</h2>
+                        <div class="need-card-badges">
+                            @if (need.Priority == H_st_2026_Gruppe_1.Models.NeedPriorityEnum.Planned)
+                            {
                                 <span class="feed-color-badge feed-color-badge--planned-need" title="Planned">
-                                    <i class="bi bi-calendar-event"></i>
-                                    <span>Planned</span>
+                                    <span>Planned need</span>
                                 </span>
-                                break;
-                            case NeedPriorityEnum.Critical:
+                            }
+                            else if (need.Priority == H_st_2026_Gruppe_1.Models.NeedPriorityEnum.Critical)
+                            {
                                 <span class="feed-color-badge feed-color-badge--critical-need" title="Critical">
-                                    <i class="bi bi-fire"></i>
-                                    <span>Critical</span>
+                                    <span>Critical need</span>
                                 </span>
-                                break;
-                        }
-                    </td>
-                    <td><span class="status-label">@(need.Status == "Ny" ? "New" : need.Status)</span></td>
-                    <td>
-                        <form class="need-actions" asp-controller="Home" asp-action="DeleteNeed" asp-route-id="@need.Id" method="post"
+                            }
+                        </div>
+                    </div>
+
+                    <p class="dashboard-card-description">@need.Description</p>
+
+                    <dl class="dashboard-details need-details">
+                        <div>
+                            <dt>Contact</dt>
+                            <dd>@need.Email<br />@need.PhoneNumber</dd>
+                        </div>
+                        <div>
+                            <dt>Crisis incident</dt>
+                            <dd>
+                                @(incident?.Title ?? $"Incident #{need.CrisisEventId}")
+                            </dd>
+                        </div>
+                        <div>
+                            <dt>Category</dt>
+                            <dd>@(need.CategoryInfo?.CategoryName ?? "Unspecified")</dd>
+                        </div>
+                        <div>
+                            <dt>Quantity</dt>
+                            <dd>@need.Quantity</dd>
+                        </div>
+                        <div>
+                            <dt>Needed from</dt>
+                            <dd>@(need.RequiredFrom?.ToString("dd.MM.yyyy") ?? "Not specified")</dd>
+                        </div>
+                        <div>
+                            <dt>Needed until</dt>
+                            <dd>@(need.Deadline?.ToString("dd.MM.yyyy") ?? "Not specified")</dd>
+                        </div>
+                        <div>
+                            <dt>Location (lat/lng)</dt>
+                            <dd>@need.Latitude.ToString("F5"), @need.Longitude.ToString("F5")</dd>
+                        </div>
+                        <div>
+                            <dt>Registered</dt>
+                            <dd>@need.RegisteredAt.ToString("dd.MM.yyyy HH:mm")</dd>
+                        </div>
+                    </dl>
+
+                    <div class="dashboard-card-footer">
+                        <form class="dashboard-card-actions" asp-controller="Home" asp-action="DeleteNeed"
+                              asp-route-id="@need.Id" method="post"
                               data-confirm="Are you sure you want to delete this need?">
-                            <a asp-controller="PublicActor"
-                               asp-action="NeedsIndex" asp-route-id="@need.Id" class="btn btn-sm btn-primary">
-                                Edit
-                            </a>
+                            @Html.AntiForgeryToken()
+                            <a asp-controller="PublicActor" asp-action="NeedsIndex" asp-route-id="@need.Id"
+                               class="btn btn-sm btn-primary">Edit</a>
                             <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                         </form>
-                    </td>
-                 
-                </tr>
+                    </div>
+                </article>
             }
-        </tbody>
-    </table>
-    </div>
-}
+        </div>
+    }
 </section>
 
 @if (ViewBag.EditNeed is H_st_2026_Gruppe_1.Models.ResourceNeed editNeed)
@@ -165,5 +193,16 @@ else
         if (modalElement?.dataset.openRegistrationModal === 'true') {
             bootstrap.Modal.getOrCreateInstance(modalElement).show();
         }
+
+        window.resqDateRange.bindFilter(
+            'needFilterForm',
+            'needStartDate',
+            'needEndDate');
+        window.resqRadius.initializeDistanceFilter({
+            sliderId: 'needRadiusFilter',
+            valueId: 'needRadiusValue',
+            errorId: 'need-location-error',
+            cardSelector: '.need-card'
+        });
     </script>
 }
