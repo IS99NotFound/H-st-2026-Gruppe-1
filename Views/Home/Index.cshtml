@@ -66,7 +66,7 @@
     <script src="~/js/map-registration.js" asp-append-version="true"></script>
     <script src="~/js/survival-location-filters.js" asp-append-version="true" defer></script>
     <script src="~/js/map-filter-button.js" asp-append-version="true" defer></script>
-    <script>
+    <script nonce="@Context.Items["CspNonce"]">
         window.operationalFeedItems = {
             resources: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
                 ViewBag.FeedResources ?? new List<object>(),
@@ -80,7 +80,7 @@
         };
     </script>
     <script src="~/js/operational-feed.js" asp-append-version="true" defer></script>
-    <script>
+    <script nonce="@Context.Items["CspNonce"]">
         window.resqRegistration.initializeDateTimeFields('resourceForm', [
             { dateId: 'availableFromDate', timeId: 'availableFromTime', valueId: 'availableFromValue' },
             { dateId: 'expiryDate', timeId: 'expirationTime', valueId: 'expirationValue',

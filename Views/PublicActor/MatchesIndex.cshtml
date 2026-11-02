@@ -27,7 +27,7 @@
             <div class="match-selection">
                 <form method="get" asp-controller="PublicActor" asp-action="MatchesIndex" class="match-need-selector">
                     <label for="needId" class="form-label match-selector-label">Select need</label>
-                    <select name="needId" id="needId" class="form-select" onchange="this.form.submit()">
+                    <select name="needId" id="needId" class="form-select" data-auto-submit>
                         @foreach (var need in Model.UserNeeds)
                         {
                             <option value="@need.Id" selected="@(need.Id == Model.Need.Id)">
@@ -144,7 +144,7 @@
 
 @if (hasSelectedNeed)
 {
-    <script>
+    <script nonce="@Context.Items["CspNonce"]">
         window.resqRadius.initialize('radiusKm', 'radiusKmValue');
     </script>
 }

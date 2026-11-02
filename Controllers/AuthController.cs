@@ -50,12 +50,22 @@ public class AuthController : Controller
         // 1. Søk etter bruker i databasen
         var user = await _userManager.FindByNameAsync(model.UserName);
         
-        // 2. Sjekk passord (Bruker samme generiske feilmelding for å unngå brukernavn-enumeration)
-        if (user == null || !await _userManager.CheckPasswordAsync(user, model.Password))
+        // 2. Sjekk lockout og passord (Bruker samme generiske feilmelding for å unngå brukernavn-enumeration)
+        // Feil passord telles, og kontoen låses etter MaxFailedAccessAttempts (se Program.cs)
+        if (user == null || await _userManager.IsLockedOutAsync(user))
         {
             ModelState.AddModelError(string.Empty, "Ugyldig brukernavn eller passord.");
             return View(model);
         }
+
+        if (!await _userManager.CheckPasswordAsync(user, model.Password))
+        {
+            await _userManager.AccessFailedAsync(user);
+            ModelState.AddModelError(string.Empty, "Ugyldig brukernavn eller passord.");
+            return View(model);
+        }
+
+        await _userManager.ResetAccessFailedCountAsync(user);
 
         // 3. Generer 6-sifret tofakto-kode (simulert SMS)
         var code = RandomNumberGenerator.GetInt32(0, 1_000_000).ToString("D6");
