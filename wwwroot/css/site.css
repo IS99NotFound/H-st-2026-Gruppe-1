@@ -220,14 +220,6 @@ body {
         border-bottom-color: var(--accent); 
     }
 
-/* Top bar, right side */
-.topbar-user {
-    justify-self: end; 
-    padding-left: 24px;
-    border-left: 1px solid var(--border);
-    color: var(--text);
-}
-
 /* Footer */
 .footer {
     display: flex;
@@ -1072,10 +1064,6 @@ html[data-theme="light"] .registration-modal .btn-close {
 
 .topbar-nav {
     grid-area: nav;
-}
-
-.topbar-user {
-    grid-area: user;
 }
 
 .section-label {
