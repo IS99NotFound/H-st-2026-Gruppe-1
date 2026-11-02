@@ -12,6 +12,10 @@
     const filterControls = document.getElementById("feed-filter-controls");
     const resultsToggle = document.querySelector("[data-feed-results-toggle]");
     const resultsLabel = document.querySelector("[data-feed-results-label]");
+    const exportToggle = document.querySelector("[data-feed-export-toggle]");
+    const exportOptions = document.getElementById("feed-export-options");
+    const exportButtons = document.querySelectorAll("[data-feed-export]");
+    const exportBackButton = document.querySelector("[data-feed-export-back]");
     const items = Array.from(document.querySelectorAll("[data-feed-item]"));
     let activeType = "all";
     let currentLocation = null;
@@ -138,6 +142,82 @@
         focusedFeedMarker.bindPopup(item.dataset.feedTitle || "Selected location").openPopup();
     }
 
+    function csvValue(value) {
+        return `"${String(value ?? "").replaceAll('"', '""')}"`;
+    }
+
+    function getFilteredResources() {
+        const maxRadius = Number(radius.value);
+        return items
+            .filter(item => item.dataset.feedType === "resource")
+            .map(item => ({
+                item,
+                distance: distanceInKm(Number(item.dataset.latitude), Number(item.dataset.longitude))
+            }))
+            .filter(({ item, distance }) => {
+                const hasCoordinates = Number.isFinite(Number(item.dataset.latitude)) &&
+                    Number.isFinite(Number(item.dataset.longitude));
+                return hasCoordinates && (!maxRadius || !currentLocation || distance <= maxRadius);
+            });
+    }
+
+    function getResourceRows() {
+        return [
+            ["Navn", "Kategori", "Beskrivelse", "Status", "Breddegrad", "Lengdegrad", "Registrert dato", "Registrert klokkeslett"],
+            ...getFilteredResources().map(({ item }) => {
+                const [registeredDate = "", registeredTime = ""] =
+                    (item.dataset.feedCreatedAt || "").split(" ");
+                return [
+                    item.dataset.feedTitle,
+                    item.dataset.feedCategory,
+                    item.dataset.feedDescription,
+                    item.dataset.feedStatus,
+                    `${item.dataset.latitude}°`,
+                    `${item.dataset.longitude}°`,
+                    registeredDate,
+                    registeredTime
+                ];
+            })
+        ];
+    }
+
+    function downloadFile(content, fileName, contentType) {
+        const blob = new Blob([content], { type: contentType });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+    }
+
+    function exportResources(format) {
+        const resourceRows = getResourceRows();
+        const resources = getFilteredResources().map(({ item }) => ({
+            name: item.dataset.feedTitle,
+            category: item.dataset.feedCategory,
+            description: item.dataset.feedDescription,
+            status: item.dataset.feedStatus,
+            latitude: Number(item.dataset.latitude),
+            longitude: Number(item.dataset.longitude),
+            registered: item.dataset.feedCreatedAt
+        }));
+
+        if (format === "json") {
+            downloadFile(
+                JSON.stringify(resources, null, 2),
+                "resources.json",
+                "application/json;charset=utf-8"
+            );
+            return;
+        }
+
+        const csv = "\uFEFF" + resourceRows.map(row => row.map(csvValue).join(";")).join("\r\n");
+        downloadFile(csv, "resources.csv", "text/csv;charset=utf-8");
+    }
+
     function render() {
         const query = search.value.trim().toLowerCase();
         const maxRadius = Number(radius.value);
@@ -196,6 +276,22 @@
     search.addEventListener("input", render);
     radius.addEventListener("change", render);
     radius.addEventListener("input", render);
+    exportToggle?.addEventListener("click", () => {
+        if (!exportOptions) return;
+        exportOptions.hidden = false;
+        exportToggle.hidden = true;
+        exportToggle.setAttribute("aria-expanded", "true");
+    });
+    exportButtons.forEach(button => {
+        button.addEventListener("click", () => exportResources(button.dataset.feedExport));
+    });
+    exportBackButton?.addEventListener("click", () => {
+        if (!exportOptions || !exportToggle) return;
+        exportOptions.hidden = true;
+        exportToggle.hidden = false;
+        exportToggle.setAttribute("aria-expanded", "false");
+        exportToggle.focus();
+    });
     items.forEach(item => {
         item.addEventListener("click", event => {
             if (event.target.closest("a, button")) return;
