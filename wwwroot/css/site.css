@@ -406,6 +406,26 @@ body {
     overflow-y: auto;
 }
 
+.feed-export-actions {
+    display: flex;
+    justify-content: flex-end;
+    flex-shrink: 0;
+    padding: 10px 12px;
+    border-top: 1px solid var(--border);
+}
+
+.feed-export-options {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+    width: 100%;
+}
+
+.feed-export-options .btn {
+    flex: 1 1 auto;
+    font-size: 0.75rem;
+}
+
 .feed-card {
     margin-bottom: 10px;
     padding: 12px;

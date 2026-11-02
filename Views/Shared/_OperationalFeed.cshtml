@@ -71,6 +71,9 @@
             <article class="feed-card feed-card--interactive feed-card--@item.ColorKey" data-feed-item data-feed-type="@item.Type"
                      data-feed-search="@($"{item.Title} {item.Description} {item.Category} {item.Status}")"
                      data-latitude="@item.Latitude" data-longitude="@item.Longitude"
+                     data-feed-category="@item.Category" data-feed-description="@item.Description"
+                     data-feed-status="@item.Status"
+                     data-feed-created-at="@item.CreatedAt.ToString("dd.MM.yyyy HH:mm")"
                      data-feed-title="@item.Title" role="button" tabindex="0"
                      aria-label="Show @item.Title on map">
                 <div class="feed-card-heading">
@@ -111,5 +114,22 @@
             </article>
         }
         <p class="placeholder-copy feed-empty" hidden>No items match the current filters.</p>
+    </div>
+    <div class="feed-export-actions">
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-feed-export-toggle
+                aria-expanded="false" aria-controls="feed-export-options">
+            <i class="bi bi-download me-1" aria-hidden="true"></i>Export resources
+        </button>
+        <div id="feed-export-options" class="feed-export-options" hidden>
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-feed-export="csv">
+                <i class="bi bi-filetype-csv me-1" aria-hidden="true"></i>CSV
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-feed-export="json">
+                <i class="bi bi-filetype-json me-1" aria-hidden="true"></i>JSON
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-feed-export-back>
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Back
+            </button>
+        </div>
     </div>
 </aside>
