@@ -166,7 +166,7 @@ CREATE TABLE ResourceNeed (
     Description    TEXT          NULL,
     Quantity       INT           NOT NULL DEFAULT 1,
     SearchRadiusKm INT           NOT NULL DEFAULT 50,
-    Priority       ENUM('planned', 'urgent', 'critical')
+    Priority       ENUM('planned', 'critical')
                    NOT NULL DEFAULT 'planned',
     Status         ENUM('new', 'under_review', 'assigned', 'resolved', 'cancelled', 'rejected')
                    NOT NULL DEFAULT 'new',
