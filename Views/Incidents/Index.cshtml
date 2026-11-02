@@ -274,7 +274,7 @@
     <partial name="_ValidationScriptsPartial" />
     @if (isPublicActor)
     {
-    <script>
+    <script nonce="@Context.Items["CspNonce"]">
         const incidentMap = L.map('incident-map').setView([58.4614, 8.7683], 6);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributors'
@@ -310,7 +310,7 @@
     </script>
     }
 
-    <script>
+    <script nonce="@Context.Items["CspNonce"]">
 
         const radiusFilter = document.getElementById('radiusFilter');
         const locationError = document.getElementById('location-error');

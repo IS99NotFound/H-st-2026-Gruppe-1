@@ -1,19 +1,26 @@
 using System.Globalization;
 using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using H_st_2026_Gruppe_1.Data;
 using H_st_2026_Gruppe_1.Models;
+using H_st_2026_Gruppe_1.Middleware;
 
 // App builder 
 var builder = WebApplication.CreateBuilder(args);
+
+// Hides the web server name (no "Server" header in the responses)
+builder.WebHost.ConfigureKestrel(options => options.AddServerHeader = false);
+
 builder.Services.AddMemoryCache();
 
-// Controllers and views (MVC)
+// Controllers and views (MVC). Every POST must have a valid antiforgery token (CSRF)
 builder.Services.AddControllersWithViews(options =>
 {
     options.Filters.Add(new AuthorizeFilter());
+    options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
 });
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
@@ -33,11 +40,13 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(connectionString, new MariaDbServerVersion(new Version(11, 4, 0))));
 
-//User registration
+//User registration, with lockout after 10 wrong passwords
 builder.Services.AddIdentityCore<User>(options =>
 {
     options.User.RequireUniqueEmail = true;
     options.Password.RequiredLength = 8;
+    options.Lockout.AllowedForNewUsers = true;
+    options.Lockout.MaxFailedAccessAttempts = 10;
 })
 .AddEntityFrameworkStores<AppDbContext>();
 
@@ -53,6 +62,9 @@ var localizationOptions = new RequestLocalizationOptions
 };
 localizationOptions.RequestCultureProviders.Clear();
 app.UseRequestLocalization(localizationOptions);
+
+// Security headers on every response
+app.UseMiddleware<SecurityHeadersMiddleware>();
 
 // Setup for requests processing 
 // Only show error page while in production 

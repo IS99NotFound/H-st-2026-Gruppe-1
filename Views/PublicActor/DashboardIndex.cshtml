@@ -63,7 +63,7 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    <script>
+    <script nonce="@Context.Items["CspNonce"]">
         window.publicActorResources = @Html.Raw(ViewBag.ResourceMarkersJson ?? "[]");
         window.resqRegistration.initializeDateTimeFields('needForm', [
             { dateId: 'requiredFromDate', timeId: 'requiredFromTime', valueId: 'requiredFromValue' },
@@ -74,7 +74,7 @@
     <script src="~/js/map-registration.js" asp-append-version="true"></script>
     <script src="~/js/public-actor-resource-filters.js" asp-append-version="true" defer></script>
     <script src="~/js/map-filter-button.js" asp-append-version="true" defer></script>
-    <script>
+    <script nonce="@Context.Items["CspNonce"]">
         window.operationalFeedItems = {
             resources: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
                 ViewBag.FeedResources ?? new List<object>(),
@@ -88,7 +88,7 @@
         };
     </script>
     <script src="~/js/operational-feed.js" asp-append-version="true" defer></script>
-    <script>
+    <script nonce="@Context.Items["CspNonce"]">
         const map = L.map('map').setView([58.4614, 8.7683], 13);
         window.resqMap = map;
         const mapElement = document.getElementById('map');
