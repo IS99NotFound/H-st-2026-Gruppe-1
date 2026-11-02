@@ -20,26 +20,40 @@
             <h2>Verify it's you</h2>
             <p class="auth-description">Enter the six-digit code to continue to ResQ.</p>
 
-            @* DEMO: in a real system the code is sent by SMS or e-mail and never shown on the page *@
             @if (!string.IsNullOrEmpty(Model.DemoCode))
             {
-                <label class="auth-code-label">Six-digit demo code</label>
-                <div class="auth-code-display" aria-label="Your demo code is @Model.DemoCode">
-                    @foreach (var digit in Model.DemoCode)
-                    {
-                        <span>@digit</span>
-                    }
-                </div>
-                <p class="auth-demo-note">This code is shown for demonstration only. In production it would be sent by SMS or e-mail.</p>
+                <aside id="demo-code-dialog" class="auth-code-dialog" aria-labelledby="demo-code-title">
+                    <div class="auth-code-dialog-header">
+                        <span class="auth-code-dialog-icon"><i class="bi bi-chat-square-text" aria-hidden="true"></i></span>
+                        <div>
+                            <p class="auth-code-dialog-eyebrow">ResQ verification</p>
+                            <h3 id="demo-code-title">Your sign-in code</h3>
+                        </div>
+                    </div>
+                    <p class="auth-code-dialog-message">Use this code to finish signing in.</p>
+                    <div class="auth-code-dialog-code" aria-label="Your sign-in code">@Model.DemoCode</div>
+                    <button type="button" class="btn auth-code-copy" data-copy-code="@Model.DemoCode">
+                        <i class="bi bi-copy" aria-hidden="true"></i>
+                        <span>Copy code</span>
+                    </button>
+                    <span class="auth-code-copy-status" role="status" aria-live="polite"></span>
+                </aside>
             }
 
-            <form asp-controller="Auth" asp-action="VerifyTwoFactor" method="post">
+            <form asp-controller="Auth" asp-action="VerifyTwoFactor" method="post" data-code-form>
                 <input asp-for="PendingId" type="hidden" />
 
                 <div class="auth-field">
-                    <label asp-for="Code">Code</label>
-                    <input asp-for="Code" class="form-control" value="" inputmode="numeric"
-                           autocomplete="one-time-code" maxlength="6" />
+                    <label asp-for="Code">Six-digit code</label>
+                    <div class="auth-code-inputs" data-code-inputs>
+                        @for (var index = 0; index < 6; index++)
+                        {
+                            <input class="auth-code-input" type="text" inputmode="numeric" maxlength="1"
+                                   autocomplete="@(index == 0 ? "one-time-code" : "off")"
+                                   aria-label="Digit @(index + 1)" />
+                        }
+                    </div>
+                    <input asp-for="Code" type="hidden" data-code-value />
                     <span asp-validation-for="Code" class="text-danger"></span>
                 </div>
 

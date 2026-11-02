@@ -3,6 +3,7 @@ using H_st_2026_Gruppe_1.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
 
 namespace H_st_2026_Gruppe_1.Controllers;
 
@@ -22,9 +23,9 @@ public class RegisterController : Controller
     }
 
     [HttpGet]
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
-        return View(new RegisterViewModel());
+        return View(await AddOrganizationsAsync(new RegisterViewModel()));
     }
 
     [HttpPost]
@@ -36,6 +37,12 @@ public class RegisterController : Controller
             ModelState.AddModelError(nameof(model.Role), "Select a valid role.");
         }
 
+        if (model.Role == IdentityUserRole.PublicActor &&
+            !await _db.Organizations.AnyAsync(organization => organization.OrganizationId == model.OrganizationId))
+        {
+            ModelState.AddModelError(nameof(model.OrganizationId), "Select an organization for public actors.");
+        }
+
         // Every role can be chosen for now
         if (!_env.IsDevelopment() && model.Role != IdentityUserRole.CivilianProvider)
         {
@@ -44,7 +51,7 @@ public class RegisterController : Controller
 
         if (!ModelState.IsValid)
         {
-            return View(model);
+            return View(await AddOrganizationsAsync(model));
         }
 
         var user = new User
@@ -52,7 +59,7 @@ public class RegisterController : Controller
             UserName = model.UserName,
             Email = model.Email,
             PhoneNumber = model.PhoneNumber,
-            Name = model.Name,
+            Name = DisplayNameFormatter.Format(model.Name),
             Role = model.Role
         };
 
@@ -66,7 +73,7 @@ public class RegisterController : Controller
             {
                 ModelState.AddModelError(string.Empty, error.Description);
             }
-            return View(model);
+            return View(await AddOrganizationsAsync(model));
         }
 
         switch (model.Role)
@@ -83,7 +90,7 @@ public class RegisterController : Controller
                 _db.PublicActors.Add(new PublicActor
                 {
                     PublicActorId = user.Id,
-                    OrganizationId = DemoDefaults.OrganizationId
+                    OrganizationId = model.OrganizationId
                 });
                 break;
 
@@ -95,5 +102,15 @@ public class RegisterController : Controller
 
         TempData["RegisterMessage"] = "Your account has been created successfully.";
         return RedirectToAction("Login", "Auth");
+    }
+
+    private async Task<RegisterViewModel> AddOrganizationsAsync(RegisterViewModel model)
+    {
+        model.Organizations = await _db.Organizations
+            .AsNoTracking()
+            .OrderBy(organization => organization.OrganizationName)
+            .ToListAsync();
+
+        return model;
     }
 }

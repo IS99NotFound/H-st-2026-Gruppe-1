@@ -25,6 +25,10 @@ public class RegisterViewModel
     [Required(ErrorMessage = "Select a role.")]
     public IdentityUserRole Role { get; set; } = IdentityUserRole.CivilianProvider;
 
+    public int OrganizationId { get; set; }
+
+    public IReadOnlyList<Organization> Organizations { get; set; } = [];
+
     [Required(ErrorMessage = "Password is required.")]
     [DataType(DataType.Password)]
     [StringLength(100, MinimumLength = 8)]

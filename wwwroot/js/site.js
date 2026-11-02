@@ -159,3 +159,63 @@ document.addEventListener("change", event => {
         event.target.form?.submit();
     }
 });
+
+const demoCodeDialog = document.querySelector("#demo-code-dialog");
+
+if (demoCodeDialog) {
+    const copyButton = demoCodeDialog.querySelector("[data-copy-code]");
+    const copyStatus = demoCodeDialog.querySelector(".auth-code-copy-status");
+
+    copyButton?.addEventListener("click", async () => {
+        const code = copyButton.dataset.copyCode ?? "";
+
+        try {
+            await navigator.clipboard.writeText(code);
+            demoCodeDialog.remove();
+        } catch {
+            if (copyStatus) copyStatus.textContent = "Could not copy the code.";
+        }
+    });
+}
+
+const codeForm = document.querySelector("[data-code-form]");
+
+if (codeForm) {
+    const codeInputs = [...codeForm.querySelectorAll("[data-code-inputs] .auth-code-input")];
+    const codeValue = codeForm.querySelector("[data-code-value]");
+
+    const syncCodeValue = () => {
+        if (codeValue) codeValue.value = codeInputs.map(input => input.value).join("");
+    };
+
+    const setCode = value => {
+        [...value].slice(0, codeInputs.length).forEach((digit, index) => {
+            codeInputs[index].value = /\d/.test(digit) ? digit : "";
+        });
+        syncCodeValue();
+        codeInputs[Math.min(value.length, codeInputs.length) - 1]?.focus();
+    };
+
+    codeInputs.forEach((input, index) => {
+        input.addEventListener("input", () => {
+            input.value = input.value.replace(/\D/g, "").slice(-1);
+            syncCodeValue();
+            if (input.value && index < codeInputs.length - 1) {
+                codeInputs[index + 1].focus();
+            }
+        });
+
+        input.addEventListener("keydown", event => {
+            if (event.key === "Backspace" && !input.value && index > 0) {
+                codeInputs[index - 1].focus();
+            }
+        });
+
+        input.addEventListener("paste", event => {
+            event.preventDefault();
+            setCode((event.clipboardData?.getData("text") ?? "").replace(/\D/g, ""));
+        });
+    });
+
+    codeForm.addEventListener("submit", syncCodeValue);
+}
