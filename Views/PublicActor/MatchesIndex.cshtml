@@ -55,7 +55,7 @@
                     <div class="match-radius-field">
                         <label for="radiusKm" class="form-label">Distance</label>
                         <input type="range" name="radiusKm" id="radiusKm" value="@Model.RadiusKm"
-                               min="0" max="100" step="5" class="form-range" />
+                               min="0" max="100" step="5" class="form-range" data-auto-submit />
                         <span id="radiusKmValue" class="match-radius-value">
                             @(Model.RadiusKm <= 0 ? "All distances" : $"{Model.RadiusKm} km")
                         </span>
