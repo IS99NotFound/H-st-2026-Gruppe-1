@@ -4,14 +4,7 @@
 }
 
 <div class="auth-page">
-    <section class="auth-brand-panel" aria-label="ResQ">
-        <a class="auth-brand-name" asp-controller="Home" asp-action="Index">ResQ</a>
-        <div class="auth-brand-message">
-            <span class="auth-accent-line" aria-hidden="true"></span>
-            <h1>Connecting<br />resources.</h1>
-        </div>
-        <i class="bi bi-shield-check auth-brand-icon" aria-hidden="true"></i>
-    </section>
+    <partial name="_AuthBrandPanel" />
 
     <section class="auth-content">
         <div class="auth-form-container">
@@ -42,7 +35,9 @@
                 <button type="submit" class="btn auth-submit">Sign in</button>
             </form>
 
-            <a class="auth-back-link" asp-controller="Register" asp-action="Index">Create account</a>
+            <p class="auth-back-link">
+                <a asp-controller="Register" asp-action="Index">Create account</a>
+            </p>
         </div>
     </section>
 </div>

@@ -4,14 +4,7 @@
 }
 
 <div class="auth-page">
-    <section class="auth-brand-panel" aria-label="ResQ">
-        <a class="auth-brand-name" asp-controller="Home" asp-action="Index">ResQ</a>
-        <div class="auth-brand-message">
-            <span class="auth-accent-line" aria-hidden="true"></span>
-            <h1>Connecting<br />resources.</h1>
-        </div>
-        <i class="bi bi-shield-check auth-brand-icon" aria-hidden="true"></i>
-    </section>
+    <partial name="_AuthBrandPanel" />
 
     <section class="auth-content">
         <div class="auth-form-container auth-register-container">
@@ -23,7 +16,7 @@
                 <div class="auth-form-grid">
                 <div class="auth-field">
                     <label asp-for="Name">Full name</label>
-                    <input asp-for="Name" class="form-control" placeholder="Full name" autocomplete="name" />
+                    <input asp-for="Name" class="form-control" placeholder="Your full name" autocomplete="name" />
                     <span asp-validation-for="Name" class="text-danger"></span>
                 </div>
                 <div class="auth-field">

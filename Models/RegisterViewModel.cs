@@ -7,7 +7,7 @@ public class RegisterViewModel
 {
     [Required(ErrorMessage = "Name is required.")]
     [StringLength(100)]
-    public string Name { get; set; } = " ";
+    public string Name { get; set; } = "";
 
     [Required(ErrorMessage = "Username is required.")]
     [StringLength(50, MinimumLength = 2)]

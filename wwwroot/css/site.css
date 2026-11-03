@@ -2297,8 +2297,12 @@ html[data-theme="light"] .registration-modal .btn-close {
 
 .auth-brand-panel {
     display: flex;
+    align-self: start;
+    height: calc(100dvh - 32px);
     min-height: 560px;
     flex-direction: column;
+    position: sticky;
+    top: 16px;
     padding: clamp(24px, 4vw, 56px);
     border: 1px solid var(--border);
     border-radius: 16px;
@@ -2732,6 +2736,9 @@ html[data-theme="light"] .registration-modal .btn-close {
     }
 
     .auth-brand-panel {
+        position: static;
+        top: auto;
+        height: auto;
         min-height: auto;
         flex-direction: row;
         align-items: center;
