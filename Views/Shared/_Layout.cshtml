@@ -1,4 +1,7 @@
 ﻿@using Microsoft.AspNetCore.Identity
+@using System.Security.Claims
+@using Microsoft.EntityFrameworkCore
+@inject H_st_2026_Gruppe_1.Data.AppDbContext Db
 
 
 <!DOCTYPE html>
@@ -8,9 +11,22 @@
     var action = ViewContext.RouteData.Values["action"]?.ToString();
     var controller = ViewContext.RouteData.Values["controller"]?.ToString();
     var isAuthenticated = User.Identity?.IsAuthenticated == true;
-    var isAuthPage = controller == "Auth";
+    var isAuthPage = controller == "Auth" || controller == "Register";
     var isPublicActor = User.IsInRole("PublicActor");
     var userName = User.Identity?.Name ?? "User";
+    var organizationName = string.Empty;
+
+    if (isAuthenticated && isPublicActor &&
+        int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
+    {
+        organizationName = await (
+            from publicActor in Db.PublicActors
+            join organization in Db.Organizations
+                on publicActor.OrganizationId equals organization.OrganizationId
+            where publicActor.PublicActorId == userId
+            select organization.OrganizationName
+        ).FirstOrDefaultAsync() ?? string.Empty;
+    }
 }
 
 <head>
@@ -112,6 +128,13 @@
             <div class="dropdown-menu dropdown-menu-end user-menu">
                 <div class="user-menu-header">
                     <span class="user-menu-name">@userName</span>
+                    @if (!string.IsNullOrWhiteSpace(organizationName))
+                    {
+                        <span class="user-menu-organization">
+                            <i class="bi bi-building" aria-hidden="true"></i>
+                            <span>@organizationName</span>
+                        </span>
+                    }
                 </div>
                 <div class="dropdown-divider"></div>
 

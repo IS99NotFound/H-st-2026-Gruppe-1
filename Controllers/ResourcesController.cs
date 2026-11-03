@@ -15,7 +15,13 @@ public class ResourcesController : Controller
         _db = db;
     }
 
-    public IActionResult Index(int? id)
+    public IActionResult Index(
+        int? id,
+        string? search,
+        string? status,
+        int? resourceType,
+        DateTime? startDate,
+        DateTime? endDate)
     {
         var now = DateTime.Today;
         var fiveDaysAhead = now.AddDays(5);
@@ -34,6 +40,34 @@ public class ResourcesController : Controller
 
             resourcesQuery = resourcesQuery
                 .Where(resource => resource.ProviderId == currentUserId);
+        }
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            resourcesQuery = resourcesQuery.Where(resource =>
+                resource.Name.Contains(search) ||
+                resource.Description.Contains(search));
+        }
+
+        if (!string.IsNullOrWhiteSpace(status))
+        {
+            resourcesQuery = resourcesQuery.Where(resource => resource.Status == status);
+        }
+
+        if (resourceType.HasValue)
+        {
+            resourcesQuery = resourcesQuery.Where(resource => resource.CategoryId == resourceType.Value);
+        }
+
+        if (startDate.HasValue)
+        {
+            resourcesQuery = resourcesQuery.Where(resource => resource.AvailableFrom >= startDate.Value.Date);
+        }
+
+        if (endDate.HasValue)
+        {
+            resourcesQuery = resourcesQuery.Where(resource =>
+                resource.AvailableFrom < endDate.Value.Date.AddDays(1));
         }
 
         var allResources = resourcesQuery
@@ -55,7 +89,12 @@ public class ResourcesController : Controller
                 r.ExpirationDate.HasValue &&
                 r.ExpirationDate.Value.Date < now),
 
-            Resources = allResources
+            Resources = allResources,
+            Search = search,
+            Status = status,
+            ResourceType = resourceType,
+            StartDate = startDate,
+            EndDate = endDate
         };
 
         if (id.HasValue)

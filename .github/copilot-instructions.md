@@ -9,6 +9,7 @@
 - Bruk kjente prinsipper og best practice, men unngå unødvendig kompliserte abstraksjoner eller store omskrivinger.
 - Kontroller etter endringer at dokumentasjonen stemmer med den faktiske koden.
 - Se etter eksisterende felles metoder, JavaScript-funksjoner og CSS-klasser før du lager ny logikk eller lokal styling. Gjenbruk eller utvid felles løsninger når samme funksjon eller visuelle regel brukes på flere sider.
+- Når du oppretter en pull request i dette prosjektet, skal målbranch være `Prøve-Main` inntil brukeren uttrykkelig ber om noe annet.
 
 ## Språk og stil
 

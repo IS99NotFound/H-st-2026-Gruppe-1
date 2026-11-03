@@ -4,60 +4,101 @@
 }
 
 <div class="auth-page">
+    <partial name="_AuthBrandPanel" />
+
     <section class="auth-content">
-        <div class="auth-form-container">
-            <h2>Create account</h2>
-            <p class="auth-description">Create a test user.</p>
+        <div class="auth-form-container auth-register-container">
+            <p class="auth-step-label">STEP 1 OF 2</p>
+            <h2>Create your account</h2>
+            <p class="auth-description">Enter your details to get started. All fields are required.</p>
 
             <form asp-controller="Register" asp-action="Index" method="post">
-                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
+                <div class="auth-form-grid">
                 <div class="auth-field">
                     <label asp-for="Name">Full name</label>
-                    <input asp-for="Name" class="form-control" />
+                    <input asp-for="Name" class="form-control" placeholder="Your full name" autocomplete="name" />
                     <span asp-validation-for="Name" class="text-danger"></span>
                 </div>
                 <div class="auth-field">
                     <label asp-for="UserName">Username</label>
-                    <input asp-for="UserName" class="form-control" />
+                    <input asp-for="UserName" class="form-control" placeholder="Choose a username" autocomplete="username" />
                     <span asp-validation-for="UserName" class="text-danger"></span>
                 </div>
                 <div class="auth-field">
                     <label asp-for="Email">Email</label>
-                    <input asp-for="Email" class="form-control" />
+                    <input asp-for="Email" class="form-control" placeholder="you@organization.com" autocomplete="email" />
                     <span asp-validation-for="Email" class="text-danger"></span>
                 </div>
                 <div class="auth-field">
-                    <label asp-for="PhoneNumber">Phone (optional)</label>
-                    <input asp-for="PhoneNumber" class="form-control" />
+                    <label asp-for="PhoneNumber">Phone number</label>
+                    <input asp-for="PhoneNumber" class="form-control" placeholder="+47 400 00 000" autocomplete="tel" />
                     <span asp-validation-for="PhoneNumber" class="text-danger"></span>
                 </div>
-                <div class="auth-field">
-                    <label asp-for="Role">Role</label> <!-- Testing phase only, later on it will be provider type etc.-->
-                    <select asp-for="Role" class="form-select">
-                        <option value="CivilianProvider">Resource provider</option>
-                        <option value="PublicActor">Public Actor</option>
-                        <option value="Administrator">Administrator</option>
-                    </select>
-                    <span asp-validation-for="Role" class="text-danger"></span>
+                <div class="auth-password-grid">
+                    <div class="auth-field">
+                        <label asp-for="Password">Password</label>
+                        <input asp-for="Password" class="form-control" placeholder="Create a password" autocomplete="new-password" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+                    <div class="auth-field">
+                        <label asp-for="ConfirmPassword">Confirm password</label>
+                        <input asp-for="ConfirmPassword" class="form-control" placeholder="Re-enter your password" autocomplete="new-password" />
+                        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                    </div>
+                    <p class="auth-password-requirements">Use at least 8 characters with a mix of letters, numbers and symbols.</p>
                 </div>
-                <div class="auth-field">
-                    <label asp-for="Password">Password</label>
-                    <input asp-for="Password" class="form-control" />
-                    <span asp-validation-for="Password" class="text-danger"></span>
                 </div>
-                <div class="auth-field">
-                    <label asp-for="ConfirmPassword">Confirm password</label>
-                    <input asp-for="ConfirmPassword" class="form-control" />
-                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
-                </div>
+
+                <fieldset class="auth-demo-fields">
+                    <legend>Demo feature</legend>
+                    <div class="auth-form-grid">
+                        <div class="auth-field">
+                            <label asp-for="Role">User role</label>
+                            <select asp-for="Role" class="form-select" id="register-role">
+                                <option value="">Select your role</option>
+                                <option value="CivilianProvider">Resource provider</option>
+                                <option value="PublicActor">Public Actor</option>
+                                <option value="Administrator">Administrator</option>
+                            </select>
+                            <span asp-validation-for="Role" class="text-danger"></span>
+                        </div>
+                        <div class="auth-field" id="organization-field">
+                            <label asp-for="OrganizationId">Organization</label>
+                            <select asp-for="OrganizationId" class="form-select">
+                                <option value="0">Select your organization</option>
+                                @foreach (var organization in Model.Organizations)
+                                {
+                                    <option value="@organization.OrganizationId">@organization.OrganizationName</option>
+                                }
+                            </select>
+                            <span asp-validation-for="OrganizationId" class="text-danger"></span>
+                        </div>
+                    </div>
+                </fieldset>
 
                 <button type="submit" class="btn auth-submit">Create account</button>
             </form>
+
+            <p class="auth-back-link">Already have an account? <a asp-controller="Auth" asp-action="Login">Sign in</a></p>
         </div>
     </section>
 </div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script nonce="@Context.Items["CspNonce"]">
+        (() => {
+            const role = document.getElementById("register-role");
+            const organizationField = document.getElementById("organization-field");
+
+            function updateOrganizationField() {
+                const isPublicActor = role.value === "PublicActor";
+                organizationField.classList.toggle("d-none", !isPublicActor);
+                organizationField.setAttribute("aria-hidden", (!isPublicActor).toString());
+            }
+
+            role.addEventListener("change", updateOrganizationField);
+            updateOrganizationField();
+        })();
+    </script>
 }

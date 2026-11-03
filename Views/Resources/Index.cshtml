@@ -2,42 +2,89 @@
 
 @{
     ViewData["Title"] = "Resources";
-    ViewData["WideContent"] = true;
+    var categories = ViewBag.Categories as List<H_st_2026_Gruppe_1.Models.Category> ?? new();
+    var statuses = Model.Resources
+        .Select(resource => resource.Status)
+        .Where(status => !string.IsNullOrWhiteSpace(status))
+        .Distinct()
+        .OrderBy(status => status)
+        .ToList();
 }
 
-<section class="subpage resources-page">
+<section class="subpage">
     <div class="subpage-header">
         <h1>Resources</h1>
     </div>
 
-@if (!Model.Resources.Any())
-{
-    <p class="placeholder-copy">No resources are registered right now</p>
-}
-else
-{
-    <div class="table-wrapper resources-table-wrapper">
-    <table class="table table-striped resources-table">
-        <thead>
-        <tr>
-            <th>Name</th>
-            <th>Telephone</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Effective date</th>
-            <th>Expiry date</th>
-            <th>Lat/Long</th>
-            <th>Registered</th>
-            <th> Status </th>
-            <th> Actions </th>
-            
-        </tr>
-        </thead>
-        
-        <tbody>
-            @foreach (var r in Model.Resources)
+    <form id="resourceFilterForm" method="get" asp-controller="Resources" asp-action="Index" class="dashboard-filter-bar">
+        <div class="dashboard-filter-field">
+            <label for="resourceSearch" class="form-label text-muted small fw-bold">Search</label>
+            <input type="search" name="search" id="resourceSearch" class="form-control"
+                   value="@Model.Search" placeholder="Search resource name" />
+        </div>
+
+        <div class="dashboard-filter-field">
+            <label for="resourceStatusFilter" class="form-label text-muted small fw-bold">Filter by status</label>
+            <select name="status" id="resourceStatusFilter" class="form-select">
+                <option value="">All</option>
+                @foreach (var status in statuses)
+                {
+                    <option value="@status" selected="@(Model.Status == status)">@status</option>
+                }
+            </select>
+        </div>
+
+        <div class="dashboard-filter-field">
+            <label for="resourceTypeFilter" class="form-label text-muted small fw-bold">Filter by type</label>
+            <select name="resourceType" id="resourceTypeFilter" class="form-select">
+                <option value="">All</option>
+                @foreach (var category in categories)
+                {
+                    <option value="@category.CategoryId" selected="@(Model.ResourceType == category.CategoryId)">
+                        @category.CategoryName
+                    </option>
+                }
+            </select>
+        </div>
+
+        <div class="dashboard-filter-field">
+            <label for="resourceStartDate" class="form-label text-muted small fw-bold">Date from</label>
+            <input type="date" name="startDate" id="resourceStartDate" class="form-control"
+                   value="@Model.StartDate?.ToString("yyyy-MM-dd")" />
+        </div>
+
+        <div class="dashboard-filter-field">
+            <label for="resourceEndDate" class="form-label text-muted small fw-bold">Date to</label>
+            <input type="date" name="endDate" id="resourceEndDate" class="form-control"
+                   value="@Model.EndDate?.ToString("yyyy-MM-dd")" />
+        </div>
+
+        <div class="dashboard-filter-field dashboard-distance-field">
+            <label for="resourceRadiusFilter" class="form-label text-muted small fw-bold">Distance</label>
+            <input id="resourceRadiusFilter" type="range" class="form-range" min="0" max="100" step="5" value="0" />
+            <div class="dashboard-radius-value" id="resourceRadiusValue">All distances</div>
+        </div>
+
+        <div class="dashboard-filter-actions">
+            <button type="submit" class="btn btn-primary">Search</button>
+            <a asp-controller="Resources" asp-action="Index" class="btn btn-outline-secondary">Reset</a>
+        </div>
+    </form>
+
+    <p id="resource-location-error" class="dashboard-location-error" role="alert" aria-live="polite" hidden>
+        Location access is required to use the distance filter.
+    </p>
+
+    @if (!Model.Resources.Any())
+    {
+        <p class="placeholder-copy">No resources are registered right now.</p>
+    }
+    else
+    {
+        <div class="resource-list">
+            @foreach (var resource in Model.Resources)
             {
-                var normalizedStatus = (r.Status ?? "").Trim().ToLowerInvariant();
+                var normalizedStatus = (resource.Status ?? "").Trim().ToLowerInvariant();
                 var statusClass = normalizedStatus switch
                 {
                     "ny" or "new" => "status-new",
@@ -53,47 +100,69 @@ else
                 {
                     "ny" or "new" => "New",
                     "under_review" => "Under review",
-                    _ => r.Status
+                    _ => resource.Status
                 };
 
-                <tr>
-                    <td>@r.Name</td>
-                    <td>@r.Email / @r.PhoneNumber</td>
-                    <td>@r.Category?.CategoryName</td>
-                    <td>@r.Description</td>
-                    <td>@r.AvailableFrom.ToString("dd.MM.yyyy")</td>
-                    <td>@r.ExpirationDate?.ToString("dd.MM.yyyy")</td>
-                    
-                    <td>
-                        @if (r.Latitude != null && r.Longitude != null)
-                        {
-                            @($"{r.Latitude:F5}, {r.Longitude:F5}")
-                        }
-                        else
-                        {
-                            <span>No position selected</span>
-                        }
-                    </td>
-                    <td>@r.RegisteredAt.ToString("dd.MM.yyyy HH:mm")</td>
-                    <td>
+                <article class="dashboard-card resource-card"
+                         data-latitude="@resource.Latitude"
+                         data-longitude="@resource.Longitude">
+                    <div class="dashboard-card-header">
+                        <h2>@resource.Name</h2>
                         <span class="status-label @statusClass">@statusText</span>
-                    </td>
-                    <td>
-                        <form class="resource-actions" asp-controller="Home" asp-action="DeleteResource" asp-route-id="@r.Id" method="post"
+                    </div>
+
+                    <p class="dashboard-card-description">@resource.Description</p>
+
+                    <dl class="dashboard-details resource-details">
+                        <div>
+                            <dt>Type</dt>
+                            <dd>@resource.Category?.CategoryName</dd>
+                        </div>
+                        <div>
+                            <dt>Contact</dt>
+                            <dd>@resource.Email<br />@resource.PhoneNumber</dd>
+                        </div>
+                        <div>
+                            <dt>Location (lat/lng)</dt>
+                            <dd>
+                                @if (resource.Latitude.HasValue && resource.Longitude.HasValue)
+                                {
+                                    @($"{resource.Latitude:F5}, {resource.Longitude:F5}")
+                                }
+                                else
+                                {
+                                    @:No position selected
+                                }
+                            </dd>
+                        </div>
+                        <div>
+                            <dt>Effective date</dt>
+                            <dd>@resource.AvailableFrom.ToString("dd.MM.yyyy")</dd>
+                        </div>
+                        <div>
+                            <dt>Expiry date</dt>
+                            <dd>@(resource.ExpirationDate?.ToString("dd.MM.yyyy") ?? "—")</dd>
+                        </div>
+                        <div>
+                            <dt>Registered</dt>
+                            <dd>@resource.RegisteredAt.ToString("dd.MM.yyyy HH:mm")</dd>
+                        </div>
+                    </dl>
+
+                    <div class="dashboard-card-footer">
+                        <form class="dashboard-card-actions" asp-controller="Home" asp-action="DeleteResource"
+                              asp-route-id="@resource.Id" method="post"
                               data-confirm="Are you sure you want to delete this resource?">
-                            <a asp-controller="Resources" asp-action="Index" asp-route-id="@r.Id" class="btn btn-sm btn-primary">
-                                Edit
-                            </a>
+                            @Html.AntiForgeryToken()
+                            <a asp-controller="Resources" asp-action="Index" asp-route-id="@resource.Id"
+                               class="btn btn-sm btn-primary">Edit</a>
                             <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                         </form>
-                    </td>
-                 
-                </tr>
+                    </div>
+                </article>
             }
-        </tbody>
-    </table>
-    </div>
-}
+        </div>
+    }
 </section>
 
 @if (ViewBag.EditResource is H_st_2026_Gruppe_1.Models.ResourceEntry editResource)
@@ -135,9 +204,21 @@ else
                     'Selected position: lat: ' + latitude.toFixed(5) + ', lng: ' + longitude.toFixed(5);
             }
         });
+
         const modalElement = document.getElementById('registrationModal');
         if (modalElement?.dataset.openRegistrationModal === 'true') {
             bootstrap.Modal.getOrCreateInstance(modalElement).show();
         }
+
+        window.resqDateRange.bindFilter(
+            'resourceFilterForm',
+            'resourceStartDate',
+            'resourceEndDate');
+        window.resqRadius.initializeDistanceFilter({
+            sliderId: 'resourceRadiusFilter',
+            valueId: 'resourceRadiusValue',
+            errorId: 'resource-location-error',
+            cardSelector: '.resource-card'
+        });
     </script>
 }

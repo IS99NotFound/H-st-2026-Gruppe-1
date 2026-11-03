@@ -20,14 +20,14 @@
         }
     </div>
 
-    <form method="get" asp-controller="Incidents" asp-action="Index" class="incident-filter-bar">
-        <div class="needs-filter-field incident-search-field">
+    <form id="incidentFilterForm" method="get" asp-controller="Incidents" asp-action="Index" class="dashboard-filter-bar">
+        <div class="dashboard-filter-field dashboard-search-field">
             <label for="incidentSearch" class="form-label text-muted small fw-bold">Search</label>
             <input type="search" name="search" id="incidentSearch" class="form-control"
                    value="@Model.Search" placeholder="Search incident title" />
         </div>
 
-        <div class="needs-filter-field">
+        <div class="dashboard-filter-field">
             <label for="statusFilter" class="form-label text-muted small fw-bold">Filter by status</label>
             <select name="status" id="statusFilter" class="form-select">
                 <option value="" selected="@(Context.Request.Query["status"].ToString() == "")">All</option>
@@ -36,7 +36,7 @@
             </select>
         </div>
 
-        <div class="needs-filter-field">
+        <div class="dashboard-filter-field">
             <label for="incidentTypeFilter" class="form-label text-muted small fw-bold">Filter by type</label>
             <select name="incidentType" id="incidentTypeFilter" class="form-select">
                 <option value="">All</option>
@@ -49,30 +49,30 @@
             </select>
         </div>
 
-        <div class="needs-filter-field">
+        <div class="dashboard-filter-field">
             <label for="startDate" class="form-label text-muted small fw-bold">Date from</label>
             <input type="date" name="startDate" id="startDate" class="form-control"
                    value="@Context.Request.Query["startDate"]" />
         </div>
 
-        <div class="needs-filter-field">
+        <div class="dashboard-filter-field">
             <label for="endDate" class="form-label text-muted small fw-bold">Date to</label>
             <input type="date" name="endDate" id="endDate" class="form-control"
                    value="@Context.Request.Query["endDate"]" />
         </div>
 
-        <div class="needs-filter-field incident-distance-field">
+        <div class="dashboard-filter-field dashboard-distance-field">
             <label for="radiusFilter" class="form-label text-muted small fw-bold">Distance</label>
             <input id="radiusFilter" type="range" class="form-range" min="0" max="100" step="5" value="0" />
-            <div class="incident-radius-value" id="radiusValue">All distances</div>
+            <div class="dashboard-radius-value" id="radiusValue">All distances</div>
         </div>
 
-        <div class="needs-filter-actions">
+        <div class="dashboard-filter-actions">
             <button type="submit" class="btn btn-primary">Search</button>
             <a asp-controller="Incidents" asp-action="Index" class="btn btn-outline-secondary">Reset</a>
         </div>
     </form>
-    <p id="location-error" class="incident-location-error" role="alert" aria-live="polite" hidden>
+    <p id="location-error" class="dashboard-location-error" role="alert" aria-live="polite" hidden>
         Location access is required to use the distance filter.
     </p>
 
@@ -157,10 +157,10 @@
         <div class="incident-list">
             @foreach (var incident in activeIncidents)
             {
-                <article class="incident-card"
+                <article class="dashboard-card incident-card"
                          data-latitude="@incident.Latitude"
                          data-longitude="@incident.Longitude">
-                    <div class="incident-card-header">
+                    <div class="dashboard-card-header">
                         <h2>@incident.Title</h2>
                         <span class="incident-status @(incident.Status == "active" ? "incident-status-active" : "incident-status-resolved")">
                             @incident.Status
@@ -169,10 +169,10 @@
 
                     @if (!string.IsNullOrWhiteSpace(incident.Description))
                     {
-                        <p class="incident-description">@incident.Description</p>
+                        <p class="dashboard-card-description">@incident.Description</p>
                     }
 
-                    <dl class="incident-details">
+                    <dl class="dashboard-details incident-details">
                         <div>
                             <dt>Type</dt>
                             <dd>@incident.IncidentType</dd>
@@ -189,7 +189,7 @@
 
                     @if (isPublicActor && incident.Status == "active")
                     {
-                        <div class="incident-card-footer">
+                        <div class="dashboard-card-footer incident-card-footer">
                             <form asp-controller="Incidents" asp-action="MarkAsResolved" method="post">
                                 <input type="hidden" name="incidentId" value="@incident.IncidentId" />
                                 @Html.AntiForgeryToken()
@@ -221,20 +221,20 @@
                     <div class="incident-list">
                         @foreach (var incident in resolvedIncidents)
                         {
-                            <article class="incident-card"
+                                        <article class="dashboard-card incident-card"
                                      data-latitude="@incident.Latitude"
                                      data-longitude="@incident.Longitude">
-                                <div class="incident-card-header">
+                                <div class="dashboard-card-header">
                                     <h2>@incident.Title</h2>
                                     <span class="incident-status incident-status-resolved">@incident.Status</span>
                                 </div>
 
                                 @if (!string.IsNullOrWhiteSpace(incident.Description))
                                 {
-                                    <p class="incident-description">@incident.Description</p>
+                                    <p class="dashboard-card-description">@incident.Description</p>
                                 }
 
-                                <dl class="incident-details">
+                                <dl class="dashboard-details incident-details">
                                     <div>
                                         <dt>Type</dt>
                                         <dd>@incident.IncidentType</dd>
@@ -251,7 +251,7 @@
 
                                 @if (isPublicActor)
                                 {
-                                    <div class="incident-card-footer">
+                                    <div class="dashboard-card-footer incident-card-footer">
                                         <form asp-controller="Incidents" asp-action="Reactivate" method="post">
                                             <input type="hidden" name="incidentId" value="@incident.IncidentId" />
                                             @Html.AntiForgeryToken()
@@ -312,91 +312,16 @@
 
     <script nonce="@Context.Items["CspNonce"]">
 
-        const radiusFilter = document.getElementById('radiusFilter');
-        const locationError = document.getElementById('location-error');
-        const radiusValue = document.getElementById('radiusValue');
-        let userLocation = null;
-        let locationRequestPending = false;
-        let locationUnavailable = false;
-
-        function distanceInKilometres(latitude, longitude) {
-            const earthRadius = 6371;
-            const latitudeDifference = (latitude - userLocation.latitude) * Math.PI / 180;
-            const longitudeDifference = (longitude - userLocation.longitude) * Math.PI / 180;
-            const firstLatitude = userLocation.latitude * Math.PI / 180;
-            const secondLatitude = latitude * Math.PI / 180;
-            const haversine = Math.sin(latitudeDifference / 2) ** 2
-                + Math.cos(firstLatitude) * Math.cos(secondLatitude)
-                * Math.sin(longitudeDifference / 2) ** 2;
-
-            return earthRadius * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
-        }
-
-        function applyRadiusFilter() {
-            const radius = Number(radiusFilter.value);
-            document.querySelectorAll('.incident-card').forEach(function (card) {
-                if (radius === 0 || !userLocation) {
-                    card.hidden = false;
-                    return;
-                }
-
-                const latitude = Number(card.dataset.latitude);
-                const longitude = Number(card.dataset.longitude);
-                card.hidden = distanceInKilometres(latitude, longitude) > radius;
-            });
-        }
-
-        function requestLocation() {
-            if (userLocation || locationRequestPending || locationUnavailable) {
-                applyRadiusFilter();
-                return;
-            }
-
-            if (!navigator.geolocation) {
-                locationUnavailable = true;
-                locationError.hidden = false;
-                applyRadiusFilter();
-                return;
-            }
-
-            locationRequestPending = true;
-            navigator.geolocation.getCurrentPosition(function (position) {
-                locationRequestPending = false;
-                userLocation = {
-                    latitude: position.coords.latitude,
-                    longitude: position.coords.longitude
-                };
-                locationError.hidden = true;
-                applyRadiusFilter();
-            }, function () {
-                locationRequestPending = false;
-                locationUnavailable = true;
-                locationError.hidden = false;
-                radiusFilter.value = '0';
-                radiusValue.textContent = window.resqRadius.format(radiusFilter.value);
-                localStorage.setItem('incidentRadius', '0');
-                applyRadiusFilter();
-            });
-        }
-
-        radiusFilter.addEventListener('input', function () {
-            radiusValue.textContent = window.resqRadius.format(radiusFilter.value);
-            localStorage.setItem('incidentRadius', radiusFilter.value);
-            if (Number(radiusFilter.value) > 0) {
-                requestLocation();
-            } else {
-                locationError.hidden = true;
-                applyRadiusFilter();
-            }
+        window.resqDateRange.bindFilter(
+            'incidentFilterForm',
+            'startDate',
+            'endDate');
+        window.resqRadius.initializeDistanceFilter({
+            sliderId: 'radiusFilter',
+            valueId: 'radiusValue',
+            errorId: 'location-error',
+            cardSelector: '.incident-card',
+            storageKey: 'incidentRadius'
         });
-
-        const savedRadius = localStorage.getItem('incidentRadius');
-        if (savedRadius !== null && Number(savedRadius) >= 0 && Number(savedRadius) <= 100) {
-            radiusFilter.value = savedRadius;
-            radiusValue.textContent = window.resqRadius.format(savedRadius);
-            if (Number(savedRadius) > 0) {
-                requestLocation();
-            }
-        }
     </script>
 }

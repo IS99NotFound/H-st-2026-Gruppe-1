@@ -48,19 +48,9 @@ window.resqRegistration = {
             const end = findInput(mappings[1].valueId);
             const endDate = findInput(mappings[1].dateId);
             const rangeError = findInput(mappings[1].rangeErrorId);
-            const invalidRange = start?.value && end?.value && end.value < start.value;
+            const validRange = window.resqDateRange.validate(start, end, endDate, rangeError);
 
-            if (endDate) {
-                endDate.setCustomValidity(invalidRange
-                    ? "End date cannot be before start date."
-                    : "");
-            }
-            if (rangeError) {
-                rangeError.textContent = invalidRange
-                    ? "End date cannot be before start date."
-                    : "";
-            }
-            if (invalidRange) {
+            if (!validRange) {
                 event.preventDefault();
             }
         });
@@ -97,6 +87,43 @@ window.resqRegistration = {
     }
 };
 
+window.resqDateRange = {
+    message: "End date cannot be before start date.",
+
+    validate(startInput, endInput, endDateInput, errorElement) {
+        const invalidRange = Boolean(startInput?.value && endInput?.value &&
+            endInput.value < startInput.value);
+        const message = invalidRange ? window.resqDateRange.message : "";
+
+        endDateInput?.setCustomValidity(message);
+        if (errorElement) {
+            errorElement.textContent = message;
+        }
+
+        return !invalidRange;
+    },
+
+    bindFilter(formId, startId, endId) {
+        const form = document.getElementById(formId);
+        const startInput = document.getElementById(startId);
+        const endInput = document.getElementById(endId);
+        if (!form || !startInput || !endInput) return;
+
+        const validate = () => window.resqDateRange.validate(
+            startInput,
+            endInput,
+            endInput,
+            null);
+
+        [startInput, endInput].forEach(input => input.addEventListener("input", validate));
+        form.addEventListener("submit", event => {
+            if (!validate()) {
+                event.preventDefault();
+            }
+        });
+    }
+};
+
 window.resqRadius = {
     format(value) {
         return Number(value) === 0 ? "All distances" : `${value} km`;
@@ -113,6 +140,100 @@ window.resqRadius = {
 
         slider.addEventListener("input", update);
         update();
+    },
+
+    initializeDistanceFilter({ sliderId, valueId, errorId, cardSelector, storageKey }) {
+        const slider = document.getElementById(sliderId);
+        const output = document.getElementById(valueId);
+        const error = document.getElementById(errorId);
+        if (!slider || !output || !error) return;
+
+        let userLocation = null;
+        let locationRequestPending = false;
+        let locationUnavailable = false;
+
+        const distanceInKilometres = (latitude, longitude) => {
+            const earthRadius = 6371;
+            const latitudeDifference = (latitude - userLocation.latitude) * Math.PI / 180;
+            const longitudeDifference = (longitude - userLocation.longitude) * Math.PI / 180;
+            const firstLatitude = userLocation.latitude * Math.PI / 180;
+            const secondLatitude = latitude * Math.PI / 180;
+            const haversine = Math.sin(latitudeDifference / 2) ** 2
+                + Math.cos(firstLatitude) * Math.cos(secondLatitude)
+                * Math.sin(longitudeDifference / 2) ** 2;
+
+            return earthRadius * 2 * Math.atan2(
+                Math.sqrt(haversine),
+                Math.sqrt(1 - haversine));
+        };
+
+        const applyFilter = () => {
+            const radius = Number(slider.value);
+            document.querySelectorAll(cardSelector).forEach(card => {
+                const latitude = Number(card.dataset.latitude);
+                const longitude = Number(card.dataset.longitude);
+                const hasCoordinates = Number.isFinite(latitude) && Number.isFinite(longitude);
+
+                card.hidden = radius > 0 && userLocation && hasCoordinates
+                    ? distanceInKilometres(latitude, longitude) > radius
+                    : false;
+            });
+        };
+
+        const requestLocation = () => {
+            if (userLocation || locationRequestPending || locationUnavailable) {
+                applyFilter();
+                return;
+            }
+            if (!navigator.geolocation) {
+                locationUnavailable = true;
+                error.hidden = false;
+                return;
+            }
+
+            locationRequestPending = true;
+            navigator.geolocation.getCurrentPosition(position => {
+                locationRequestPending = false;
+                userLocation = {
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude
+                };
+                error.hidden = true;
+                applyFilter();
+            }, () => {
+                locationRequestPending = false;
+                locationUnavailable = true;
+                error.hidden = false;
+                slider.value = "0";
+                output.textContent = window.resqRadius.format("0");
+                if (storageKey) {
+                    localStorage.setItem(storageKey, "0");
+                }
+                applyFilter();
+            });
+        };
+
+        slider.addEventListener("input", () => {
+            output.textContent = window.resqRadius.format(slider.value);
+            if (storageKey) {
+                localStorage.setItem(storageKey, slider.value);
+            }
+            if (Number(slider.value) > 0) {
+                requestLocation();
+            } else {
+                error.hidden = true;
+                applyFilter();
+            }
+        });
+
+        const savedRadius = storageKey && localStorage.getItem(storageKey);
+        if (savedRadius !== null && Number(savedRadius) >= 0 && Number(savedRadius) <= 100) {
+            slider.value = savedRadius;
+        }
+        output.textContent = window.resqRadius.format(slider.value);
+        if (Number(slider.value) > 0) {
+            requestLocation();
+        }
     }
 };
 
@@ -159,3 +280,63 @@ document.addEventListener("change", event => {
         event.target.form?.submit();
     }
 });
+
+const demoCodeDialog = document.querySelector("#demo-code-dialog");
+
+if (demoCodeDialog) {
+    const copyButton = demoCodeDialog.querySelector("[data-copy-code]");
+    const copyStatus = demoCodeDialog.querySelector(".auth-code-copy-status");
+
+    copyButton?.addEventListener("click", async () => {
+        const code = copyButton.dataset.copyCode ?? "";
+
+        try {
+            await navigator.clipboard.writeText(code);
+            demoCodeDialog.remove();
+        } catch {
+            if (copyStatus) copyStatus.textContent = "Could not copy the code.";
+        }
+    });
+}
+
+const codeForm = document.querySelector("[data-code-form]");
+
+if (codeForm) {
+    const codeInputs = [...codeForm.querySelectorAll("[data-code-inputs] .auth-code-input")];
+    const codeValue = codeForm.querySelector("[data-code-value]");
+
+    const syncCodeValue = () => {
+        if (codeValue) codeValue.value = codeInputs.map(input => input.value).join("");
+    };
+
+    const setCode = value => {
+        [...value].slice(0, codeInputs.length).forEach((digit, index) => {
+            codeInputs[index].value = /\d/.test(digit) ? digit : "";
+        });
+        syncCodeValue();
+        codeInputs[Math.min(value.length, codeInputs.length) - 1]?.focus();
+    };
+
+    codeInputs.forEach((input, index) => {
+        input.addEventListener("input", () => {
+            input.value = input.value.replace(/\D/g, "").slice(-1);
+            syncCodeValue();
+            if (input.value && index < codeInputs.length - 1) {
+                codeInputs[index + 1].focus();
+            }
+        });
+
+        input.addEventListener("keydown", event => {
+            if (event.key === "Backspace" && !input.value && index > 0) {
+                codeInputs[index - 1].focus();
+            }
+        });
+
+        input.addEventListener("paste", event => {
+            event.preventDefault();
+            setCode((event.clipboardData?.getData("text") ?? "").replace(/\D/g, ""));
+        });
+    });
+
+    codeForm.addEventListener("submit", syncCodeValue);
+}

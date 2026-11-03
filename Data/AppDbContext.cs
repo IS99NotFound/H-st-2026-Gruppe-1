@@ -19,6 +19,7 @@ public class AppDbContext : DbContext
     public DbSet<User> Users => Set<User>();
     public DbSet<CivilianProvider> CivilianProviders => Set<CivilianProvider>();
     public DbSet<PublicActor> PublicActors => Set<PublicActor>();
+    public DbSet<Organization> Organizations => Set<Organization>();
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -99,6 +100,14 @@ public class AppDbContext : DbContext
             entity.HasKey(p => p.PublicActorId);
             entity.Property(p => p.PublicActorId).HasColumnName("PublicActorID");
             entity.Property(p => p.OrganizationId).HasColumnName("OrganizationID");
+        });
+
+        modelBuilder.Entity<Organization>(entity =>
+        {
+            entity.ToTable("Organization");
+            entity.HasKey(o => o.OrganizationId);
+            entity.Property(o => o.OrganizationId).HasColumnName("OrganizationID");
+            entity.Property(o => o.OrganizationName).HasColumnName("OrganizationName");
         });
             
     }

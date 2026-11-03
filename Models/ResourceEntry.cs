@@ -64,4 +64,9 @@ public class ResourceDashboard
 	public int ExpiredCount { get; set; }
 
 	public List<ResourceEntry> Resources { get; set; } = new();
+	public string? Search { get; set; }
+	public string? Status { get; set; }
+	public int? ResourceType { get; set; }
+	public DateTime? StartDate { get; set; }
+	public DateTime? EndDate { get; set; }
 }
