@@ -8,36 +8,36 @@ namespace H_st_2026_Gruppe_1.Models
     {
         public int Id { get; set; }
 
-        [Required(ErrorMessage = "Title or short summary is required.")]
-        [StringLength(100, ErrorMessage = "Title cannot exceed 100 characters.")]
+        [Required(ErrorMessage = "Tittel eller kort sammendrag er påkrevd.")]
+        [StringLength(100, ErrorMessage = "Tittelen kan ikke være lengre enn 100 tegn.")]
         public string Title { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Email is required.")]
-        [EmailAddress(ErrorMessage = "Please provide a valid email address.")]
+        [Required(ErrorMessage = "E-post er påkrevd.")]
+        [EmailAddress(ErrorMessage = "Oppgi en gyldig e-postadresse.")]
         public string Email { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Phone number is required.")]
-        [Phone(ErrorMessage = "Please provide a valid phone number.")]
+        [Required(ErrorMessage = "Telefonnummer er påkrevd.")]
+        [Phone(ErrorMessage = "Oppgi et gyldig telefonnummer.")]
         public string PhoneNumber { get; set; } = "+47 ";
 
-        [Required(ErrorMessage = "Please select a crisis incident.")]
-        [Range(1, int.MaxValue, ErrorMessage = "Please select a valid crisis incident.")]
+        [Required(ErrorMessage = "Velg en krisehendelse.")]
+        [Range(1, int.MaxValue, ErrorMessage = "Velg en gyldig krisehendelse.")]
         public int CrisisEventId { get; set; }
 
-        [Required(ErrorMessage = "Please select a category.")]
-        [Range(1, int.MaxValue, ErrorMessage = "Please select a valid category.")]
+        [Required(ErrorMessage = "Velg en kategori.")]
+        [Range(1, int.MaxValue, ErrorMessage = "Velg en gyldig kategori.")]
         public int Category { get; set; }
         public Category? CategoryInfo { get; set; }
 
         // Required by the database. Set in the controller, not in the form.
         public int PublicActorId { get; set; }
         
-        [Required(ErrorMessage = "Description is required.")]
-        [StringLength(1000, ErrorMessage = "Description cannot exceed 1000 characters.")]
+        [Required(ErrorMessage = "Beskrivelse er påkrevd.")]
+        [StringLength(1000, ErrorMessage = "Beskrivelsen kan ikke være lengre enn 1000 tegn.")]
         public string Description { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Quantity is required.")]
-        [Range(1, 10000, ErrorMessage = "Quantity must be at least 1.")]
+        [Required(ErrorMessage = "Antall er påkrevd.")]
+        [Range(1, 10000, ErrorMessage = "Antall må være minst 1.")]
         public int Quantity { get; set; } = 1;
 
         [DataType(DataType.Date)]
@@ -48,17 +48,17 @@ namespace H_st_2026_Gruppe_1.Models
         [DataType(DataType.Date)]
         public DateTime? Deadline { get; set; }
 
-        [StringLength(200)]
+        [StringLength(200, ErrorMessage = "Stedsnavn kan ikke være lengre enn 200 tegn.")]
         public string LocationName { get; set; } = string.Empty;
         
-        [Required(ErrorMessage = "Map location is required.")]
-        [Range(-90.0, 90.0, ErrorMessage = "Invalid latitude value.")]
+        [Required(ErrorMessage = "Sted på kartet er påkrevd.")]
+        [Range(-90.0, 90.0, ErrorMessage = "Ugyldig breddegrad.")]
         public double Latitude { get; set; }
         
         public DateTime RegisteredAt { get; set; }
 
-        [Required(ErrorMessage = "Map location is required.")]
-        [Range(-180.0, 180.0, ErrorMessage = "Invalid longitude value.")]
+        [Required(ErrorMessage = "Sted på kartet er påkrevd.")]
+        [Range(-180.0, 180.0, ErrorMessage = "Ugyldig lengdegrad.")]
         public double Longitude { get; set; }
 
         public string Status { get; set; } = "new";
@@ -68,7 +68,7 @@ namespace H_st_2026_Gruppe_1.Models
             if (RequiredFrom.HasValue && Deadline.HasValue && Deadline < RequiredFrom)
             {
                 yield return new ValidationResult(
-                    "End date cannot be before start date.",
+                    "Sluttdato kan ikke være før startdato.",
                     new[] { nameof(Deadline) });
             }
         }

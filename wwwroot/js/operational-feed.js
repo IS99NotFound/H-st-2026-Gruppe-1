@@ -47,7 +47,7 @@
 
             const popup = document.createElement("div");
             const title = document.createElement("strong");
-            title.textContent = item.title || "Feed item";
+            title.textContent = item.title || "Element";
             popup.appendChild(title);
             if (item.description) {
                 popup.appendChild(document.createElement("br"));
@@ -95,19 +95,19 @@
                 weight: 2,
                 fillColor: "#258cfb",
                 fillOpacity: 1
-            }).bindTooltip("Current location").addTo(map);
+            }).bindTooltip("Nåværende posisjon").addTo(map);
         }
         map.setView(location, 13);
     }
 
     function requestCurrentLocation() {
         if (!navigator.geolocation) {
-            locationStatus.textContent = "Current location is not available in this browser.";
+            locationStatus.textContent = "Nåværende posisjon er ikke tilgjengelig i denne nettleseren.";
             return;
         }
 
         if (currentLocationButton) currentLocationButton.disabled = true;
-        locationStatus.textContent = "Finding your current location...";
+        locationStatus.textContent = "Finner din nåværende posisjon...";
         navigator.geolocation.getCurrentPosition(position => {
             currentLocation = {
                 latitude: position.coords.latitude,
@@ -117,7 +117,7 @@
             render();
             if (currentLocationButton) currentLocationButton.disabled = false;
         }, () => {
-            locationStatus.textContent = "Could not access your current location.";
+            locationStatus.textContent = "Fikk ikke tilgang til din nåværende posisjon.";
             render();
             if (currentLocationButton) currentLocationButton.disabled = false;
         });
@@ -238,15 +238,15 @@
         });
         empty.hidden = visible !== 0;
         if (resultsLabel) {
-            const resultText = `${visible} result${visible === 1 ? "" : "s"}`;
+            const resultText = `${visible} ${visible === 1 ? "resultat" : "resultater"}`;
             resultsLabel.textContent = currentLocation
-                ? `Show ${resultText}, sorted by distance from your location`
-                : `Show ${resultText}`;
+                ? `Vis ${resultText}, sortert etter avstand fra din posisjon`
+                : `Vis ${resultText}`;
         }
         if (currentLocation) {
-            locationStatus.textContent = `${visible} items shown, sorted by distance from your location.`;
+            locationStatus.textContent = `${visible} elementer vist, sortert etter avstand fra din posisjon.`;
         } else {
-            locationStatus.textContent = `${visible} items shown. Allow location to sort and filter by distance.`;
+            locationStatus.textContent = `${visible} elementer vist. Tillat posisjon for å sortere og filtrere etter avstand.`;
         }
     }
 

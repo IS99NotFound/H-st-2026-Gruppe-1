@@ -34,19 +34,19 @@ public class RegisterController : Controller
     {
         if (!Enum.IsDefined(model.Role))
         {
-            ModelState.AddModelError(nameof(model.Role), "Select a valid role.");
+            ModelState.AddModelError(nameof(model.Role), "Velg en gyldig rolle.");
         }
 
         if (model.Role == IdentityUserRole.PublicActor &&
             !await _db.Organizations.AnyAsync(organization => organization.OrganizationId == model.OrganizationId))
         {
-            ModelState.AddModelError(nameof(model.OrganizationId), "Select an organization for public actors.");
+            ModelState.AddModelError(nameof(model.OrganizationId), "Velg en organisasjon for offentlige aktører.");
         }
 
         // Every role can be chosen for now
         if (!_env.IsDevelopment() && model.Role != IdentityUserRole.CivilianProvider)
         {
-            ModelState.AddModelError(nameof(model.Role), "Only resource providers can register.");
+            ModelState.AddModelError(nameof(model.Role), "Bare ressursleverandører kan registrere seg.");
         }
 
         if (!ModelState.IsValid)
@@ -71,7 +71,19 @@ public class RegisterController : Controller
         {
             foreach (var error in result.Errors)
             {
-                ModelState.AddModelError(string.Empty, error.Description);
+                ModelState.AddModelError(string.Empty, error.Code switch
+                {
+                    "PasswordRequiresDigit" => "Passordet må inneholde minst ett tall.",
+                    "PasswordRequiresLower" => "Passordet må inneholde minst én liten bokstav.",
+                    "PasswordRequiresUpper" => "Passordet må inneholde minst én stor bokstav.",
+                    "PasswordRequiresNonAlphanumeric" => "Passordet må inneholde minst ett spesialtegn.",
+                    "PasswordTooShort" => "Passordet må være minst 8 tegn.",
+                    "DuplicateUserName" => "Brukernavnet er allerede i bruk.",
+                    "DuplicateEmail" => "E-postadressen er allerede i bruk.",
+                    "InvalidEmail" => "Oppgi en gyldig e-postadresse.",
+                    "InvalidUserName" => "Brukernavnet inneholder ugyldige tegn.",
+                    _ => error.Description
+                });
             }
             return View(await AddOrganizationsAsync(model));
         }
@@ -100,7 +112,7 @@ public class RegisterController : Controller
         await _db.SaveChangesAsync();
         await transaction.CommitAsync();
 
-        TempData["RegisterMessage"] = "Your account has been created successfully.";
+        TempData["RegisterMessage"] = "Kontoen din er opprettet.";
         return RedirectToAction("Login", "Auth");
     }
 

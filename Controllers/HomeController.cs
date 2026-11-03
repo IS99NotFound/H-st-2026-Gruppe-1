@@ -40,7 +40,7 @@ public class PublicActorController : Controller
             name = r.Name,
             resourceType = r.Category != null
                 ? r.Category.CategoryName
-                : "Other",
+                : "Annet",
             description = r.Description,
             phone = r.PhoneNumber,
             latitude = r.Latitude,

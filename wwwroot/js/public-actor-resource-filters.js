@@ -66,12 +66,12 @@
             const popup = document.createElement("div");
             const title = document.createElement("strong");
 
-            title.textContent = resource.name || "Unnamed resource";
+            title.textContent = resource.name || "Ressurs uten navn";
             popup.appendChild(title);
             popup.appendChild(document.createElement("br"));
 
             const type = document.createElement("span");
-            type.textContent = resource.resourceType || "Other";
+            type.textContent = resource.resourceType || "Annet";
             popup.appendChild(type);
 
             if (resource.description) {
@@ -86,7 +86,7 @@
                 popup.appendChild(document.createElement("br"));
 
                 const contact = document.createElement("span");
-                contact.textContent = "Contact: " + resource.phone;
+                contact.textContent = "Kontakt: " + resource.phone;
                 popup.appendChild(contact);
             }
 
@@ -98,7 +98,7 @@
         
     if(status) {
         status.textContent = 
-        `${visibleCount} registered resources shown on the map.`;
+        `${visibleCount} registrerte ressurser vist på kartet.`;
     }
 }
 

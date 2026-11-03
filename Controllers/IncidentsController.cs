@@ -72,7 +72,7 @@ public class IncidentsController : Controller
         _db.Incidents.Add(incident);
         _db.SaveChanges();
 
-        TempData["IncidentCreated"] = "Incident registered successfully.";
+        TempData["IncidentCreated"] = "Hendelsen ble registrert.";
         return RedirectToAction(nameof(Index));
     }
 
@@ -102,7 +102,7 @@ public class IncidentsController : Controller
         incident.Status = "resolved";
         _db.SaveChanges();
 
-        TempData["IncidentUpdated"] = "Incident marked as resolved.";
+        TempData["IncidentUpdated"] = "Hendelsen er markert som løst.";
         return RedirectToAction(nameof(Index));
     }
 
@@ -133,7 +133,7 @@ public class IncidentsController : Controller
         incident.Status = "active";
         _db.SaveChanges();
 
-        TempData["IncidentUpdated"] = "Incident reactivated.";
+        TempData["IncidentUpdated"] = "Hendelsen er aktivert på nytt.";
         return RedirectToAction(nameof(Index));
     }
 

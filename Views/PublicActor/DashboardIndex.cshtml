@@ -1,6 +1,6 @@
 @model H_st_2026_Gruppe_1.Models.ResourceNeed
 @{
-    ViewData["Title"] = "Public Actor Dashboard";
+    ViewData["Title"] = "Oversikt for offentlig aktør";
     ViewData["FullWidth"] = true;
     ViewData["RegistrationType"] = "need";
     var canRegisterResource = User.IsInRole("ResourceProvider") || User.IsInRole("Administrator");
@@ -12,9 +12,9 @@
 <div class="main-layout registration-modal-page">
     <partial name="_OperationalFeed" />
     <div class="feed-resizer" role="separator" aria-orientation="vertical"
-         aria-label="Resize operational feed" tabindex="0"></div>
+         aria-label="Endre størrelse på operativ oversikt" tabindex="0"></div>
     <section class="map-area">
-        <div id="map" role="application" aria-label="Interactive map"
+        <div id="map" role="application" aria-label="Interaktivt kart"
              data-resource-registration-url="@(canRegisterResource ? Url.Action("Index", "Home") : null)"
              data-need-registration-url="@Url.Action("DashboardIndex", "PublicActor")"
              data-registration-type="need"></div>
@@ -23,10 +23,10 @@
             <div class="map-filter-header">
                 <button type="button" id="survival-filter-button" class="map-filter-button"
                         aria-expanded="false" aria-controls="survival-filter-content"
-                        aria-label="Collapse registered resource filters">
+                        aria-label="Skjul filter for registrerte ressurser">
                     <i class="bi bi-chevron-right" aria-hidden="true"></i>
                 </button>
-                <strong class="map-filter-title">Filter resource</strong>
+                <strong class="map-filter-title">Filtrer ressurser</strong>
             </div>
             <div id="survival-filter-content">
                 <div class="map-filter-options">
@@ -35,10 +35,10 @@
                         <label><input type="checkbox" class="registered-resources-filter" value="@category.CategoryName" checked /> @category.CategoryName</label>
                     }
                 </div>
-                <p id="registered-resources-status" role="status">Loading registered resources...</p>
+                <p id="registered-resources-status" role="status">Laster registrerte ressurser...</p>
             </div>
         </div>
-        <p id="map-status" class="map-status" role="status" aria-live="polite">Loading map ...</p>
+        <p id="map-status" class="map-status" role="status" aria-live="polite">Laster kart ...</p>
     </section>
 </div>
 
@@ -50,9 +50,9 @@
             <div class="modal-header">
                 <h2 class="modal-title" id="registrationModalTitle">
                     <i class="bi bi-clipboard-plus" aria-hidden="true"></i>
-                    <span>@(Model.Id > 0 ? "Edit resource need" : "Register resource need")</span>
+                    <span>@(Model.Id > 0 ? "Rediger ressursbehov" : "Registrer ressursbehov")</span>
                 </h2>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close registration form"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Lukk registreringsskjema"></button>
             </div>
             <div class="modal-body" data-registration-modal-body>
                 <partial name="_NeedRegistrationForm" model="Model" />
@@ -102,7 +102,7 @@
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
         document.getElementById('map-status').textContent =
-            'Map ready. Select position for the crisis need.';
+            'Kartet er klart. Velg posisjon for krisebehovet.';
 
         const latInput = document.getElementById('latInput');
         const lngInput = document.getElementById('lngInput');
@@ -111,7 +111,7 @@
             lngInput: lngInput,
             positionText: document.getElementById('posText'),
             positionError: document.getElementById('posError'),
-            popupText: 'Need location'
+            popupText: 'Sted for behov'
         });
         const requestedLocation = window.resqMapRegistration.readRequestedLocation();
         const initialLat = Number(latInput?.value);
@@ -137,7 +137,7 @@
             if (!latInput.value || latInput.value === '0') {
                 event.preventDefault();
                 document.getElementById('posError').textContent =
-                    'Position on the map is required.';
+                    'Posisjon på kartet må velges.';
             }
         });
         window.resqRegistration.bindCurrentLocationButton('useCurrentLocation', {
