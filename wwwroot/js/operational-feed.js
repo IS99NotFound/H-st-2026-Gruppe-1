@@ -47,7 +47,7 @@
 
             const popup = document.createElement("div");
             const title = document.createElement("strong");
-            title.textContent = item.title || "Element";
+            title.textContent = item.title || "Uten tittel";
             popup.appendChild(title);
             if (item.description) {
                 popup.appendChild(document.createElement("br"));
@@ -117,7 +117,7 @@
             render();
             if (currentLocationButton) currentLocationButton.disabled = false;
         }, () => {
-            locationStatus.textContent = "Fikk ikke tilgang til din nåværende posisjon.";
+            locationStatus.textContent = "Fikk ikke tilgang til posisjonen din.";
             render();
             if (currentLocationButton) currentLocationButton.disabled = false;
         });

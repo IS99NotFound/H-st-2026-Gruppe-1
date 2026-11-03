@@ -12,7 +12,7 @@
     const categoryLabels = {
         hospital: "Sykehus",
         drinking_water: "Drikkevann",
-        shelter: "Tilfluktsrom / bunker"
+        shelter: "Tilfluktsrom/bunker"
     };
 
     let locations = [];

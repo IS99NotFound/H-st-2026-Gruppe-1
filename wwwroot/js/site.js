@@ -79,7 +79,7 @@ window.resqRegistration = {
                 button.disabled = false;
             }, () => {
                 if (errorElement) {
-                    errorElement.textContent = "Fikk ikke tak i nåværende posisjon.";
+                    errorElement.textContent = "Kunne ikke hente posisjonen din.";
                 }
                 button.disabled = false;
             });
