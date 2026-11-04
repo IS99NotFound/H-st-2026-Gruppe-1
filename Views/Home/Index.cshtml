@@ -63,6 +63,7 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/map-base.js" asp-append-version="true"></script>
     <script src="~/js/map-registration.js" asp-append-version="true"></script>
     <script src="~/js/map-ab.js" asp-append-version="true"></script>
     <script src="~/js/survival-location-filters.js" asp-append-version="true" defer></script>
@@ -88,7 +89,12 @@
               rangeErrorId: 'resourceDateRangeError' }
         ]);
 
-        const map = L.map('map').setView([58.4614, 8.7683], 13);
+        // Felles kartoppsett brukes også her, mens denne siden beholder filteret for beredskapssteder.
+        const mapSetup = window.resqMapBase.initialize({
+            center: [58.4614, 8.7683],
+            zoom: 13
+        });
+        const map = mapSetup.map;
         window.resqMap = map;
         const mapElement = document.getElementById('map');
         const registrationLinks = window.resqMapRegistration.bind(map, {
@@ -96,9 +102,6 @@
             need: mapElement.dataset.needRegistrationUrl,
             currentType: mapElement.dataset.registrationType
         });
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(map);
         document.getElementById('map-status').textContent =
             'Kartet er klart. Velg en posisjon eller bruk din nåværende posisjon.';
 
@@ -131,6 +134,8 @@
                 registrationLinks(event.latlng);
             }
         });
+        // A-B legges til før Layers for å få ønsket rekkefølge på kartkontrollene.
+        mapSetup.addLayersControl();
 
         document.getElementById('resourceType')?.addEventListener('change', event => {
             const expiryDate = document.getElementById('expiryDate');

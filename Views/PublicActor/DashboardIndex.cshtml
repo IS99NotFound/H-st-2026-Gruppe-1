@@ -69,6 +69,7 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/map-base.js" asp-append-version="true"></script>
     <script nonce="@Context.Items["CspNonce"]">
         window.publicActorResources = @Html.Raw(ViewBag.ResourceMarkersJson ?? "[]");
         window.resqRegistration.initializeDateTimeFields('needForm', [
@@ -96,7 +97,14 @@
     </script>
     <script src="~/js/operational-feed.js" asp-append-version="true" defer></script>
     <script nonce="@Context.Items["CspNonce"]">
-        const map = L.map('map').setView([58.4614, 8.7683], 13);
+
+        // Felles kartoppsett brukes her, mens denne siden beholder filteret for registrerte ressurser.
+        const mapSetup = window.resqMapBase.initialize({
+            center: [58.16322, 8.00230],
+            zoom: 13
+        });
+        const map = mapSetup.map;
+
         window.resqMap = map;
         const mapElement = document.getElementById('map');
         const registrationLinks = window.resqMapRegistration.bind(map, {
@@ -104,9 +112,7 @@
             need: mapElement.dataset.needRegistrationUrl,
             currentType: mapElement.dataset.registrationType
         });
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(map);
+
         document.getElementById('map-status').textContent =
             'Kartet er klart. Velg posisjon for krisebehovet.';
 
@@ -139,6 +145,9 @@
                 registrationLinks(event.latlng);
             }
         });
+        // A-B legges til før Layers for å få ønsket rekkefølge på kartkontrollene.
+        mapSetup.addLayersControl();
+
         document.getElementById('needForm')?.addEventListener('submit', event => {
             if (!latInput.value || latInput.value === '0') {
                 event.preventDefault();
