@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using H_st_2026_Gruppe_1.Data;
 using H_st_2026_Gruppe_1.Models;
 using H_st_2026_Gruppe_1.Middleware;
+using H_st_2026_Gruppe_1.Services;
 
 // App builder 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,6 +17,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.ConfigureKestrel(options => options.AddServerHeader = false);
 
 builder.Services.AddMemoryCache();
+builder.Services.AddHttpClient();
 
 // Controllers and views (MVC). Every POST must have a valid antiforgery token (CSRF)
 builder.Services.AddControllersWithViews(options =>
@@ -67,6 +69,10 @@ builder.Services.AddIdentityCore<User>(options =>
     options.Lockout.MaxFailedAccessAttempts = 10;
 })
 .AddEntityFrameworkStores<AppDbContext>();
+
+//Action-buttons written in program now use the MatchNeedLifecycle method
+builder.Services.AddScoped<MatchNeedLifecycle>();
+builder.Services.AddHostedService<MatchLifecycleWorker>();
 
 var app = builder.Build();
 

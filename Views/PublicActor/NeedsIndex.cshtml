@@ -92,6 +92,22 @@
                                     <span>Akutt behov</span>
                                 </span>
                             }
+                            @{
+                                //Coverterts the status value stored in the database (example: "under_review")
+                                //into a readable text for the user. Unknown values are shown as they are.
+                                var needStatusText = need.Status switch
+                                {
+                                    "new" => "Ny",
+                                    "under_review" => "Vurderes",
+                                    "assigned" => "Tildelt",
+                                    "resolved" => "Løst",
+                                    "cancelled" => "Kansellert",
+                                    "rejected" => "Avvist",
+                                    _ => need.Status
+                                };
+                            }
+                        @*Shows the current status of the need*@
+                            <span class ="status-label">@needStatusText</span>
                         </div>
                     </div>
 
