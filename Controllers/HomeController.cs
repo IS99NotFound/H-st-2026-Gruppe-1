@@ -444,12 +444,20 @@ public class PublicActorController : Controller
             .Where(match => match.NeedId == selectedNeed.Id)
             .ToList();
 
+        // Ressurser som allerede er tildelt dette behovet skal fortsatt vises,
+        // ellers forsvinner knappene og tildelingen kan ikke endres.
+        var assignedResourceIds = records
+            .Where(match => match.Status == "accepted")
+            .Select(match => match.ResourceId)
+            .ToList();
+
         model.Matches = RadiusMatcher.FindResources(
             selectedNeed,
             radiusKm,
             _db.Resources
                 .Include(resource => resource.Category)
-                .Where(resource => resource.Status == "available")
+                .Where(resource => resource.Status == "available"
+                    || assignedResourceIds.Contains(resource.Id))
                 .ToList(),
             allCategories);
         
@@ -517,7 +525,7 @@ public class PublicActorController : Controller
         {
             if (need.Status is "resolved" or "cancelled")
             {
-                TempData["MatchError"] = "This need is closed, so resources can no longer be assigned to it.";
+                TempData["MatchError"] = "Dette behovet er lukket, så ressurser kan ikke lenger tildeles det.";
                 return RedirectToAction("Matches", new { needId });
             }
             
@@ -529,14 +537,14 @@ public class PublicActorController : Controller
             {
                 if (!_lifecycle.TryReserveResource(resourceId))
                 {
-                    TempData["MatchError"] = "This resource is temporarily unavailable. It is already assigned to another need.";
+                    TempData["MatchError"] = "Denne ressursen er midlertidig utilgjengelig. Den er allerede tildelt et annet behov.";
                     return RedirectToAction("Matches", new { needId });
                 }
             }
             else if (!wasAssigned)
             {
                 //The resource is unavailable and no already assigned to this need
-                TempData["MatchError"] = "This resource is already assigned to another need.";
+                TempData["MatchError"] = "Denne ressursen er allerede tildelt et annet behov.";
 
                 return RedirectToAction("Matches", new {needId});
             }
@@ -566,10 +574,10 @@ public class PublicActorController : Controller
 
         TempData["MatchMessage"] = newStatus switch
         {
-            "accepted" => "Resource assigned. It is now marked as temporarily unavailable for other public actors.",
-            "proposed" when wasAssigned => "Resource set to under review and is available again.",
-            "declined" when wasAssigned => "Resource rejected and is available again",
-            _ => "Status saved."
+            "accepted" => "Ressursen er tildelt. Den er nå midlertidig utilgjengelig for andre offentlige aktører.",
+            "proposed" when wasAssigned => "Ressursen er satt til vurdering og er tilgjengelig igjen.",
+            "declined" when wasAssigned => "Ressursen er avslått og er tilgjengelig igjen.",
+            _ => "Status er lagret."
         };
 
         return RedirectToAction("Matches", new { needId });

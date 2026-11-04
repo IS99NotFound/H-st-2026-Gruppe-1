@@ -97,10 +97,12 @@
                                 //into a readable text for the user. Unknown values are shown as they are.
                                 var needStatusText = need.Status switch
                                 {
-                                    "new" => "New",
-                                    "under_review" => "Under review",
-                                    "assigned" => "Assigned",
-                                    "resolved" => "Resolved",
+                                    "new" => "Ny",
+                                    "under_review" => "Vurderes",
+                                    "assigned" => "Tildelt",
+                                    "resolved" => "Løst",
+                                    "cancelled" => "Kansellert",
+                                    "rejected" => "Avvist",
                                     _ => need.Status
                                 };
                             }
