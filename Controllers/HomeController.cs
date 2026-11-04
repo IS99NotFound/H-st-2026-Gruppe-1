@@ -600,11 +600,11 @@ public class PublicActorController : Controller
             return Unauthorized();
         }
 
-        //Ikke admin ennå
-       /* if (!User.IsInRole("Administrator") && need.PublicActorId != currentUserId.Value)
+        // Bare den som eier behovet kan lukke det
+        if (need.PublicActorId != currentUserId.Value)
         {
             return Forbid();
-        }*/
+        }
 
         _lifecycle.CloseNeed(id, "resolved");
         return RedirectToAction(nameof(NeedsIndex));
