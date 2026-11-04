@@ -8,7 +8,10 @@
 
 <section class="subpage">
     <div class="subpage-header">
-        <h1>Behov</h1>
+        <div>
+            <h1>Behov</h1>
+            <p class="page-intro">Oversikt over behov.</p>
+        </div>
     </div>
 
     <form id="needFilterForm" method="get" asp-controller="PublicActor" asp-action="NeedsIndex" class="dashboard-filter-bar">
@@ -115,37 +118,37 @@
 
                     <dl class="dashboard-details need-details">
                         <div>
-                            <dt>Kontakt</dt>
+                            <dt><i class="bi bi-person" aria-hidden="true"></i> Kontakt</dt>
                             <dd>@need.Email<br />@need.PhoneNumber</dd>
                         </div>
                         <div>
-                            <dt>Krisehendelse</dt>
+                            <dt><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> Krisehendelse</dt>
                             <dd>
                                 @(incident?.Title ?? $"Hendelse #{need.CrisisEventId}")
                             </dd>
                         </div>
                         <div>
-                            <dt>Kategori</dt>
+                            <dt><i class="bi bi-tag" aria-hidden="true"></i> Kategori</dt>
                             <dd>@(need.CategoryInfo?.CategoryName ?? "Ikke oppgitt")</dd>
                         </div>
                         <div>
-                            <dt>Antall</dt>
+                            <dt><i class="bi bi-box-seam" aria-hidden="true"></i> Antall</dt>
                             <dd>@need.Quantity</dd>
                         </div>
                         <div>
-                            <dt>Trengs fra</dt>
+                            <dt><i class="bi bi-calendar-event" aria-hidden="true"></i> Trengs fra</dt>
                             <dd>@(need.RequiredFrom?.ToString("dd.MM.yyyy") ?? "Ikke oppgitt")</dd>
                         </div>
                         <div>
-                            <dt>Trengs til</dt>
+                            <dt><i class="bi bi-calendar-x" aria-hidden="true"></i> Trengs til</dt>
                             <dd>@(need.Deadline?.ToString("dd.MM.yyyy") ?? "Ikke oppgitt")</dd>
                         </div>
                         <div>
-                            <dt>Sted (breddegrad/lengdegrad)</dt>
+                            <dt><i class="bi bi-geo-alt" aria-hidden="true"></i> Sted (breddegrad/lengdegrad)</dt>
                             <dd>@need.Latitude.ToString("F5"), @need.Longitude.ToString("F5")</dd>
                         </div>
                         <div>
-                            <dt>Registrert</dt>
+                            <dt><i class="bi bi-clock-history" aria-hidden="true"></i> Registrert</dt>
                             <dd>@need.RegisteredAt.ToString("dd.MM.yyyy HH:mm")</dd>
                         </div>
                     </dl>

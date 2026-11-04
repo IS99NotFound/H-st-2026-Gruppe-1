@@ -73,6 +73,7 @@ public class ResourcesController : Controller
         var allResources = resourcesQuery
             .OrderBy(resource => resource.Id)
             .ToList();
+
         ViewBag.Categories = _db.Categories.OrderBy(category => category.CategoryId).ToList();
         var dashboardModel = new ResourceDashboard
         {
@@ -88,7 +89,7 @@ public class ResourcesController : Controller
             ExpiredCount = allResources.Count(r =>
                 r.ExpirationDate.HasValue &&
                 r.ExpirationDate.Value.Date < now),
-
+            Resources = allResources,
             Resources = allResources,
             Search = search,
             Status = status,
