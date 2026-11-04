@@ -354,7 +354,7 @@ public class PublicActorController : Controller
                 existingNeed.Deadline =need.Deadline;
                 existingNeed.Priority = need.Priority;
                 existingNeed.RegisteredAt = DateTime.Now;
-               // existingNeed.Status = need.Status; 
+               // existingNeed.Status = need.Status;
                // <- Bug, no status-field. After changes, status will always be new
                 _db.SaveChanges();
             }
@@ -472,13 +472,6 @@ public class PublicActorController : Controller
             match.Comment = record?.Comment;
         }
  
-        foreach (var match in model.Matches)
-        {
-            var record = records.FirstOrDefault(item => item.ResourceId == match.Resource.Id);
-            match.MatchStatus = record?.Status;
-            match.Comment = record?.Comment;
-        }
-
         return model;
     }
 
