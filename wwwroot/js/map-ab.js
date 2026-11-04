@@ -50,7 +50,7 @@ window.resqAbMap = {
                 const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
                 abButton = L.DomUtil.create('a', 'ab-button', container);
                 abButton.href = '#';
-                abButton.title = 'Mark point A and B';
+                abButton.title = 'Marker punkt A og B';
                 abButton.setAttribute('role', 'button');
                 abButton.innerHTML = '<span aria-hidden="true">A-B</span>';
                 L.DomEvent.disableClickPropagation(container);

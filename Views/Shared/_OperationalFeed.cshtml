@@ -4,64 +4,65 @@
     var needs = (IReadOnlyList<OperationalFeedItem>)(ViewBag.FeedNeeds ?? new List<OperationalFeedItem>());
     var incidents = (IReadOnlyList<OperationalFeedItem>)(ViewBag.FeedIncidents ?? new List<OperationalFeedItem>());
     var feedItems = resources.Concat(needs).Concat(incidents).OrderByDescending(item => item.CreatedAt).ToList();
+    string StatusLabel(string? statusValue) => statusValue switch { "active" => "Aktiv", "new" => "Ny", "under_review" => "Vurderes", "assigned" => "Tildelt", "resolved" => "Løst", "cancelled" => "Kansellert", "rejected" => "Avvist", "available" => "Tilgjengelig", "unavailable" => "Utilgjengelig", "withdrawn" => "Trukket tilbake", _ => statusValue ?? "" };
 }
 
-<aside class="operational-feed" aria-label="Operational feed">
+<aside class="operational-feed" aria-label="Operativ oversikt">
     <div class="operational-feed-header">
-        <p class="section-label">Operational feed</p>
+        <p class="section-label">Operativ oversikt</p>
         <div class="feed-search-row">
-            <label class="visually-hidden" for="feed-search">Search operational feed</label>
+            <label class="visually-hidden" for="feed-search">Søk i operativ oversikt</label>
             <div class="operational-feed-search">
                 <i class="bi bi-search" aria-hidden="true"></i>
                 <input id="feed-search" type="search" class="form-control"
-                       placeholder="Search needs, resources, incidents..." autocomplete="off" />
+                       placeholder="Søk i behov, ressurser, hendelser..." autocomplete="off" />
             </div>
             <button type="button" class="btn btn-outline-secondary feed-filter-toggle"
                     data-feed-filter-toggle aria-expanded="false" aria-controls="feed-filter-controls">
-                <i class="bi bi-sliders me-1" aria-hidden="true"></i>Filter
+                <i class="bi bi-sliders me-1" aria-hidden="true"></i>Filtrer
             </button>
         </div>
         <div id="feed-filter-controls" class="feed-filter-controls">
             <div class="feed-filter-column">
-                <div class="operational-feed-tabs" role="group" aria-label="Filter feed">
+                <div class="operational-feed-tabs" role="group" aria-label="Filtrer oversikt">
                     <button type="button" class="btn btn-primary active" data-feed-type="all">
-                        All (<span>@feedItems.Count</span>)
+                        Alle (<span>@feedItems.Count</span>)
                     </button>
                     <button type="button" class="btn btn-outline-secondary" data-feed-type="need">
-                        Needs (<span>@needs.Count</span>)
+                        Behov (<span>@needs.Count</span>)
                     </button>
                     <button type="button" class="btn btn-outline-secondary" data-feed-type="resource">
-                        Resources (<span>@resources.Count</span>)
+                        Ressurser (<span>@resources.Count</span>)
                     </button>
                     <button type="button" class="btn btn-outline-secondary" data-feed-type="incident">
-                        Incidents (<span>@incidents.Count</span>)
+                        Hendelser (<span>@incidents.Count</span>)
                     </button>
                 </div>
             </div>
             <div class="feed-location-column">
                 <div class="operational-feed-radius">
                     <label for="feed-radius">Radius</label>
-                    <output id="feed-radius-value" for="feed-radius">All distances</output>
+                    <output id="feed-radius-value" for="feed-radius">Alle avstander</output>
                     <input id="feed-radius" type="range" class="form-range" min="0" max="100" step="5" value="0" />
                 </div>
                 <div class="feed-location-actions">
                     <button type="button" class="btn btn-outline-secondary btn-sm" data-feed-current-location
-                            aria-label="Show current location">
-                            <i class="bi bi-crosshair me-1" aria-hidden="true"></i>Current location
+                            aria-label="Vis nåværende posisjon">
+                            <i class="bi bi-crosshair me-1" aria-hidden="true"></i>Nåværende posisjon
                     </button>
                     <button type="button" class="btn btn-outline-secondary btn-sm" data-feed-reset-location
-                            aria-label="Reset filters and return to current location">
-                            <i class="bi bi-arrow-counterclockwise me-1" aria-hidden="true"></i>Reset filters
+                            aria-label="Nullstill filtre og gå tilbake til nåværende posisjon">
+                            <i class="bi bi-arrow-counterclockwise me-1" aria-hidden="true"></i>Nullstill filtre
                     </button>
                 </div>
             </div>
         </div>
         <p id="feed-location-status" class="feed-status" role="status">
-            Showing all registered items. Allow location to sort by distance.
+            Viser alle registrerte elementer. Tillat posisjon for å sortere etter avstand.
         </p>
         <button type="button" class="btn btn-outline-secondary feed-results-toggle"
                 data-feed-results-toggle aria-expanded="false" aria-controls="operational-feed-list">
-            <span data-feed-results-label>Show results</span>
+            <span data-feed-results-label>Vis resultater</span>
             <i class="bi bi-chevron-up ms-1" aria-hidden="true"></i>
         </button>
     </div>
@@ -75,16 +76,16 @@
                      data-feed-status="@item.Status"
                      data-feed-created-at="@item.CreatedAt.ToString("dd.MM.yyyy HH:mm")"
                      data-feed-title="@item.Title" role="button" tabindex="0"
-                     aria-label="Show @item.Title on map">
+                     aria-label="Vis @item.Title på kartet">
                 <div class="feed-card-heading">
                     <span class="feed-color-badge feed-color-badge--@item.ColorKey">
                         @(item.Priority switch
                         {
-                            "Critical" => "Critical need",
-                            "Planned" => "Planned need",
-                            _ when item.Type == "resource" => "Available resource",
-                            _ when item.Type == "incident" => "Incident",
-                            _ => "Public team"
+                            "Critical" => "Akutt behov",
+                            "Planned" => "Planlagt behov",
+                            _ when item.Type == "resource" => "Tilgjengelig ressurs",
+                            _ when item.Type == "incident" => "Hendelse",
+                            _ => "Offentlig aktør"
                         })
                     </span>
                     <time datetime="@item.CreatedAt.ToString("O")">@item.CreatedAt.ToString("dd.MM.yyyy HH:mm")</time>
@@ -97,28 +98,28 @@
                 <dl>
                     @if (!string.IsNullOrWhiteSpace(item.Category))
                     {
-                        <div><dt>Category</dt><dd>@item.Category</dd></div>
+                        <div><dt>Kategori</dt><dd>@item.Category</dd></div>
                     }
                     @if (!string.IsNullOrWhiteSpace(item.Status))
                     {
-                        <div><dt>Status</dt><dd>@item.Status</dd></div>
+                        <div><dt>Status</dt><dd>@StatusLabel(item.Status)</dd></div>
                     }
-                    <div><dt>Location</dt><dd>@item.Latitude.ToString("F4"), @item.Longitude.ToString("F4")</dd></div>
+                    <div><dt>Sted</dt><dd>@item.Latitude.ToString("F4"), @item.Longitude.ToString("F4")</dd></div>
                 </dl>
                 <div class="feed-card-actions">
                     @if (item.Type == "need")
                     {
-                        <a asp-controller="PublicActor" asp-action="Matches" asp-route-needId="@item.Id" class="btn btn-primary btn-sm">Match resource</a>
+                        <a asp-controller="PublicActor" asp-action="Matches" asp-route-needId="@item.Id" class="btn btn-primary btn-sm">Match ressurs</a>
                     }
                 </div>
             </article>
         }
-        <p class="placeholder-copy feed-empty" hidden>No items match the current filters.</p>
+        <p class="placeholder-copy feed-empty" hidden>Ingen elementer samsvarer med filtrene.</p>
     </div>
     <div class="feed-export-actions">
         <button type="button" class="btn btn-outline-secondary btn-sm" data-feed-export-toggle
                 aria-expanded="false" aria-controls="feed-export-options">
-            <i class="bi bi-download me-1" aria-hidden="true"></i>Export resources
+            <i class="bi bi-download me-1" aria-hidden="true"></i>Eksporter ressurser
         </button>
         <div id="feed-export-options" class="feed-export-options" hidden>
             <button type="button" class="btn btn-outline-secondary btn-sm" data-feed-export="csv">
@@ -128,7 +129,7 @@
                 <i class="bi bi-filetype-json me-1" aria-hidden="true"></i>JSON
             </button>
             <button type="button" class="btn btn-outline-secondary btn-sm" data-feed-export-back>
-                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Back
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Tilbake
             </button>
         </div>
     </div>

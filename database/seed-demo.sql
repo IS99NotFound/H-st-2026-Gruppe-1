@@ -27,46 +27,46 @@ INSERT INTO CivilianProvider (ProviderID, ProviderType) VALUES
     (4, 'private_person');
 
 INSERT INTO Incident (IncidentID, PublicActorID, Title, NormalizedTitle, IncidentType, Description, Latitude, Longitude) VALUES
-    (1, 1, 'Storm in Agder',            'storm in agder',            'Storm',        'Fallen trees and blocked roads',          58.146700, 7.995600),
-    (2, 1, 'Flooding in Rogaland',      'flooding in rogaland',      'Flood',        'Flooding rivers',                 58.970000, 5.733100),
-    (3, 1, 'Power outage in Trøndelag', 'power outage in trøndelag', 'Power outage', 'Large power outage after heavy snowfall', 63.430500, 10.395100);
+    (1, 1, 'Storm i Agder',              'storm i agder',              'Storm',        'Veltede trær og stengte veier',          58.146700, 7.995600),
+    (2, 1, 'Flom i Rogaland',           'flom i rogaland',            'Flood',        'Elver som flommer over',                 58.970000, 5.733100),
+    (3, 1, 'Strømbrudd i Trøndelag',    'strømbrudd i trøndelag',     'Power outage', 'Stort strømbrudd etter kraftig snøfall', 63.430500, 10.395100);
 
 INSERT INTO ResourceNeed
     (NeedID, IncidentID, PublicActorID, CategoryID, Title, Description, Quantity,
      SearchRadiusKm, Priority, Status, Email, PhoneNumber, LocationName, Latitude, Longitude) VALUES
-    (1, 1, 1, 6, 'Wheel loader for clearing roads',
-     'A wheel loader is needed to clear fallen trees and blocked access roads.', 1,
+    (1, 1, 1, 6, 'Hjullaster til rydding av veier',
+     'Det trengs en hjullaster for å rydde veltede trær og stengte adkomstveier.', 1,
      50, 'critical', 'new', 'hv07@demo.local', '+47 37 00 07 07',
      'Grimstad', 58.340500, 8.593400),
-    (2, 1, 1, 3, 'Emergency generator',
-     'A generator is needed to keep the temporary command post and charging station running.', 1,
+    (2, 1, 1, 3, 'Nødstrømsaggregat',
+     'Det trengs et aggregat for å holde den midlertidige kommandoplassen og ladestasjonen i drift.', 1,
      50, 'critical', 'new', 'hv07@demo.local', '+47 37 00 07 07',
      'Grimstad', 58.340500, 8.593400),
-    (3, 1, 1, 9, 'Extra crew for cleanup',
-     'Volunteers or experienced personnel are needed for safe cleanup and distribution of supplies.', 4,
+    (3, 1, 1, 9, 'Ekstra mannskap til opprydding',
+     'Det trengs frivillige eller erfarent personell for trygg opprydding og utdeling av forsyninger.', 4,
      50, 'planned', 'new', 'hv07@demo.local', '+47 37 00 07 07',
      'Kristiansand', 58.159900, 8.018200),
-    (4, 1, 1, 1, 'Transport vehicle',
-     'A vehicle is needed to move equipment and supplies between local response points.', 1,
+    (4, 1, 1, 1, 'Transportkjøretøy',
+     'Det trengs et kjøretøy for å flytte utstyr og forsyninger mellom lokale innsatspunkter.', 1,
      50, 'planned', 'new', 'hv07@demo.local', '+47 37 00 07 07',
      'Kristiansand', 58.159900, 8.018200);
 
 INSERT INTO Resource
     (ResourceID, ProviderID, CategoryID, RegionID, Name, Description, Quantity,
      AvailableFrom, Status, Email, PhoneNumber, LocationName, Latitude, Longitude) VALUES
-    (1, 2, 6, 8, 'Wheel loader with operator',
-     'Medium wheel loader suitable for clearing roads and moving fallen timber.', 1,
+    (1, 2, 6, 8, 'Hjullaster med fører',
+     'Mellomstor hjullaster egnet til å rydde veier og flytte veltet tømmer.', 1,
      '2026-11-02 08:00:00', 'available', 'person1@demo.local', '+47 900 10 101',
      'Kristiansand', 58.159900, 8.018200),
-    (2, 2, 3, 8, 'Mobile emergency generator',
-     'Diesel generator for temporary power supply, including cables and basic distribution equipment.', 1,
+    (2, 2, 3, 8, 'Mobilt nødstrømsaggregat',
+     'Dieselaggregat for midlertidig strømforsyning, inkludert kabler og enkelt fordelingsutstyr.', 1,
      '2026-11-02 08:00:00', 'available', 'person1@demo.local', '+47 900 10 101',
      'Lillesand', 58.248800, 8.377800),
-    (3, 4, 9, 8, 'Cleanup crew',
-     'A small trained crew available for debris removal, logistics and supply distribution.', 4,
+    (3, 4, 9, 8, 'Oppryddingsmannskap',
+     'Et lite, opplært mannskap som kan fjerne rusk, ta logistikkoppgaver og dele ut forsyninger.', 4,
      '2026-11-02 09:00:00', 'available', 'person2@demo.local', '+47 900 10 102',
      'Grimstad', 58.340500, 8.593400),
-    (4, 4, 1, 8, 'Four-wheel-drive transport vehicle',
-     'Four-wheel-drive vehicle with trailer for transporting equipment and emergency supplies.', 1,
+    (4, 4, 1, 8, 'Firehjulstrukket transportkjøretøy',
+     'Firehjulstrukket kjøretøy med tilhenger for transport av utstyr og nødforsyninger.', 1,
      '2026-11-02 09:00:00', 'available', 'person2@demo.local', '+47 900 10 102',
      'Arendal', 58.461500, 8.772500);

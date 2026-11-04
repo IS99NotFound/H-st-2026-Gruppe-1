@@ -276,19 +276,19 @@ CREATE INDEX idx_ResourceNeed_Position ON ResourceNeed (Latitude, Longitude);
 
 -- Categories from the case description
 INSERT INTO Category (CategoryName, Description) VALUES
-    ('Transport',          'Vehicles and transport of people or equipment'),
-    ('Drone observation',  'Drones and drone operators'),
-    ('Power / generator',  'Generators and emergency power'),
-    ('Snow clearing',      'Plowing and snow clearing'),
-    ('Sand / gravel',      'Sand, gravel and other materials'),
-    ('Heavy machinery',    'Excavator, tractor, wheel loader, forestry machine'),
-    ('Evacuation',         'Evacuation and temporary accommodation'),
-    ('Communications',     'Communication equipment'),
-    ('Crew / personnel',   'Crew and volunteers'),
-    ('Premises',           'Premises for accommodation, meeting or storage'),
-    ('Boat',               'Boats and sea transport'),
-    ('Fuel',               'Fuel for vehicles and generators'),
-    ('Other',              'Anything that does not fit the other categories');
+    ('Transport',          'Kjøretøy og transport av personer eller utstyr'),
+    ('Droneobservasjon',  'Droner og dronepiloter'),
+    ('Strøm/aggregat',  'Aggregater og nødstrøm'),
+    ('Snørydding',      'Brøyting og snørydding'),
+    ('Sand/grus',      'Sand, grus og andre masser'),
+    ('Maskiner',    'Gravemaskin, traktor, hjullaster, skogsmaskin'),
+    ('Evakuering',         'Evakuering og midlertidig innkvartering'),
+    ('Samband',     'Kommunikasjonsutstyr'),
+    ('Mannskap',   'Mannskap og frivillige'),
+    ('Lokaler',           'Lokaler til overnatting, møter eller lagring'),
+    ('Båt',               'Båter og sjøtransport'),
+    ('Drivstoff',               'Drivstoff til kjøretøy og aggregater'),
+    ('Annet',              'Alt som ikke passer i de andre kategoriene');
 
 -- Regions (counties)
 INSERT INTO Region (RegionName) VALUES

@@ -3,14 +3,14 @@ window.resqMapRegistration = {
         return function showRegistrationChoices(latlng) {
             const content = L.DomUtil.create('div', 'map-register-popup');
             const heading = L.DomUtil.create('strong', 'map-register-popup-heading', content);
-            heading.textContent = 'GPS fix';
+            heading.textContent = 'GPS-posisjon';
 
             const coordinates = L.DomUtil.create('span', 'map-register-popup-coordinates', content);
             coordinates.textContent = `${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}`;
 
             const actions = [
-                { type: 'need', label: 'Register need here', icon: 'bi-clipboard-plus' },
-                { type: 'resource', label: 'Deploy resource here', icon: 'bi-box-seam' }
+                { type: 'need', label: 'Registrer behov her', icon: 'bi-clipboard-plus' },
+                { type: 'resource', label: 'Registrer ressurs her', icon: 'bi-box-seam' }
             ];
 
             for (const action of actions) {
@@ -77,13 +77,13 @@ window.resqMapRegistration = {
                 selectedMarker = null;
                 latInput.value = '';
                 lngInput.value = '';
-                positionText.textContent = 'No position selected.';
+                positionText.textContent = 'Ingen posisjon valgt.';
             });
 
             latInput.value = lat;
             lngInput.value = lng;
             positionText.textContent =
-                'Selected position: lat: ' + lat.toFixed(5) + ', lng: ' + lng.toFixed(5);
+                'Valgt posisjon: bredde: ' + lat.toFixed(5) + ', lengde: ' + lng.toFixed(5);
             positionError.textContent = '';
         };
     }

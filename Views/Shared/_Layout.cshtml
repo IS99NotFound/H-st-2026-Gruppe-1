@@ -5,7 +5,7 @@
 
 
 <!DOCTYPE html>
-<html lang="en" data-theme="dark" data-bs-theme="dark">
+<html lang="nb" data-theme="dark" data-bs-theme="dark">
 
 @{
     var action = ViewContext.RouteData.Values["action"]?.ToString();
@@ -13,7 +13,7 @@
     var isAuthenticated = User.Identity?.IsAuthenticated == true;
     var isAuthPage = controller == "Auth" || controller == "Register";
     var isPublicActor = User.IsInRole("PublicActor");
-    var userName = User.Identity?.Name ?? "User";
+    var userName = User.Identity?.Name ?? "Bruker";
     var organizationName = string.Empty;
 
     if (isAuthenticated && isPublicActor &&
@@ -67,7 +67,7 @@
         <a asp-controller="PublicActor" asp-action="DashboardIndex"
            class="topbar-link @(controller == "PublicActor" && action == "DashboardIndex" ? "active" : "")">
             <i class="bi bi-map topbar-link-icon" aria-hidden="true"></i>
-            <span>Map</span>
+            <span>Kart</span>
         </a>
     }
     else
@@ -75,21 +75,21 @@
         <a asp-controller="Home" asp-action="Index"
            class="topbar-link @(controller == "Home" ? "active" : "")">
             <i class="bi bi-map topbar-link-icon" aria-hidden="true"></i>
-            <span>Map</span>
+            <span>Kart</span>
         </a>
     }
 
     <a asp-controller="Incidents" asp-action="Index"
        class="topbar-link @(controller == "Incidents" ? "active" : "")">
         <i class="bi bi-exclamation-triangle topbar-link-icon" aria-hidden="true"></i>
-        <span>Incidents</span>
+        <span>Hendelser</span>
     </a>
 
     @if (isPublicActor)
     {
         <a asp-controller="PublicActor" asp-action="NeedsIndex"
            class="topbar-link @(controller == "PublicActor" && action == "NeedsIndex" ? "active" : "")">            <i class="bi bi-clipboard-check topbar-link-icon" aria-hidden="true"></i>
-            <span>Needs</span>
+            <span>Behov</span>
         </a>
         
         <a asp-controller="PublicActor" asp-action="MatchesIndex"
@@ -103,7 +103,7 @@
         <a asp-controller="Resources" asp-action="Index"
            class="topbar-link @(controller == "Resources" ? "active" : "")">
             <i class="bi bi-box-seam topbar-link-icon" aria-hidden="true"></i>
-            <span>Resources</span>
+            <span>Ressurser</span>
         </a>
     }
     
@@ -111,14 +111,14 @@
     <a asp-controller="Reports" asp-action="Index"
        class="topbar-link @(controller == "Reports" ? "active" : "")">
         <i class="bi bi-bar-chart-line topbar-link-icon" aria-hidden="true"></i>
-        <span>Reports</span>
+        <span>Rapporter</span>
     </a>
 </nav>
 
         <!-- Top, right corner, User account  -->
         <div class="topbar-user-controls dropdown">
             <button type="button" class="user-menu-button" data-bs-toggle="dropdown"
-                    aria-expanded="false" aria-label="Open user menu">
+                    aria-expanded="false" aria-label="Åpne brukermeny">
                 <span class="user-avatar" aria-hidden="true">
                     <i class="bi bi-person-fill"></i>
                 </span>
@@ -140,19 +140,19 @@
 
                 <a class="dropdown-item user-menu-item" href="#">
                     <i class="bi bi-person-circle" aria-hidden="true"></i>
-                    <span>My profile</span>
+                    <span>Min profil</span>
                 </a>
                 <button type="button" class="dropdown-item user-menu-item" id="theme-toggle"
                         aria-pressed="false">
                     <i class="bi bi-sun" aria-hidden="true"></i>
-                    <span id="theme-toggle-label">Light mode</span>
+                    <span id="theme-toggle-label">Lys modus</span>
                 </button>
                 <div class="dropdown-divider"></div>
 
                 <form asp-controller="Auth" asp-action="Logout" method="post">
                     <button type="submit" class="dropdown-item user-menu-item logout-item">
                         <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
-                        <span>Log out</span>
+                        <span>Logg ut</span>
                     </button>
                 </form>
             </div>
