@@ -1,0 +1,497 @@
+/* Felles farger og styling for kart, kartlag og kartkontroller. */
+:root {
+    --map-overlay: rgb(15 17 21 / 85%);
+    --map-critical-need: #ef4444;
+    --map-planned-need: #f59e0b;
+    --map-available-resource: #22c55e;
+    --map-public-team: #3b82f6;
+}
+
+[data-theme="light"] {
+    --map-overlay: rgb(255 255 255 / 90%);
+    --map-critical-need: #dc2626;
+    --map-planned-need: #d97706;
+    --map-available-resource: #16a34a;
+    --map-public-team: #2563eb;
+}
+
+.map-area {
+    flex: 2;
+    position: relative;
+}
+
+.map-overlay-control {
+    border: 1px solid var(--border);
+    background-color: var(--map-overlay);
+    color: var(--feed-text);
+    box-shadow: 0 2px 8px rgb(0 0 0 / 25%);
+}
+
+.map-color-legend {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    z-index: 500;
+    width: 200px;
+    min-width: 0;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--map-overlay);
+    color: var(--text);
+    box-shadow: 0 2px 8px rgb(0 0 0 / 25%);
+    font-size: 0.72rem;
+}
+
+.map-color-legend-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    font-size: inherit;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-align: left;
+}
+
+.map-color-legend-toggle i {
+    margin-left: 12px;
+}
+
+.map-color-legend-content {
+    display: grid;
+    gap: 5px;
+    margin-top: 7px;
+}
+
+.map-color-legend-content.is-collapsed {
+    display: none;
+}
+
+.map-color-legend-item,
+.feed-color-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.map-color-dot {
+    display: inline-block;
+    flex: 0 0 8px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--map-public-team);
+}
+
+.map-color-dot--critical-need,
+.resq-map-marker--critical-need {
+    background-color: var(--map-critical-need);
+}
+
+.map-color-dot--planned-need,
+.resq-map-marker--planned-need {
+    background-color: var(--map-planned-need);
+}
+
+.map-color-dot--available-resource,
+.resq-map-marker--available-resource {
+    background-color: var(--map-available-resource);
+}
+
+.map-color-dot--public-team,
+.resq-map-marker--public-team {
+    background-color: var(--map-public-team);
+}
+
+.feed-color-badge {
+    padding: 2px 6px;
+    border: 1px solid currentColor;
+    border-radius: 999px;
+    color: var(--text-muted);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.feed-color-badge--critical-need { color: var(--map-critical-need); }
+.feed-color-badge--planned-need { color: var(--map-planned-need); }
+.feed-color-badge--available-resource { color: var(--map-available-resource); }
+.feed-color-badge--public-team { color: var(--map-public-team); }
+
+.resq-map-marker-icon {
+    border: 0;
+    background: transparent;
+}
+
+.resq-map-marker {
+    display: block;
+    width: 18px;
+    height: 18px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    box-shadow: 0 1px 5px rgb(0 0 0 / 45%);
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+}
+
+/*
+ * Leaflet setter egne bakgrunns- og tekstfarger på kontrollene sine.
+ * Disse reglene samler kartkontrollene med prosjektets tema og gjennomsiktige overlay.
+ * !important trengs fordi Leaflets standardregler er mer spesifikke og ellers vinner.
+ */
+.map-overlay-control,
+.map-overlay-control a,
+.map-overlay-control .leaflet-control-layers-toggle {
+    background-color: var(--map-overlay) !important;
+    color: var(--feed-text) !important;
+}
+
+.map-overlay-control a:hover,
+.map-overlay-control .leaflet-control-layers-toggle:hover {
+    background-color: var(--map-overlay) !important;
+    color: var(--feed-text) !important;
+}
+
+/* Overstyrer Leaflets standardramme, slik at alle kartkontroller følger temaet. */
+.map-overlay-control.leaflet-control-zoom,
+.map-overlay-control.leaflet-bar,
+.map-overlay-control.layers-menu-control {
+    border-color: var(--border) !important;
+}
+
+/* A-B-knappen ligger inne i en Leaflet-bar og trenger samme ramme som zoomknappene. */
+.map-overlay-control.leaflet-control-zoom a,
+.map-overlay-control .ab-button {
+    border-color: var(--border) !important;
+}
+
+/*
+ * Leaflet setter samme bakgrunn på hover og kan overstyre aktiv knapp.
+ * Den aktive A-B-knappen skal derfor eksplisitt være blå når punktplassering er aktiv.
+ */
+.map-overlay-control .ab-button.is-active,
+.map-overlay-control .ab-button.is-active:hover {
+    border-color: var(--accent) !important;
+    background-color: var(--accent) !important;
+    color: #fff !important;
+}
+
+/* Leaflets utvidede layers-panel får samme skygge som de øvrige kartkontrollene. */
+.map-overlay-control.layers-menu-control.leaflet-control-layers-expanded {
+    box-shadow: 0 1px 5px rgb(0 0 0 / 40%);
+}
+
+/*
+ * Leaflet bruker et innebygd ikon for Layers-knappen. Det byttes her for å sikre
+ * hvitt ikon i darkmode; !important trengs for å overstyre Leaflets bakgrunnsbilde.
+ */
+html:not([data-theme="light"]) .layers-menu-control .leaflet-control-layers-toggle {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='white' d='m12 3 9 5-9 5-9-5 9-5Zm-7.5 8.6L12 15.8l7.5-4.2L21 13l-9 5-9-5 1.5-1.4Zm0 4L12 19.8l7.5-4.2L21 17l-9 5-9-5 1.5-1.4Z'/%3E%3C/svg%3E") !important;
+}
+
+/*
+ * Leaflet bruker hvit bakgrunn på kontrollene som standard. Disse reglene gjør
+ * zoom og Layers kompatible med darkmode/lightmode; !important sikrer at temaet
+ * ikke blir overstyrt av Leaflets .leaflet-bar- og touch-regler.
+ */
+html:not([data-theme="light"]) .leaflet-control-zoom a,
+html:not([data-theme="light"]) .layers-menu-control .leaflet-control-layers-toggle,
+html:not([data-theme="light"]) .layers-menu-control.leaflet-control-layers-expanded {
+    background-color: var(--map-overlay) !important;
+    color: #fff !important;
+}
+
+html[data-theme="light"] .leaflet-control-zoom a,
+html[data-theme="light"] .layers-menu-control .leaflet-control-layers-toggle,
+html[data-theme="light"] .layers-menu-control.leaflet-control-layers-expanded {
+    background-color: var(--map-overlay) !important;
+    color: #000 !important;
+}
+
+/* Leaflet gjør Layers-knappen større enn zoomknappene på enkelte enheter. */
+.layers-menu-control .leaflet-control-layers-toggle {
+    width: 30px !important;
+    height: 30px !important;
+    background-size: 22px 22px !important;
+}
+
+/* Beholder en litt større trykkflate på berøringsskjermer. */
+@media (pointer: coarse) {
+    .leaflet-touch .layers-menu-control .leaflet-control-layers-toggle {
+        width: 34px !important;
+        height: 34px !important;
+        background-size: 22px 22px !important;
+    }
+}
+
+/* Leaflet legger normalt 10px mellom kontrollene; her ønskes 5px. */
+#map .leaflet-top .leaflet-control + .leaflet-control {
+    margin-top: 5px;
+}
+
+.map-filtering {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    left: auto;
+    z-index: 1000;
+    width: min(200px, calc(100% - 70px));
+    min-width: 0;
+    max-height: 70%;
+    overflow-y: auto;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--map-overlay);
+    color: var(--text);
+    box-shadow: 0 4px 14px rgb(0 0 0 / 25%);
+    box-sizing: border-box;
+    font-size: 0.72rem;
+    transition: width 0.2s ease, padding 0.2s ease;
+}
+
+.map-filter-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.map-filter-title {
+    flex: 1;
+    margin: 0;
+    font-size: inherit;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-align: left;
+}
+
+.map-filter-header > strong {
+    margin: 0;
+}
+
+.map-filter-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+}
+
+.map-filter-header .map-filter-button {
+    order: 2;
+}
+
+.map-filtering.is-collapsed {
+    width: 34px;
+    padding: 4px;
+    overflow: hidden;
+}
+
+.map-filtering.is-collapsed .map-filter-title,
+.map-filtering.is-collapsed #survival-filter-content {
+    display: none;
+}
+
+.map-filtering.is-collapsed .map-filter-header {
+    justify-content: center;
+    margin-bottom: 0;
+}
+
+.map-filter-button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.map-filter-options {
+    display: grid;
+    gap: 8px;
+    justify-items: start;
+}
+
+.map-filter-options label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    line-height: 1.2;
+}
+
+.map-filter-options input {
+    accent-color: var(--accent);
+    margin: 0;
+}
+
+#survival-filter-status,
+#registered-resources-status {
+    margin: 10px 0 0;
+    font-size: inherit;
+    color: var(--text-muted);
+}
+
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+    border-radius: 10px;
+    background-color: var(--bg-hover) !important;
+    color: var(--text) !important;
+}
+
+.leaflet-popup-close-button {
+    color: var(--text) !important;
+}
+
+.leaflet-popup-content {
+    margin: 14px 16px;
+}
+
+.map-register-popup {
+    display: grid;
+    gap: 8px;
+    min-width: 220px;
+}
+
+.map-register-popup-heading {
+    font-size: 1rem;
+    line-height: 1.3;
+}
+
+.map-register-popup-coordinates {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+.map-register-action {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    width: 100%;
+    color: #fff !important;
+    text-decoration: none;
+    text-align: left;
+}
+
+.incident-map-panel {
+    min-width: 0;
+}
+
+.incident-map {
+    width: 100%;
+    min-height: 180px;
+    height: 180px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.map-status {
+    margin: 8px 0 0;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+/* A-B-linje og kartmarkører. */
+.ab-button {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.ab-button svg {
+    width: 18px;
+    height: 18px;
+}
+
+.ab-marker {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #fff;
+    border-radius: 50% 50% 50% 0;
+    background-color: #fff;
+    box-shadow: 0 2px 6px rgb(0 0 0 / 50%);
+    transform: rotate(-45deg);
+}
+
+.ab-marker span {
+    color: #000;
+    font-size: 14px;
+    font-weight: 700;
+    transform: rotate(45deg);
+}
+
+.ab-distance-label {
+    display: block;
+    width: max-content;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+
+.ab-distance-label span {
+    display: block;
+    padding: 3px 7px;
+    border: 1px solid rgb(255 255 255 / 35%);
+    border-radius: 6px;
+    background-color: rgb(15 17 21 / 85%);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+#map.placing {
+    cursor: crosshair;
+}
+
+@media (max-width: 991px) {
+    .registration-modal-page .map-area,
+    .map-area {
+        height: 100%;
+    }
+
+    .map-color-legend {
+        top: auto;
+        right: 12px;
+        bottom: 88px;
+        left: auto;
+        z-index: 1200;
+        max-width: calc(100% - 24px);
+    }
+
+    .map-status {
+        position: absolute;
+        right: 12px;
+        bottom: 12px;
+        z-index: 1001;
+        display: block;
+        max-width: min(80vw, 420px);
+        margin: 0;
+        padding: 8px 10px;
+        border-radius: 6px;
+        background-color: var(--map-overlay);
+        color: var(--text);
+        font-size: 0.8rem;
+    }
+}

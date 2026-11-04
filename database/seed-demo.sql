@@ -28,8 +28,8 @@ INSERT INTO CivilianProvider (ProviderID, ProviderType) VALUES
 
 INSERT INTO Incident (IncidentID, PublicActorID, Title, NormalizedTitle, IncidentType, Description, Latitude, Longitude) VALUES
     (1, 1, 'Storm i Agder',              'storm i agder',              'Storm',        'Veltede trær og stengte veier',          58.146700, 7.995600),
-    (2, 1, 'Flom i Rogaland',           'flom i rogaland',            'Flood',        'Elver som flommer over',                 58.970000, 5.733100),
-    (3, 1, 'Strømbrudd i Trøndelag',    'strømbrudd i trøndelag',     'Power outage', 'Stort strømbrudd etter kraftig snøfall', 63.430500, 10.395100);
+    (2, 1, 'Flom i Rogaland',           'flom i rogaland',            'Flom',         'Elver som flommer over',                 58.970000, 5.733100),
+    (3, 1, 'Strømbrudd i Trøndelag',    'strømbrudd i trøndelag',     'Strømbrudd',   'Stort strømbrudd etter kraftig snøfall', 63.430500, 10.395100);
 
 INSERT INTO ResourceNeed
     (NeedID, IncidentID, PublicActorID, CategoryID, Title, Description, Quantity,

@@ -62,7 +62,7 @@ public class SecurityHeadersMiddleware
             "form-action 'self'",
             $"script-src 'self' https://unpkg.com/leaflet@1.9.4/dist/leaflet.js 'nonce-{nonce}'",
             "style-src 'self' https://unpkg.com https://cdn.jsdelivr.net",
-            "img-src 'self' data: https://unpkg.com https://tile.openstreetmap.org https://*.tile.openstreetmap.org",
+            "img-src 'self' data: https://unpkg.com https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://cache.kartverket.no https://server.arcgisonline.com",
             "font-src 'self' data: https://cdn.jsdelivr.net",
             connectSource
         });
