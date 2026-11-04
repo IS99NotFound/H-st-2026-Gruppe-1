@@ -22,6 +22,14 @@ builder.Services.AddControllersWithViews(options =>
 {
     options.Filters.Add(new AuthorizeFilter());
     options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
+
+    // Norwegian texts for model binding errors (e.g. letters in a number field)
+    options.ModelBindingMessageProvider.SetValueMustBeANumberAccessor(_ => "Oppgi et gyldig tall.");
+    options.ModelBindingMessageProvider.SetAttemptedValueIsInvalidAccessor((value, _) => $"Verdien '{value}' er ugyldig.");
+    options.ModelBindingMessageProvider.SetValueIsInvalidAccessor(value => $"Verdien '{value}' er ugyldig.");
+    options.ModelBindingMessageProvider.SetUnknownValueIsInvalidAccessor(_ => "Verdien er ugyldig.");
+    options.ModelBindingMessageProvider.SetValueMustNotBeNullAccessor(_ => "Dette feltet er påkrevd.");
+    options.ModelBindingMessageProvider.SetMissingBindRequiredValueAccessor(_ => "Dette feltet er påkrevd.");
 });
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>

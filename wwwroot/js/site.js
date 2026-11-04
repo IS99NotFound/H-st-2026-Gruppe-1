@@ -65,7 +65,7 @@ window.resqRegistration = {
             const errorElement = document.getElementById("posError");
             if (!navigator.geolocation) {
                 if (errorElement) {
-                    errorElement.textContent = "Current location is not available in this browser.";
+                    errorElement.textContent = "Nåværende posisjon er ikke tilgjengelig i denne nettleseren.";
                 }
                 return;
             }
@@ -79,7 +79,7 @@ window.resqRegistration = {
                 button.disabled = false;
             }, () => {
                 if (errorElement) {
-                    errorElement.textContent = "Could not get the current location.";
+                    errorElement.textContent = "Kunne ikke hente posisjonen din.";
                 }
                 button.disabled = false;
             });
@@ -88,7 +88,7 @@ window.resqRegistration = {
 };
 
 window.resqDateRange = {
-    message: "End date cannot be before start date.",
+    message: "Sluttdato kan ikke være før startdato.",
 
     validate(startInput, endInput, endDateInput, errorElement) {
         const invalidRange = Boolean(startInput?.value && endInput?.value &&
@@ -126,7 +126,7 @@ window.resqDateRange = {
 
 window.resqRadius = {
     format(value) {
-        return Number(value) === 0 ? "All distances" : `${value} km`;
+        return Number(value) === 0 ? "Alle avstander" : `${value} km`;
     },
 
     initialize(sliderId, valueId) {
@@ -248,7 +248,7 @@ if (themeToggle) {
         const isDark = root.dataset.theme === "dark";
 
         themeToggle.setAttribute("aria-pressed", String(isDark));
-        themeToggleLabel.textContent = isDark ? "Light mode" : "Dark mode";
+        themeToggleLabel.textContent = isDark ? "Lys modus" : "Mørk modus";
         themeToggleIcon.className = isDark ? "bi bi-sun" : "bi bi-moon";
     };
 
@@ -294,7 +294,7 @@ if (demoCodeDialog) {
             await navigator.clipboard.writeText(code);
             demoCodeDialog.remove();
         } catch {
-            if (copyStatus) copyStatus.textContent = "Could not copy the code.";
+            if (copyStatus) copyStatus.textContent = "Kunne ikke kopiere koden.";
         }
     });
 }

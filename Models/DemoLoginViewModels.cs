@@ -3,10 +3,10 @@ namespace H_st_2026_Gruppe_1.Models;
 
 public class LoginViewModel
 {
-    [Required(ErrorMessage = "Username is required.")]
+    [Required(ErrorMessage = "Brukernavn er påkrevd.")]
     public string UserName { get; set; } = "";
     
-    [Required(ErrorMessage = "Password is required.")]
+    [Required(ErrorMessage = "Passord er påkrevd.")]
     [DataType(DataType.Password)]
     public string Password { get; set; } = "";
 }
@@ -16,8 +16,8 @@ public class TwoFactorViewModel
     [Required]
     public string PendingId { get; set; } = "";
     
-    [Required(ErrorMessage = "Code is required.")]
-    [RegularExpression(@"^\d{6}$", ErrorMessage = "The code must contain 6 digits.")]
+    [Required(ErrorMessage = "Kode er påkrevd.")]
+    [RegularExpression(@"^\d{6}$", ErrorMessage = "Koden må inneholde 6 siffer.")]
     public string Code { get; set; } = "";
     
     // skrevet midlertidig byttes ut med sms/mail 

@@ -1,7 +1,8 @@
 @model H_st_2026_Gruppe_1.Models.ResourceDashboard
 
 @{
-    ViewData["Title"] = "Resources";
+    ViewData["Title"] = "Ressurser";
+    string StatusLabel(string? statusValue) => statusValue switch { "active" => "Aktiv", "new" => "Ny", "under_review" => "Vurderes", "assigned" => "Tildelt", "resolved" => "Løst", "cancelled" => "Kansellert", "rejected" => "Avvist", "available" => "Tilgjengelig", "unavailable" => "Utilgjengelig", "withdrawn" => "Trukket tilbake", _ => statusValue ?? "" };
     var categories = ViewBag.Categories as List<H_st_2026_Gruppe_1.Models.Category> ?? new();
     var statuses = Model.Resources
         .Select(resource => resource.Status)
@@ -13,31 +14,31 @@
 
 <section class="subpage">
     <div class="subpage-header">
-        <h1>Resources</h1>
+        <h1>Ressurser</h1>
     </div>
 
     <form id="resourceFilterForm" method="get" asp-controller="Resources" asp-action="Index" class="dashboard-filter-bar">
         <div class="dashboard-filter-field">
-            <label for="resourceSearch" class="form-label text-muted small fw-bold">Search</label>
+            <label for="resourceSearch" class="form-label text-muted small fw-bold">Søk</label>
             <input type="search" name="search" id="resourceSearch" class="form-control"
-                   value="@Model.Search" placeholder="Search resource name" />
+                   value="@Model.Search" placeholder="Søk etter ressursnavn" />
         </div>
 
         <div class="dashboard-filter-field">
-            <label for="resourceStatusFilter" class="form-label text-muted small fw-bold">Filter by status</label>
+            <label for="resourceStatusFilter" class="form-label text-muted small fw-bold">Filtrer på status</label>
             <select name="status" id="resourceStatusFilter" class="form-select">
-                <option value="">All</option>
+                <option value="">Alle</option>
                 @foreach (var status in statuses)
                 {
-                    <option value="@status" selected="@(Model.Status == status)">@status</option>
+                    <option value="@status" selected="@(Model.Status == status)">@StatusLabel(status)</option>
                 }
             </select>
         </div>
 
         <div class="dashboard-filter-field">
-            <label for="resourceTypeFilter" class="form-label text-muted small fw-bold">Filter by type</label>
+            <label for="resourceTypeFilter" class="form-label text-muted small fw-bold">Filtrer på type</label>
             <select name="resourceType" id="resourceTypeFilter" class="form-select">
-                <option value="">All</option>
+                <option value="">Alle</option>
                 @foreach (var category in categories)
                 {
                     <option value="@category.CategoryId" selected="@(Model.ResourceType == category.CategoryId)">
@@ -48,36 +49,36 @@
         </div>
 
         <div class="dashboard-filter-field">
-            <label for="resourceStartDate" class="form-label text-muted small fw-bold">Date from</label>
+            <label for="resourceStartDate" class="form-label text-muted small fw-bold">Dato fra</label>
             <input type="date" name="startDate" id="resourceStartDate" class="form-control"
                    value="@Model.StartDate?.ToString("yyyy-MM-dd")" />
         </div>
 
         <div class="dashboard-filter-field">
-            <label for="resourceEndDate" class="form-label text-muted small fw-bold">Date to</label>
+            <label for="resourceEndDate" class="form-label text-muted small fw-bold">Dato til</label>
             <input type="date" name="endDate" id="resourceEndDate" class="form-control"
                    value="@Model.EndDate?.ToString("yyyy-MM-dd")" />
         </div>
 
         <div class="dashboard-filter-field dashboard-distance-field">
-            <label for="resourceRadiusFilter" class="form-label text-muted small fw-bold">Distance</label>
+            <label for="resourceRadiusFilter" class="form-label text-muted small fw-bold">Avstand</label>
             <input id="resourceRadiusFilter" type="range" class="form-range" min="0" max="100" step="5" value="0" />
-            <div class="dashboard-radius-value" id="resourceRadiusValue">All distances</div>
+            <div class="dashboard-radius-value" id="resourceRadiusValue">Alle avstander</div>
         </div>
 
         <div class="dashboard-filter-actions">
-            <button type="submit" class="btn btn-primary">Search</button>
-            <a asp-controller="Resources" asp-action="Index" class="btn btn-outline-secondary">Reset</a>
+            <button type="submit" class="btn btn-primary">Søk</button>
+            <a asp-controller="Resources" asp-action="Index" class="btn btn-outline-secondary">Nullstill</a>
         </div>
     </form>
 
     <p id="resource-location-error" class="dashboard-location-error" role="alert" aria-live="polite" hidden>
-        Location access is required to use the distance filter.
+        Tilgang til posisjon kreves for å bruke avstandsfilteret.
     </p>
 
     @if (!Model.Resources.Any())
     {
-        <p class="placeholder-copy">No resources are registered right now.</p>
+        <p class="placeholder-copy">Ingen ressurser er registrert akkurat nå.</p>
     }
     else
     {
@@ -98,9 +99,9 @@
                 };
                 var statusText = normalizedStatus switch
                 {
-                    "ny" or "new" => "New",
-                    "under_review" => "Under review",
-                    _ => resource.Status
+                    "ny" or "new" => "Ny",
+                    "under_review" => "Vurderes",
+                    _ => StatusLabel(resource.Status)
                 };
 
                 <article class="dashboard-card resource-card"
@@ -119,11 +120,11 @@
                             <dd>@resource.Category?.CategoryName</dd>
                         </div>
                         <div>
-                            <dt>Contact</dt>
+                            <dt>Kontakt</dt>
                             <dd>@resource.Email<br />@resource.PhoneNumber</dd>
                         </div>
                         <div>
-                            <dt>Location (lat/lng)</dt>
+                            <dt>Sted (breddegrad/lengdegrad)</dt>
                             <dd>
                                 @if (resource.Latitude.HasValue && resource.Longitude.HasValue)
                                 {
@@ -131,20 +132,20 @@
                                 }
                                 else
                                 {
-                                    @:No position selected
+                                    @:Ingen posisjon valgt
                                 }
                             </dd>
                         </div>
                         <div>
-                            <dt>Effective date</dt>
+                            <dt>Gyldig fra</dt>
                             <dd>@resource.AvailableFrom.ToString("dd.MM.yyyy")</dd>
                         </div>
                         <div>
-                            <dt>Expiry date</dt>
+                            <dt>Utløpsdato</dt>
                             <dd>@(resource.ExpirationDate?.ToString("dd.MM.yyyy") ?? "—")</dd>
                         </div>
                         <div>
-                            <dt>Registered</dt>
+                            <dt>Registrert</dt>
                             <dd>@resource.RegisteredAt.ToString("dd.MM.yyyy HH:mm")</dd>
                         </div>
                     </dl>
@@ -152,11 +153,11 @@
                     <div class="dashboard-card-footer">
                         <form class="dashboard-card-actions" asp-controller="Home" asp-action="DeleteResource"
                               asp-route-id="@resource.Id" method="post"
-                              data-confirm="Are you sure you want to delete this resource?">
+                              data-confirm="Er du sikker på at du vil slette denne ressursen?">
                             @Html.AntiForgeryToken()
                             <a asp-controller="Resources" asp-action="Index" asp-route-id="@resource.Id"
-                               class="btn btn-sm btn-primary">Edit</a>
-                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                               class="btn btn-sm btn-primary">Rediger</a>
+                            <button type="submit" class="btn btn-sm btn-danger">Slett</button>
                         </form>
                     </div>
                 </article>
@@ -175,10 +176,10 @@
                 <div class="modal-header">
                     <h2 class="modal-title" id="registrationModalTitle">
                         <i class="bi bi-box-seam" aria-hidden="true"></i>
-                        <span>Edit resource</span>
+                        <span>Rediger ressurs</span>
                     </h2>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"
-                            aria-label="Close registration form"></button>
+                            aria-label="Lukk registreringsskjema"></button>
                 </div>
                 <div class="modal-body" data-registration-modal-body>
                     <partial name="~/Views/Home/_ResourceRegistrationForm.cshtml" model="editResource" />
@@ -201,7 +202,7 @@
                 document.getElementById('latInput').value = latitude;
                 document.getElementById('lngInput').value = longitude;
                 document.getElementById('posText').textContent =
-                    'Selected position: lat: ' + latitude.toFixed(5) + ', lng: ' + longitude.toFixed(5);
+                    'Valgt posisjon: bredde: ' + latitude.toFixed(5) + ', lengde: ' + longitude.toFixed(5);
             }
         });
 

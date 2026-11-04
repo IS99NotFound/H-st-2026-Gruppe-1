@@ -9,8 +9,8 @@ window.resqMapRegistration = {
             coordinates.textContent = `Koordinater: ${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}`;
 
             const actions = [
-                { type: 'need', label: 'Register need here', icon: 'bi-clipboard-plus' },
-                { type: 'resource', label: 'Deploy resource here', icon: 'bi-box-seam' }
+                { type: 'need', label: 'Registrer behov her', icon: 'bi-clipboard-plus' },
+                { type: 'resource', label: 'Registrer ressurs her', icon: 'bi-box-seam' }
             ];
 
             for (const action of actions) {
@@ -71,7 +71,7 @@ window.resqMapRegistration = {
             latInput.value = lat;
             lngInput.value = lng;
             positionText.textContent =
-                'Selected position: lat: ' + lat.toFixed(5) + ', lng: ' + lng.toFixed(5);
+                'Valgt posisjon: bredde: ' + lat.toFixed(5) + ', lengde: ' + lng.toFixed(5);
             positionError.textContent = '';
         };
     }

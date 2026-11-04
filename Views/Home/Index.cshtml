@@ -1,6 +1,6 @@
 @model H_st_2026_Gruppe_1.Models.ResourceEntry
 @{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Startside";
     ViewData["FullWidth"] = true;
     ViewData["RegistrationType"] = "resource";
     var canRegisterNeed = User.IsInRole("PublicActor") || User.IsInRole("Administrator");
@@ -13,32 +13,32 @@
 <div class="main-layout registration-modal-page">
     <partial name="_OperationalFeed" />
     <div class="feed-resizer" role="separator" aria-orientation="vertical"
-         aria-label="Resize operational feed" tabindex="0"></div>
+         aria-label="Endre størrelse på operativ oversikt" tabindex="0"></div>
     <section class="map-area">
-        <div id="map" role="application" aria-label="Interactive map"
+        <div id="map" role="application" aria-label="Interaktivt kart"
              data-resource-registration-url="@Url.Action("Index", "Home")"
              data-need-registration-url="@(canRegisterNeed ? Url.Action("DashboardIndex", "PublicActor") : null)"
              data-registration-type="resource"></div>
         <partial name="_MapColorLegend" />
         <div class="map-filtering is-collapsed" id="survival-filter-panel">
             <div class="map-filter-header">
-                <strong class="map-filter-title">Filter location</strong>
+                <strong class="map-filter-title">Filtrer steder</strong>
                 <button type="button" id="survival-filter-button" class="map-filter-button"
                         aria-expanded="false" aria-controls="survival-filter-content"
-                        aria-label="Expand survival location filters">
+                        aria-label="Utvid filter for beredskapssteder">
                     <i class="bi bi-chevron-right" aria-hidden="true"></i>
                 </button>
             </div>
             <div id="survival-filter-content">
                 <div class="map-filter-options">
-                    <label><input type="checkbox" class="survival-filter" value="hospital" checked /> Hospitals</label>
-                    <label><input type="checkbox" class="survival-filter" value="drinking_water" checked /> Drinking water</label>
-                    <label><input type="checkbox" class="survival-filter" value="shelter" checked /> Shelters/bunkers</label>
+                    <label><input type="checkbox" class="survival-filter" value="hospital" checked /> Sykehus</label>
+                    <label><input type="checkbox" class="survival-filter" value="drinking_water" checked /> Drikkevann</label>
+                    <label><input type="checkbox" class="survival-filter" value="shelter" checked /> Tilfluktsrom/bunkere</label>
                 </div>
-                <p id="survival-filter-status" role="status">Loading existing locations...</p>
+                <p id="survival-filter-status" role="status">Laster eksisterende steder...</p>
             </div>
         </div>
-        <p id="map-status" class="map-status" role="status" aria-live="polite">Loading map ...</p>
+        <p id="map-status" class="map-status" role="status" aria-live="polite">Laster kart ...</p>
     </section>
 </div>
 
@@ -50,9 +50,9 @@
             <div class="modal-header">
                 <h2 class="modal-title" id="registrationModalTitle">
                     <i class="bi bi-box-seam" aria-hidden="true"></i>
-                    <span>@(Model.Id > 0 ? "Edit resource" : "Register a resource")</span>
+                    <span>@(Model.Id > 0 ? "Rediger ressurs" : "Registrer en ressurs")</span>
                 </h2>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close registration form"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Lukk registreringsskjema"></button>
             </div>
             <div class="modal-body" data-registration-modal-body>
                 <partial name="_ResourceRegistrationForm" model="Model" />
@@ -100,7 +100,7 @@
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
         document.getElementById('map-status').textContent =
-            'The map is ready. Select a position or use your current location.';
+            'Kartet er klart. Velg en posisjon eller bruk din nåværende posisjon.';
 
         const latInput = document.getElementById('latInput');
         const lngInput = document.getElementById('lngInput');
@@ -109,7 +109,7 @@
             lngInput: lngInput,
             positionText: document.getElementById('posText'),
             positionError: document.getElementById('posError'),
-            popupText: 'Selected position'
+            popupText: 'Valgt posisjon'
         });
         const requestedLocation = window.resqMapRegistration.readRequestedLocation();
         const initialLat = Number(latInput?.value);
@@ -160,7 +160,7 @@
             if (!latInput?.value || !lngInput?.value) {
                 event.preventDefault();
                 document.getElementById('posError').textContent =
-                    'Position on the map is required.';
+                    'Posisjon på kartet må velges.';
             }
         });
         window.resqRegistration.bindCurrentLocationButton('useCurrentLocation', {

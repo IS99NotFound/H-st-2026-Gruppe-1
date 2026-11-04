@@ -7,19 +7,19 @@ public class ResourceEntry : IValidatableObject
 {
 	public int Id { get; set; }
 
-	[Required(ErrorMessage = "Full Name is required.")]
-	[StringLength(80, MinimumLength = 1, ErrorMessage = "Full Name must be at least {2} and at most {1} characters long.")]
+	[Required(ErrorMessage = "Fullt navn er påkrevd.")]
+	[StringLength(80, MinimumLength = 1, ErrorMessage = "Fullt navn må være minst {2} og maks {1} tegn langt.")]
 	public string Name { get; set; } = "";
 
-	[Required(ErrorMessage = "Email is required.")]
-	[EmailAddress(ErrorMessage = "Please provide a valid email address.")]
+	[Required(ErrorMessage = "E-post er påkrevd.")]
+	[EmailAddress(ErrorMessage = "Oppgi en gyldig e-postadresse.")]
 	public string Email { get; set; } = "";
 
-	[Required(ErrorMessage = "Phone number is required.")]
-	[Phone(ErrorMessage = "Please provide a valid phone number.")]
+	[Required(ErrorMessage = "Telefonnummer er påkrevd.")]
+	[Phone(ErrorMessage = "Oppgi et gyldig telefonnummer.")]
 	public string PhoneNumber { get; set; } = "+47 ";
 
-	[Range(1, int.MaxValue, ErrorMessage = "Select a resource type.")]
+	[Range(1, int.MaxValue, ErrorMessage = "Velg en ressurstype.")]
 	public int CategoryId { get; set; }
 	public Category? Category { get; set; }
 
@@ -27,19 +27,19 @@ public class ResourceEntry : IValidatableObject
 	public int ProviderId { get; set; }
 	public int RegionId { get; set; }
 
-	[Required(ErrorMessage = "Description must be filled out.")]
+	[Required(ErrorMessage = "Beskrivelse må fylles ut.")]
 	public string Description { get; set; } = "";
 	
 	public DateTime? ExpirationDate { get; set; }
 	public DateTime AvailableFrom { get; set; } = DateTime.Now;
 
-	[Required(ErrorMessage = "Position on the map must be filled out")]
+	[Required(ErrorMessage = "Posisjon på kartet må fylles ut")]
 	public double? Latitude { get; set; }
 
-	[Required(ErrorMessage = "Position on the map must be filled out.")]
+	[Required(ErrorMessage = "Posisjon på kartet må fylles ut.")]
 	public double? Longitude { get; set; }
 
-	[StringLength(200)]
+	[StringLength(200, ErrorMessage = "Stedsnavn kan ikke være lengre enn 200 tegn.")]
 	public string LocationName { get; set; } = "";
 
 	public DateTime RegisteredAt { get; set; }
@@ -50,7 +50,7 @@ public class ResourceEntry : IValidatableObject
 		if (ExpirationDate.HasValue && ExpirationDate < AvailableFrom)
 		{
 			yield return new ValidationResult(
-				"End date cannot be before start date.",
+				"Sluttdato kan ikke være før startdato.",
 				new[] { nameof(ExpirationDate) });
 		}
 	}
