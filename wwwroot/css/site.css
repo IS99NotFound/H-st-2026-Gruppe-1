@@ -2490,3 +2490,9 @@ html[data-theme="light"] .registration-modal .btn-close {
         height: 48px;
     }
 }
+
+/* Oransje markør for tildelte/utilgjengelige ressurser. */
+.map-color-dot--unavailable-resource,
+.resq-map-marker--unavailable-resource {
+    background-color: #3B3A3A;
+}
