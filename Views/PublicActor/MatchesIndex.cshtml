@@ -155,6 +155,10 @@
 
                             <p class="dashboard-card-description">@match.Resource.Description</p>
 
+                            @if (match.MatchStatus == "accepted")
+                            {
+                                <p><span class="status-label status-assigned">Ressursen er tildelt behovet - midlertidig utilgjengelig for andre</span></p>
+                            }
                             <dl class="dashboard-details match-details">
                                 <div>
                                     <dt><i class="bi bi-person" aria-hidden="true"></i> Kontakt</dt>
@@ -191,6 +195,14 @@
                                 <input type="hidden" name="resourceId" value="@match.Resource.Id" />
                                 <input type="hidden" name="needId" value="@Model.Need.Id" />
 
+                                <label for="comment-@match.Resource.Id">Kommentar</label>
+
+                                <textarea id="comment-@match.Resource.Id" 
+                                        name="statusComment"
+                                        class="form-control" 
+                                        maxlength="500"
+                                        placeholder="Skriv en kommentar">@match.Comment</textarea>
+                                
                                 <div class="match-status-buttons">
                                     <button type="submit" name="newStatus" value="accepted"
                                             class="btn btn-sm match-action match-action-accepted @(match.MatchStatus == "accepted" ? "status-selected" : "")">
