@@ -16,6 +16,7 @@ html {
     position: relative;
     min-height: 100%;
     scrollbar-gutter: stable;
+    background-color: var(--bg-panel);
 }
 
 body {
@@ -1033,7 +1034,7 @@ html[data-theme="light"] .registration-modal .btn-close {
 }
 :root {
     --topbar-height: 64px;
-    --footer-height: 48px;
+    --footer-height: 36px;
 }
 
 /* Map fills screen, other pages keep the container width */
@@ -1072,6 +1073,25 @@ html[data-theme="light"] .registration-modal .btn-close {
     left: 0;
     z-index: 1200;
     height: var(--footer-height);
+}
+
+@media (min-width: 992px) {
+    body:not(.full-width-page):not(.authentication-page) {
+        margin-bottom: 0;
+    }
+
+    body:not(.full-width-page):not(.authentication-page) > .container {
+        padding-bottom: var(--footer-height);
+    }
+
+    body:not(.full-width-page):not(.authentication-page) .footer {
+        position: fixed;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 1200;
+        height: var(--footer-height);
+    }
 }
 
 .topbar {
@@ -1601,6 +1621,10 @@ html[data-theme="light"] .registration-modal .btn-close {
 .incident-form-fields {
     display: grid;
     gap: 12px;
+}
+
+.incident-edit-form .incident-form-fields {
+    padding-bottom: 12px;
 }
 
 .compact-field {

@@ -10,9 +10,9 @@
     const markers = L.layerGroup().addTo(map);
 
     const categoryLabels = {
-        hospital: "Hospital",
-        drinking_water: "Drinking water",
-        shelter: "Shelter / bunker"
+        hospital: "Sykehus",
+        drinking_water: "Drikkevann",
+        shelter: "Tilfluktsrom/bunker"
     };
 
     let locations = [];
@@ -84,7 +84,7 @@
 
             if (status) {
                 status.textContent =
-                `${visibleCount} nearby locations shown on the map.`;
+                `${visibleCount} steder i nærheten vist på kartet.`;
             }
         }
 
@@ -119,7 +119,7 @@
             `;
 
             if (status) {
-                status.textContent = "Searching for nearby locations..."
+                status.textContent = "Søker etter steder i nærheten..."
             }
           
             //Website som allerede har survival locations//
@@ -151,7 +151,7 @@
                     const longitude = place.lon ?? place.center?.lon;
 
                     return{
-                        name: tags.name || "Unnamed location",
+                        name: tags.name || "Sted uten navn",
                         category: getCategory(tags),
                         latitude,
                         longitude,
@@ -178,7 +178,7 @@
                 console.error("Could not load locations.", error);
 
                 if (status) {
-                    status.textContent = "Could not load nearby locations. Pleasy try again later";
+                    status.textContent = "Kunne ikke laste steder i nærheten. Prøv igjen senere.";
                 }
             }
         }

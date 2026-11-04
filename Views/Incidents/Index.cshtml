@@ -1,79 +1,81 @@
 @model H_st_2026_Gruppe_1.Models.IncidentIndexViewModel
 @{
-    ViewData["Title"] = "Incidents";
+    ViewData["Title"] = "Hendelser";
     var isPublicActor = User.IsInRole("PublicActor");
     var incidentTypes = new[] { "Forest fire", "Landslide", "Flood", "Storm", "Power outage", "Other" };
-    var showCreatePanel = !ViewData.ModelState.IsValid;
+    string StatusLabel(string? statusValue) => statusValue switch { "active" => "Aktiv", "new" => "Ny", "under_review" => "Vurderes", "assigned" => "Tildelt", "resolved" => "Løst", "cancelled" => "Kansellert", "rejected" => "Avvist", "available" => "Tilgjengelig", "unavailable" => "Utilgjengelig", "withdrawn" => "Trukket tilbake", _ => statusValue ?? "" };
+    string TypeLabel(string? typeValue) => typeValue switch { "Forest fire" => "Skogbrann", "Landslide" => "Jordskred", "Flood" => "Flom", "Storm" => "Storm", "Power outage" => "Strømbrudd", "Other" => "Annet", _ => typeValue ?? "" };
+    var showCreatePanel = !ViewData.ModelState.IsValid && ViewBag.EditIncident is null;
 }
 
 <section class="subpage">
     <div class="subpage-header">
-        <h1>Incidents</h1>
+        <h1>Hendelser</h1>
         @if (isPublicActor)
         {
             <button class="btn btn-primary" type="button" data-bs-toggle="collapse"
                     data-bs-target="#incident-create-panel" aria-expanded="@(showCreatePanel.ToString().ToLowerInvariant())"
-                    aria-controls="incident-create-panel" aria-label="Register incident">
+                    aria-controls="incident-create-panel" aria-label="Registrer hendelse">
                 <i class="bi bi-plus-lg" aria-hidden="true"></i>
-                Register
+                Registrer
             </button>
         }
     </div>
 
     <form id="incidentFilterForm" method="get" asp-controller="Incidents" asp-action="Index" class="dashboard-filter-bar">
         <div class="dashboard-filter-field dashboard-search-field">
-            <label for="incidentSearch" class="form-label text-muted small fw-bold">Search</label>
+            <label for="incidentSearch" class="form-label text-muted small fw-bold">Søk</label>
             <input type="search" name="search" id="incidentSearch" class="form-control"
-                   value="@Model.Search" placeholder="Search incident title" />
+                   value="@Model.Search" placeholder="Søk etter hendelsestittel" />
         </div>
 
         <div class="dashboard-filter-field">
-            <label for="statusFilter" class="form-label text-muted small fw-bold">Filter by status</label>
+            <label for="statusFilter" class="form-label text-muted small fw-bold">Filtrer på status</label>
             <select name="status" id="statusFilter" class="form-select">
-                <option value="" selected="@(Context.Request.Query["status"].ToString() == "")">All</option>
-                <option value="active" selected="@(Context.Request.Query["status"] == "active")">Active</option>
-                <option value="resolved" selected="@(Context.Request.Query["status"] == "resolved")">Resolved</option>
+                <option value="" selected="@(Context.Request.Query["status"].ToString() == "")">Alle</option>
+                <option value="active" selected="@(Context.Request.Query["status"] == "active")">Aktive</option>
+                <option value="resolved" selected="@(Context.Request.Query["status"] == "resolved")">Løste</option>
             </select>
         </div>
 
         <div class="dashboard-filter-field">
-            <label for="incidentTypeFilter" class="form-label text-muted small fw-bold">Filter by type</label>
+            <label for="incidentTypeFilter" class="form-label text-muted small fw-bold">Filtrer på type</label>
             <select name="incidentType" id="incidentTypeFilter" class="form-select">
-                <option value="">All</option>
+                <option value="">Alle</option>
                 @foreach (var incidentType in incidentTypes)
                 {
                     <option value="@incidentType" selected="@(Context.Request.Query["incidentType"] == incidentType)">
-                        @incidentType
+                        @TypeLabel(incidentType)
                     </option>
                 }
             </select>
         </div>
 
         <div class="dashboard-filter-field">
-            <label for="startDate" class="form-label text-muted small fw-bold">Date from</label>
+            <label for="startDate" class="form-label text-muted small fw-bold">Dato fra</label>
             <input type="date" name="startDate" id="startDate" class="form-control"
                    value="@Context.Request.Query["startDate"]" />
         </div>
 
         <div class="dashboard-filter-field">
-            <label for="endDate" class="form-label text-muted small fw-bold">Date to</label>
+            <label for="endDate" class="form-label text-muted small fw-bold">Dato til</label>
             <input type="date" name="endDate" id="endDate" class="form-control"
                    value="@Context.Request.Query["endDate"]" />
         </div>
 
         <div class="dashboard-filter-field dashboard-distance-field">
-            <label for="radiusFilter" class="form-label text-muted small fw-bold">Distance</label>
+            <label for="radiusFilter" class="form-label text-muted small fw-bold">Avstand</label>
             <input id="radiusFilter" type="range" class="form-range" min="0" max="100" step="5" value="0" />
-            <div class="dashboard-radius-value" id="radiusValue">All distances</div>
+            <div class="dashboard-radius-value" id="radiusValue">Alle avstander</div>
         </div>
 
         <div class="dashboard-filter-actions">
-            <button type="submit" class="btn btn-primary">Search</button>
-            <a asp-controller="Incidents" asp-action="Index" class="btn btn-outline-secondary">Reset</a>
+            <button type="submit" class="btn btn-primary">Søk</button>
+            <a asp-controller="Incidents" asp-action="Index" class="btn btn-outline-secondary">Nullstill</a>
         </div>
     </form>
     <p id="location-error" class="dashboard-location-error" role="alert" aria-live="polite" hidden>
-        Location access is required to use the distance filter.
+        Tilgang til posisjon kreves for å bruke avstandsfilteret.
     </p>
 
     @if (TempData["IncidentCreated"] is string successMessage)
@@ -95,49 +97,49 @@
                 <div class="incident-register-layout">
                     <div class="incident-form-fields">
                         <div>
-                            <label asp-for="CreateModel.Title" class="form-label">Incident name</label>
+                            <label asp-for="CreateModel.Title" class="form-label">Navn på hendelse</label>
                             <input asp-for="CreateModel.Title" class="form-control compact-field"
-                                   placeholder="Example: Flood near Arendal" />
+                                   placeholder="Eksempel: Flom nær Arendal" />
                             <span asp-validation-for="CreateModel.Title" class="text-danger"></span>
                         </div>
                         <div>
-                            <label asp-for="CreateModel.IncidentType" class="form-label">Incident type</label>
+                            <label asp-for="CreateModel.IncidentType" class="form-label">Hendelsestype</label>
                             <select asp-for="CreateModel.IncidentType" class="form-select compact-field">
-                                <option value="">Select type</option>
+                                <option value="">Velg type</option>
                                 @foreach (var incidentType in incidentTypes)
                                 {
-                                    <option value="@incidentType">@incidentType</option>
+                                    <option value="@incidentType">@TypeLabel(incidentType)</option>
                                 }
                             </select>
                             <span asp-validation-for="CreateModel.IncidentType" class="text-danger"></span>
                         </div>
                         <div>
-                            <label asp-for="CreateModel.Description" class="form-label">Description</label>
+                            <label asp-for="CreateModel.Description" class="form-label">Beskrivelse</label>
                             <textarea asp-for="CreateModel.Description" class="form-control compact-field" rows="3"
-                                      placeholder="Describe what has happened and where help is needed."></textarea>
+                                      placeholder="Beskriv hva som har skjedd og hvor det trengs hjelp."></textarea>
                             <span asp-validation-for="CreateModel.Description" class="text-danger"></span>
                         </div>
                     </div>
 
                     <div class="incident-map-panel">
-                        <label class="form-label">Location</label>
+                        <label class="form-label">Sted</label>
                         <div id="incident-map" class="incident-map" role="application" tabindex="0"
-                             aria-label="Select incident location on map"
+                             aria-label="Velg sted for hendelsen på kartet"
                              aria-describedby="incident-map-status"></div>
                         <p id="incident-map-status" class="map-status" role="status" aria-live="polite">
-                            Click the map to select the incident location.
+                            Klikk på kartet for å velge sted for hendelsen.
                         </p>
                         <input asp-for="CreateModel.Latitude" type="hidden" id="incident-latitude" />
                         <input asp-for="CreateModel.Longitude" type="hidden" id="incident-longitude" />
                         @if (ViewData.ModelState["CreateModel.Latitude"]?.Errors.Count > 0
                             || ViewData.ModelState["CreateModel.Longitude"]?.Errors.Count > 0)
                         {
-                            <span class="text-danger d-block">This field is required.</span>
+                            <span class="text-danger d-block">Dette feltet er påkrevd.</span>
                         }
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary mt-3">Register incident</button>
+                <button type="submit" class="btn btn-primary mt-3">Registrer hendelse</button>
             </form>
         </div>
     }
@@ -150,7 +152,7 @@
 
     @if (Model.Incidents == null || !Model.Incidents.Any())
     {
-        <p class="placeholder-copy">No incidents have been reported yet.</p>
+        <p class="placeholder-copy">Ingen hendelser er rapportert ennå.</p>
     }
     else
     {
@@ -163,7 +165,7 @@
                     <div class="dashboard-card-header">
                         <h2>@incident.Title</h2>
                         <span class="incident-status @(incident.Status == "active" ? "incident-status-active" : "incident-status-resolved")">
-                            @incident.Status
+                            @StatusLabel(incident.Status)
                         </span>
                     </div>
 
@@ -175,26 +177,32 @@
                     <dl class="dashboard-details incident-details">
                         <div>
                             <dt>Type</dt>
-                            <dd>@incident.IncidentType</dd>
+                            <dd>@TypeLabel(incident.IncidentType)</dd>
                         </div>
                         <div>
-                            <dt>Location (lat/lng)</dt>
+                            <dt>Sted (breddegrad/lengdegrad)</dt>
                             <dd>@incident.Latitude, @incident.Longitude</dd>
                         </div>
                         <div>
-                            <dt>Reported</dt>
+                            <dt>Rapportert</dt>
                             <dd>@incident.CreatedAt.ToString("dd.MM.yyyy HH:mm")</dd>
                         </div>
                     </dl>
 
-                    @if (isPublicActor && incident.Status == "active")
+                    @if ((isPublicActor || User.IsInRole("Administrator")) && incident.Status == "active")
                     {
                         <div class="dashboard-card-footer incident-card-footer">
+                            @if (isPublicActor)
+                            {
+                                <a asp-controller="Incidents" asp-action="Index"
+                                   asp-route-id="@incident.IncidentId"
+                                   class="btn btn-sm btn-outline-primary">Rediger</a>
+                            }
                             <form asp-controller="Incidents" asp-action="MarkAsResolved" method="post">
                                 <input type="hidden" name="incidentId" value="@incident.IncidentId" />
                                 @Html.AntiForgeryToken()
                                 <button type="submit" class="btn btn-sm btn-outline-secondary">
-                                    Mark as resolved
+                                    Marker som løst
                                 </button>
                             </form>
                         </div>
@@ -211,7 +219,7 @@
                     <button class="resolved-incidents-toggle" type="button" data-bs-toggle="collapse"
                             data-bs-target="#resolved-incidents-list" aria-expanded="false"
                             aria-controls="resolved-incidents-list">
-                        <span>Resolved incidents</span>
+                        <span>Løste hendelser</span>
                         <span class="incident-count">@resolvedIncidents.Count</span>
                         <i class="bi bi-chevron-down" aria-hidden="true"></i>
                     </button>
@@ -237,26 +245,32 @@
                                 <dl class="dashboard-details incident-details">
                                     <div>
                                         <dt>Type</dt>
-                                        <dd>@incident.IncidentType</dd>
+                                        <dd>@TypeLabel(incident.IncidentType)</dd>
                                     </div>
                                     <div>
-                                        <dt>Location (lat/lng)</dt>
+                                        <dt>Sted (breddegrad/lengdegrad)</dt>
                                         <dd>@incident.Latitude, @incident.Longitude</dd>
                                     </div>
                                     <div>
-                                        <dt>Reported</dt>
+                                        <dt>Rapportert</dt>
                                         <dd>@incident.CreatedAt.ToString("dd.MM.yyyy HH:mm")</dd>
                                     </div>
                                 </dl>
 
-                                @if (isPublicActor)
+                                @if (isPublicActor || User.IsInRole("Administrator"))
                                 {
                                     <div class="dashboard-card-footer incident-card-footer">
+                                        @if (isPublicActor)
+                                        {
+                                            <a asp-controller="Incidents" asp-action="Index"
+                                               asp-route-id="@incident.IncidentId"
+                                               class="btn btn-sm btn-outline-primary">Rediger</a>
+                                        }
                                         <form asp-controller="Incidents" asp-action="Reactivate" method="post">
                                             <input type="hidden" name="incidentId" value="@incident.IncidentId" />
                                             @Html.AntiForgeryToken()
                                             <button type="submit" class="btn btn-sm btn-outline-success">
-                                                Reactivate
+                                                Aktiver på nytt
                                             </button>
                                         </form>
                                     </div>
@@ -269,6 +283,25 @@
         }
     }
 </section>
+
+@if (ViewBag.EditIncident is H_st_2026_Gruppe_1.Models.IncidentCreateViewModel editIncident)
+{
+    <div class="modal fade registration-modal" id="incidentEditModal" tabindex="-1"
+         aria-labelledby="incidentEditModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg modal-fullscreen-md-down">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title" id="incidentEditModalTitle">Rediger hendelse</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                            aria-label="Lukk redigering"></button>
+                </div>
+                <div class="modal-body">
+                    <partial name="_IncidentEditForm" model="editIncident" />
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
@@ -296,7 +329,7 @@
             incidentMarker = L.marker([latitude, longitude]).addTo(incidentMap);
             latitudeInput.value = latitude.toFixed(6);
             longitudeInput.value = longitude.toFixed(6);
-            mapStatus.textContent = `Selected location: ${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+            mapStatus.textContent = `Valgt sted: ${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
         });
 
         setTimeout(() => incidentMap.invalidateSize(), 50);
@@ -306,6 +339,46 @@
             registerButton.addEventListener('click', function () {
                 setTimeout(() => incidentMap.invalidateSize(), 100);
             });
+        }
+    </script>
+    }
+
+    @if (ViewBag.EditIncident is not null)
+    {
+    <script nonce="@Context.Items["CspNonce"]">
+        const incidentEditModal = document.getElementById('incidentEditModal');
+        const editMapElement = document.getElementById('incident-edit-map');
+        const editLatitudeInput = document.getElementById('incident-edit-latitude');
+        const editLongitudeInput = document.getElementById('incident-edit-longitude');
+        const editMapStatus = document.getElementById('incident-edit-map-status');
+
+        if (incidentEditModal && editMapElement) {
+            const editLatitude = Number(editMapElement.dataset.latitude);
+            const editLongitude = Number(editMapElement.dataset.longitude);
+            const editMap = L.map(editMapElement).setView([editLatitude, editLongitude], 10);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(editMap);
+
+            let editMarker = L.marker([editLatitude, editLongitude]).addTo(editMap);
+            editMap.on('click', function (event) {
+                const latitude = event.latlng.lat;
+                const longitude = event.latlng.lng;
+
+                editMarker.setLatLng([latitude, longitude]);
+                editLatitudeInput.value = latitude.toFixed(6);
+                editLongitudeInput.value = longitude.toFixed(6);
+                editMapStatus.textContent =
+                    `Valgt sted: ${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+            });
+
+            const modal = bootstrap.Modal.getOrCreateInstance(incidentEditModal);
+            incidentEditModal.addEventListener('shown.bs.modal', () => {
+                editMap.invalidateSize();
+            });
+            modal.show();
+        } else if (incidentEditModal) {
+            bootstrap.Modal.getOrCreateInstance(incidentEditModal).show();
         }
     </script>
     }

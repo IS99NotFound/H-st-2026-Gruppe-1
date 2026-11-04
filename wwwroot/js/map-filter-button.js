@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", function () {
         filterButton.setAttribute("aria-expanded", String(!isCollapsed));
         filterButton.setAttribute(
             "aria-label",
-            isCollapsed ? "Expand map filters" : "Collapse map filters"
+            isCollapsed ? "Utvid kartfiltre" : "Skjul kartfiltre"
         );
         filterButton.innerHTML = isCollapsed
             ? '<i class="bi bi-chevron-right" aria-hidden="true"></i>'

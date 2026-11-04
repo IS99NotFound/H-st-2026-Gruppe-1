@@ -1,6 +1,6 @@
 ﻿@model H_st_2026_Gruppe_1.Models.RegisterViewModel
 @{
-    ViewData["Title"] = "Register";
+    ViewData["Title"] = "Registrer deg";
 }
 
 <div class="auth-page">
@@ -8,64 +8,64 @@
 
     <section class="auth-content">
         <div class="auth-form-container auth-register-container">
-            <p class="auth-step-label">STEP 1 OF 2</p>
-            <h2>Create your account</h2>
-            <p class="auth-description">Enter your details to get started. All fields are required.</p>
+            <p class="auth-step-label">STEG 1 AV 2</p>
+            <h2>Opprett kontoen din</h2>
+            <p class="auth-description">Fyll inn opplysningene dine for å komme i gang. Alle felt må fylles ut.</p>
 
             <form asp-controller="Register" asp-action="Index" method="post">
                 <div class="auth-form-grid">
                 <div class="auth-field">
-                    <label asp-for="Name">Full name</label>
-                    <input asp-for="Name" class="form-control" placeholder="Your full name" autocomplete="name" />
+                    <label asp-for="Name">Fullt navn</label>
+                    <input asp-for="Name" class="form-control" placeholder="Fullt navn" autocomplete="name" />
                     <span asp-validation-for="Name" class="text-danger"></span>
                 </div>
                 <div class="auth-field">
-                    <label asp-for="UserName">Username</label>
-                    <input asp-for="UserName" class="form-control" placeholder="Choose a username" autocomplete="username" />
+                    <label asp-for="UserName">Brukernavn</label>
+                    <input asp-for="UserName" class="form-control" placeholder="Velg et brukernavn" autocomplete="username" />
                     <span asp-validation-for="UserName" class="text-danger"></span>
                 </div>
                 <div class="auth-field">
-                    <label asp-for="Email">Email</label>
-                    <input asp-for="Email" class="form-control" placeholder="you@organization.com" autocomplete="email" />
+                    <label asp-for="Email">E-post</label>
+                    <input asp-for="Email" class="form-control" placeholder="navn@organisasjon.no" autocomplete="email" />
                     <span asp-validation-for="Email" class="text-danger"></span>
                 </div>
                 <div class="auth-field">
-                    <label asp-for="PhoneNumber">Phone number</label>
+                    <label asp-for="PhoneNumber">Telefonnummer</label>
                     <input asp-for="PhoneNumber" class="form-control" placeholder="+47 400 00 000" autocomplete="tel" />
                     <span asp-validation-for="PhoneNumber" class="text-danger"></span>
                 </div>
                 <div class="auth-password-grid">
                     <div class="auth-field">
-                        <label asp-for="Password">Password</label>
-                        <input asp-for="Password" class="form-control" placeholder="Create a password" autocomplete="new-password" />
+                        <label asp-for="Password">Passord</label>
+                        <input asp-for="Password" class="form-control" placeholder="Lag et passord" autocomplete="new-password" />
                         <span asp-validation-for="Password" class="text-danger"></span>
                     </div>
                     <div class="auth-field">
-                        <label asp-for="ConfirmPassword">Confirm password</label>
-                        <input asp-for="ConfirmPassword" class="form-control" placeholder="Re-enter your password" autocomplete="new-password" />
+                        <label asp-for="ConfirmPassword">Bekreft passord</label>
+                        <input asp-for="ConfirmPassword" class="form-control" placeholder="Skriv passordet på nytt" autocomplete="new-password" />
                         <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
                     </div>
-                    <p class="auth-password-requirements">Use at least 8 characters with a mix of letters, numbers and symbols.</p>
+                    <p class="auth-password-requirements">Bruk minst 8 tegn med en blanding av bokstaver, tall og symboler.</p>
                 </div>
                 </div>
 
                 <fieldset class="auth-demo-fields">
-                    <legend>Demo feature</legend>
+                    <legend>Demofunksjon</legend>
                     <div class="auth-form-grid">
                         <div class="auth-field">
-                            <label asp-for="Role">User role</label>
+                            <label asp-for="Role">Brukerrolle</label>
                             <select asp-for="Role" class="form-select" id="register-role">
-                                <option value="">Select your role</option>
-                                <option value="CivilianProvider">Resource provider</option>
-                                <option value="PublicActor">Public Actor</option>
+                                <option value="">Velg rolle</option>
+                                <option value="CivilianProvider">Ressursleverandør</option>
+                                <option value="PublicActor">Offentlig aktør</option>
                                 <option value="Administrator">Administrator</option>
                             </select>
                             <span asp-validation-for="Role" class="text-danger"></span>
                         </div>
                         <div class="auth-field" id="organization-field">
-                            <label asp-for="OrganizationId">Organization</label>
+                            <label asp-for="OrganizationId">Organisasjon</label>
                             <select asp-for="OrganizationId" class="form-select">
-                                <option value="0">Select your organization</option>
+                                <option value="0">Velg organisasjon</option>
                                 @foreach (var organization in Model.Organizations)
                                 {
                                     <option value="@organization.OrganizationId">@organization.OrganizationName</option>
@@ -76,10 +76,10 @@
                     </div>
                 </fieldset>
 
-                <button type="submit" class="btn auth-submit">Create account</button>
+                <button type="submit" class="btn auth-submit">Opprett konto</button>
             </form>
 
-            <p class="auth-back-link">Already have an account? <a asp-controller="Auth" asp-action="Login">Sign in</a></p>
+            <p class="auth-back-link">Har du allerede en konto? <a asp-controller="Auth" asp-action="Login">Logg inn</a></p>
         </div>
     </section>
 </div>

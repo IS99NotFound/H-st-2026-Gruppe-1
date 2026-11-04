@@ -5,12 +5,12 @@
     <input type="hidden" name="OpenRegistrationModal" value="true" />
 
     <section class="registration-section">
-        <h3 class="registration-section-title">Classification</h3>
+        <h3 class="registration-section-title">Klassifisering</h3>
         <div class="registration-grid registration-grid--category">
             <div class="registration-field">
-                <label asp-for="Category" class="form-label">Category</label>
+                <label asp-for="Category" class="form-label">Kategori</label>
                 <select asp-for="Category" id="categoryInput" class="form-select" required>
-                    <option value="">Select category</option>
+                    <option value="">Velg kategori</option>
                     @foreach (var category in (List<Category>)ViewBag.Categories)
                     {
                         <option value="@category.CategoryId">@category.CategoryName</option>
@@ -20,27 +20,27 @@
             </div>
 
             <div class="registration-field">
-                <label asp-for="Quantity" class="form-label">Quantity needed</label>
+                <label asp-for="Quantity" class="form-label">Antall som trengs</label>
                 <input asp-for="Quantity" id="quantityInput" class="form-control" min="1" required />
                 <span asp-validation-for="Quantity" class="text-danger"></span>
             </div>
 
             <fieldset class="registration-field registration-priority-field">
-                <legend class="form-label">Priority level</legend>
-                <div class="registration-priority" role="group" aria-label="Priority selection">
+                <legend class="form-label">Prioritetsnivå</legend>
+                <div class="registration-priority" role="group" aria-label="Velg prioritet">
                     <input type="radio" class="btn-check" asp-for="Priority" id="priorityPlanned" value="Planned" />
-                    <label class="btn registration-priority-planned" for="priorityPlanned">Planned</label>
+                    <label class="btn registration-priority-planned" for="priorityPlanned">Planlagt</label>
                     <input type="radio" class="btn-check" asp-for="Priority" id="priorityCritical" value="Critical" />
-                    <label class="btn registration-priority-critical" for="priorityCritical">Critical</label>
+                    <label class="btn registration-priority-critical" for="priorityCritical">Akutt</label>
                 </div>
                 <span asp-validation-for="Priority" class="text-danger"></span>
             </fieldset>
         </div>
 
         <div class="registration-field">
-            <label asp-for="CrisisEventId" class="form-label">Crisis incident</label>
+            <label asp-for="CrisisEventId" class="form-label">Krisehendelse</label>
             <select asp-for="CrisisEventId" id="crisisEventInput" class="form-select" required>
-                <option value="">Select incident</option>
+                <option value="">Velg hendelse</option>
                 @foreach (var incident in (List<Incident>)ViewBag.Incidents)
                 {
                     <option value="@incident.IncidentId">@incident.Title</option>
@@ -51,22 +51,22 @@
     </section>
 
     <section class="registration-section">
-        <h3 class="registration-section-title">Details &amp; timeframe</h3>
+        <h3 class="registration-section-title">Detaljer og tidsrom</h3>
         <div class="registration-field">
-            <label asp-for="Title" class="form-label">Title</label>
-            <input asp-for="Title" id="titleInput" class="form-control" placeholder="e.g. Emergency Water Tank 5000L" required />
+            <label asp-for="Title" class="form-label">Tittel</label>
+            <input asp-for="Title" id="titleInput" class="form-control" placeholder="f.eks. nødvanntank 5000 L" required />
             <span asp-validation-for="Title" class="text-danger"></span>
         </div>
 
         <div class="registration-field">
-            <label asp-for="Description" class="form-label">Description</label>
-            <textarea asp-for="Description" id="descriptionInput" class="form-control" rows="3" placeholder="Provide details and operational background..." required></textarea>
+            <label asp-for="Description" class="form-label">Beskrivelse</label>
+            <textarea asp-for="Description" id="descriptionInput" class="form-control" rows="3" placeholder="Gi detaljer og operativ bakgrunn..." required></textarea>
             <span asp-validation-for="Description" class="text-danger"></span>
         </div>
 
         <div class="registration-grid registration-grid--details">
             <div class="registration-field">
-                <label class="form-label" for="requiredFromDate">Start date/time</label>
+                <label class="form-label" for="requiredFromDate">Startdato/-tid</label>
                 <div class="registration-datetime">
                     <input type="date" id="requiredFromDate" class="form-control"
                            value="@Model.RequiredFrom?.ToString("yyyy-MM-dd")" />
@@ -77,7 +77,7 @@
             </div>
 
             <div class="registration-field">
-                <label class="form-label" for="deadlineDate">End date/time (optional)</label>
+                <label class="form-label" for="deadlineDate">Sluttdato/-tid (valgfritt)</label>
                 <div class="registration-datetime">
                     <input type="date" id="deadlineDate" class="form-control"
                            value="@Model.Deadline?.ToString("yyyy-MM-dd")" />
@@ -93,15 +93,15 @@
     </section>
 
     <section class="registration-section">
-        <h3 class="registration-section-title">Contact information</h3>
+        <h3 class="registration-section-title">Kontaktinformasjon</h3>
         <div class="registration-grid registration-grid--details">
             <div class="registration-field">
-                <label asp-for="Email" class="form-label">Email</label>
-                <input asp-for="Email" class="form-control" type="email" placeholder="name@example.com" required />
+                <label asp-for="Email" class="form-label">E-post</label>
+                <input asp-for="Email" class="form-control" type="email" placeholder="navn@eksempel.no" required />
                 <span asp-validation-for="Email" class="text-danger"></span>
             </div>
             <div class="registration-field">
-                <label asp-for="PhoneNumber" class="form-label">Phone number</label>
+                <label asp-for="PhoneNumber" class="form-label">Telefonnummer</label>
                 <input asp-for="PhoneNumber" class="form-control" type="tel" placeholder="+47 00 00 00 00" required />
                 <span asp-validation-for="PhoneNumber" class="text-danger"></span>
             </div>
@@ -109,14 +109,14 @@
     </section>
 
     <section class="registration-section registration-location">
-        <h3 class="registration-section-title">Location &amp; accuracy</h3>
+        <h3 class="registration-section-title">Sted og nøyaktighet</h3>
         <div class="registration-field">
-            <label asp-for="LocationName" class="form-label">Location name</label>
+            <label asp-for="LocationName" class="form-label">Stedsnavn</label>
             <div class="registration-location-input">
                 <input asp-for="LocationName" id="locationNameInput" class="form-control"
-                       placeholder="Search address or facility (e.g. Hellemyr Skole)" />
+                       placeholder="Søk etter adresse eller anlegg (f.eks. Hellemyr Skole)" />
                 <button type="button" class="registration-icon-button" id="useCurrentLocation"
-                        title="Current location" aria-label="Use current location">
+                        title="Nåværende posisjon" aria-label="Bruk nåværende posisjon">
                     <i class="bi bi-crosshair" aria-hidden="true"></i>
                 </button>
             </div>
@@ -125,7 +125,7 @@
         <input type="hidden" asp-for="Latitude" id="latInput" />
         <input type="hidden" asp-for="Longitude" id="lngInput" />
         <p id="posText" class="registration-help">
-            Select a point on the map to set the GPS coordinates.
+            Velg et punkt på kartet for å sette GPS-koordinatene.
         </p>
         <span asp-validation-for="Latitude" class="text-danger d-block" id="posError"></span>
         <span asp-validation-for="Longitude" class="text-danger d-block"></span>
@@ -133,9 +133,9 @@
 
     <div asp-validation-summary="ModelOnly" class="text-danger registration-validation"></div>
     <div class="registration-actions">
-        <button type="button" class="btn registration-cancel" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn registration-cancel" data-bs-dismiss="modal">Avbryt</button>
         <button type="submit" class="btn btn-primary registration-submit">
-            @(Model.Id > 0 ? "Save changes" : "Register")
+            @(Model.Id > 0 ? "Lagre endringer" : "Registrer")
         </button>
     </div>
 </form>

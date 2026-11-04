@@ -1,23 +1,23 @@
 @model H_st_2026_Gruppe_1.Models.MatchViewModel
 
 @{
-    ViewData["Title"] = "Match resources";
+    ViewData["Title"] = "Match ressurser";
     var hasSelectedNeed = Model.UserNeeds.Any() && Model.Need.Id > 0;
 }
 
 <section class="subpage">
     <div class="subpage-header">
-        <h1>Match resources</h1>
+        <h1>Match ressurser</h1>
     </div>
 
     @if (!Model.UserNeeds.Any())
     {
         <div class="empty-state-panel">
             <i class="bi bi-link-45deg" aria-hidden="true"></i>
-            <h2>No needs to match</h2>
-            <p>Register a need before looking for matching resources.</p>
+            <h2>Ingen behov å matche</h2>
+            <p>Registrer et behov før du leter etter matchende ressurser.</p>
             <a asp-controller="PublicActor" asp-action="DashboardIndex" asp-route-register="need"
-               class="btn btn-primary">Register need</a>
+               class="btn btn-primary">Registrer behov</a>
         </div>
     }
     else
@@ -25,12 +25,12 @@
         <div class="match-toolbar">
             <div class="match-selection">
                 <form method="get" asp-controller="PublicActor" asp-action="MatchesIndex" class="match-need-selector">
-                    <label for="needId" class="form-label match-selector-label">Select need</label>
+                    <label for="needId" class="form-label match-selector-label">Velg behov</label>
                     <select name="needId" id="needId" class="form-select" data-auto-submit>
                         @foreach (var need in Model.UserNeeds)
                         {
                             <option value="@need.Id" selected="@(need.Id == Model.Need.Id)">
-                                @need.Title (incident ID: @need.CrisisEventId)
+                                @need.Title (hendelses-ID: @need.CrisisEventId)
                             </option>
                         }
                     </select>
@@ -41,9 +41,9 @@
                     <div class="match-need-summary">
                         <strong>@Model.Need.Title</strong>
                         <span>@Model.Need.Description</span>
-                        <span>Location: @Model.Need.Latitude.ToString("F5"), @Model.Need.Longitude.ToString("F5")</span>
-                        <span>Email: @Model.Need.Email</span>
-                        <span>Phone: @Model.Need.PhoneNumber</span>
+                        <span>Sted: @Model.Need.Latitude.ToString("F5"), @Model.Need.Longitude.ToString("F5")</span>
+                        <span>E-post: @Model.Need.Email</span>
+                        <span>Telefon: @Model.Need.PhoneNumber</span>
                     </div>
                 }
             </div>
@@ -53,18 +53,18 @@
                 <form asp-controller="PublicActor" asp-action="Matches" method="get" class="match-controls">
                     <input type="hidden" name="needId" value="@Model.Need.Id" />
                     <div class="match-radius-field">
-                        <label for="radiusKm" class="form-label">Distance</label>
+                        <label for="radiusKm" class="form-label">Avstand</label>
                         <input type="range" name="radiusKm" id="radiusKm" value="@Model.RadiusKm"
-                               min="0" max="100" step="5" class="form-range" />
+                               min="0" max="100" step="5" class="form-range" data-auto-submit />
                         <span id="radiusKmValue" class="match-radius-value">
-                            @(Model.RadiusKm <= 0 ? "All distances" : $"{Model.RadiusKm} km")
+                            @(Model.RadiusKm <= 0 ? "Alle avstander" : $"{Model.RadiusKm} km")
                         </span>
                     </div>
-                    <button type="submit" class="btn btn-sm btn-primary">Find matches</button>
+                    <button type="submit" class="btn btn-sm btn-primary">Finn matcher</button>
                     <button type="submit"
                             formaction="@Url.Action("ShowAllResourcesInMatches", "PublicActor")"
                             class="btn btn-sm btn-outline-secondary">
-                        View all resources
+                        Vis alle ressurser
                     </button>
                 </form>
             }
@@ -77,8 +77,8 @@
                 <div class="empty-state-panel empty-state-panel--compact">
                     <i class="bi bi-box-seam" aria-hidden="true"></i>
                     <p>
-                        No resources found
-                        @(Model.RadiusKm <= 0 ? "for this need" : $"within {Model.RadiusKm} km").
+                        Ingen ressurser funnet
+                        @(Model.RadiusKm <= 0 ? "for dette behovet" : $"innenfor {Model.RadiusKm} km").
                     </p>
                 </div>
             }
@@ -100,11 +100,11 @@
 
                             <dl class="dashboard-details match-details">
                                 <div>
-                                    <dt>Contact</dt>
+                                    <dt>Kontakt</dt>
                                     <dd>@match.Resource.Email<br />@match.Resource.PhoneNumber</dd>
                                 </div>
                                 <div>
-                                    <dt>Location</dt>
+                                    <dt>Sted</dt>
                                     <dd>
                                         @if (match.Resource.Latitude.HasValue && match.Resource.Longitude.HasValue)
                                         {
@@ -112,17 +112,17 @@
                                         }
                                         else
                                         {
-                                            @:Not specified
+                                            @:Ikke oppgitt
                                         }
                                     </dd>
                                 </div>
                                 <div>
-                                    <dt>Effective date</dt>
+                                    <dt>Gyldig fra</dt>
                                     <dd>@match.Resource.AvailableFrom.ToString("dd.MM.yyyy")</dd>
                                 </div>
                                 <div>
-                                    <dt>Expiry date</dt>
-                                    <dd>@(match.Resource.ExpirationDate?.ToString("dd.MM.yyyy") ?? "Not specified")</dd>
+                                    <dt>Utløpsdato</dt>
+                                    <dd>@(match.Resource.ExpirationDate?.ToString("dd.MM.yyyy") ?? "Ikke oppgitt")</dd>
                                 </div>
                             </dl>
 
@@ -131,22 +131,22 @@
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="resourceId" value="@match.Resource.Id" />
                                 <input type="hidden" name="needId" value="@Model.Need.Id" />
-                                <label for="comment-@match.Resource.Id">Comment</label>
+                                <label for="comment-@match.Resource.Id">Kommentar</label>
                                 <textarea id="comment-@match.Resource.Id" name="statusComment"
                                           class="form-control" maxlength="500"
-                                          placeholder="Write a comment">@match.Comment</textarea>
+                                          placeholder="Skriv en kommentar">@match.Comment</textarea>
                                 <div class="match-status-buttons">
                                     <button type="submit" name="newStatus" value="accepted"
                                             class="btn btn-sm match-action match-action-accepted @(match.MatchStatus == "accepted" ? "status-selected" : "")">
-                                        Assign
+                                        Tildelt
                                     </button>
                                     <button type="submit" name="newStatus" value="proposed"
                                             class="btn btn-sm match-action match-action-proposed @(match.MatchStatus == "proposed" ? "status-selected" : "")">
-                                        Under review
+                                        Vurderes
                                     </button>
                                     <button type="submit" name="newStatus" value="declined"
                                             class="btn btn-sm match-action match-action-declined @(match.MatchStatus == "declined" ? "status-selected" : "")">
-                                        Reject
+                                        Avslått
                                     </button>
                                 </div>
                             </form>
