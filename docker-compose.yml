@@ -7,6 +7,7 @@ services:
     environment:
       MARIADB_ROOT_PASSWORD: root
       MARIADB_DATABASE: heimevernet
+      TZ: Europe/Oslo
     ports:
       # Maps host port 3307 to container port 3306 (default MariaDB port)
       # This allows database clients (Rider, DBeaver) to connect via localhost:3307
@@ -30,6 +31,7 @@ services:
       - "8081:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - TZ=Europe/Oslo
       # Tells the application inside the container to listen on port 8080
       - ASPNETCORE_HTTP_PORTS=8080
       # Connects to the database service container ('db') over the internal Docker network on port 3306
