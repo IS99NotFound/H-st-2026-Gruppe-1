@@ -20,9 +20,21 @@ public class IncidentsController : Controller
         string? status,
         string? incidentType,
         DateTime? startDate,
-        DateTime? endDate)
+        DateTime? endDate,
+        int? id = null)
     {
         var incidents = GetIncidents(search, status, incidentType, startDate, endDate);
+
+        if (id.HasValue)
+        {
+            var incident = incidents.FirstOrDefault(item => item.IncidentId == id.Value);
+            if (incident == null || !User.IsInRole("PublicActor"))
+            {
+                return NotFound();
+            }
+
+            ViewBag.EditIncident = ToEditModel(incident);
+        }
 
         return View(new IncidentIndexViewModel
         {
@@ -73,6 +85,47 @@ public class IncidentsController : Controller
         _db.SaveChanges();
 
         TempData["IncidentCreated"] = "Hendelsen ble registrert.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [Authorize(Roles = "PublicActor")]
+    [ValidateAntiForgeryToken]
+    public IActionResult Edit(IncidentCreateViewModel model)
+    {
+        var incident = _db.Incidents.Find(model.IncidentId);
+        if (incident == null)
+        {
+            return NotFound();
+        }
+
+        if (!User.IsInRole("PublicActor"))
+        {
+            return Forbid();
+        }
+
+        if (!ModelState.IsValid)
+        {
+            ViewBag.EditIncident = model;
+            return View("Index", new IncidentIndexViewModel
+            {
+                Incidents = GetIncidents(),
+                Search = model.Title
+            });
+        }
+
+        incident.Title = model.Title.Trim();
+        incident.NormalizedTitle = NormalizeTitle(model.Title);
+        incident.IncidentType = model.IncidentType;
+        incident.Description = string.IsNullOrWhiteSpace(model.Description)
+            ? null
+            : model.Description.Trim();
+        incident.Latitude = model.Latitude!.Value;
+        incident.Longitude = model.Longitude!.Value;
+
+        _db.SaveChanges();
+
+        TempData["IncidentUpdated"] = "Hendelsen ble oppdatert.";
         return RedirectToAction(nameof(Index));
     }
 
@@ -181,5 +234,18 @@ public class IncidentsController : Controller
     private static string NormalizeTitle(string title)
     {
         return title.Trim().ToLowerInvariant();
+    }
+
+    private static IncidentCreateViewModel ToEditModel(Incident incident)
+    {
+        return new IncidentCreateViewModel
+        {
+            IncidentId = incident.IncidentId,
+            Title = incident.Title,
+            IncidentType = incident.IncidentType,
+            Description = incident.Description,
+            Latitude = incident.Latitude,
+            Longitude = incident.Longitude
+        };
     }
 }

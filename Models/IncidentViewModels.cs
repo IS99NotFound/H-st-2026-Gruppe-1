@@ -11,6 +11,8 @@ public class IncidentIndexViewModel
 
 public class IncidentCreateViewModel
 {
+    public int IncidentId { get; set; }
+
     [Required(ErrorMessage = "Dette feltet er påkrevd.")]
     [StringLength(150, ErrorMessage = "Tittelen kan ikke være lengre enn 150 tegn.")]
     public string Title { get; set; } = string.Empty;

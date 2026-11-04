@@ -5,7 +5,7 @@
     var incidentTypes = new[] { "Forest fire", "Landslide", "Flood", "Storm", "Power outage", "Other" };
     string StatusLabel(string? statusValue) => statusValue switch { "active" => "Aktiv", "new" => "Ny", "under_review" => "Vurderes", "assigned" => "Tildelt", "resolved" => "Løst", "cancelled" => "Kansellert", "rejected" => "Avvist", "available" => "Tilgjengelig", "unavailable" => "Utilgjengelig", "withdrawn" => "Trukket tilbake", _ => statusValue ?? "" };
     string TypeLabel(string? typeValue) => typeValue switch { "Forest fire" => "Skogbrann", "Landslide" => "Jordskred", "Flood" => "Flom", "Storm" => "Storm", "Power outage" => "Strømbrudd", "Other" => "Annet", _ => typeValue ?? "" };
-    var showCreatePanel = !ViewData.ModelState.IsValid;
+    var showCreatePanel = !ViewData.ModelState.IsValid && ViewBag.EditIncident is null;
 }
 
 <section class="subpage">
@@ -189,9 +189,15 @@
                         </div>
                     </dl>
 
-                    @if (isPublicActor && incident.Status == "active")
+                    @if ((isPublicActor || User.IsInRole("Administrator")) && incident.Status == "active")
                     {
                         <div class="dashboard-card-footer incident-card-footer">
+                            @if (isPublicActor)
+                            {
+                                <a asp-controller="Incidents" asp-action="Index"
+                                   asp-route-id="@incident.IncidentId"
+                                   class="btn btn-sm btn-outline-primary">Rediger</a>
+                            }
                             <form asp-controller="Incidents" asp-action="MarkAsResolved" method="post">
                                 <input type="hidden" name="incidentId" value="@incident.IncidentId" />
                                 @Html.AntiForgeryToken()
@@ -251,9 +257,15 @@
                                     </div>
                                 </dl>
 
-                                @if (isPublicActor)
+                                @if (isPublicActor || User.IsInRole("Administrator"))
                                 {
                                     <div class="dashboard-card-footer incident-card-footer">
+                                        @if (isPublicActor)
+                                        {
+                                            <a asp-controller="Incidents" asp-action="Index"
+                                               asp-route-id="@incident.IncidentId"
+                                               class="btn btn-sm btn-outline-primary">Rediger</a>
+                                        }
                                         <form asp-controller="Incidents" asp-action="Reactivate" method="post">
                                             <input type="hidden" name="incidentId" value="@incident.IncidentId" />
                                             @Html.AntiForgeryToken()
@@ -271,6 +283,25 @@
         }
     }
 </section>
+
+@if (ViewBag.EditIncident is H_st_2026_Gruppe_1.Models.IncidentCreateViewModel editIncident)
+{
+    <div class="modal fade registration-modal" id="incidentEditModal" tabindex="-1"
+         aria-labelledby="incidentEditModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg modal-fullscreen-md-down">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title" id="incidentEditModalTitle">Rediger hendelse</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                            aria-label="Lukk redigering"></button>
+                </div>
+                <div class="modal-body">
+                    <partial name="_IncidentEditForm" model="editIncident" />
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
@@ -308,6 +339,46 @@
             registerButton.addEventListener('click', function () {
                 setTimeout(() => incidentMap.invalidateSize(), 100);
             });
+        }
+    </script>
+    }
+
+    @if (ViewBag.EditIncident is not null)
+    {
+    <script nonce="@Context.Items["CspNonce"]">
+        const incidentEditModal = document.getElementById('incidentEditModal');
+        const editMapElement = document.getElementById('incident-edit-map');
+        const editLatitudeInput = document.getElementById('incident-edit-latitude');
+        const editLongitudeInput = document.getElementById('incident-edit-longitude');
+        const editMapStatus = document.getElementById('incident-edit-map-status');
+
+        if (incidentEditModal && editMapElement) {
+            const editLatitude = Number(editMapElement.dataset.latitude);
+            const editLongitude = Number(editMapElement.dataset.longitude);
+            const editMap = L.map(editMapElement).setView([editLatitude, editLongitude], 10);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(editMap);
+
+            let editMarker = L.marker([editLatitude, editLongitude]).addTo(editMap);
+            editMap.on('click', function (event) {
+                const latitude = event.latlng.lat;
+                const longitude = event.latlng.lng;
+
+                editMarker.setLatLng([latitude, longitude]);
+                editLatitudeInput.value = latitude.toFixed(6);
+                editLongitudeInput.value = longitude.toFixed(6);
+                editMapStatus.textContent =
+                    `Valgt sted: ${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+            });
+
+            const modal = bootstrap.Modal.getOrCreateInstance(incidentEditModal);
+            incidentEditModal.addEventListener('shown.bs.modal', () => {
+                editMap.invalidateSize();
+            });
+            modal.show();
+        } else if (incidentEditModal) {
+            bootstrap.Modal.getOrCreateInstance(incidentEditModal).show();
         }
     </script>
     }
