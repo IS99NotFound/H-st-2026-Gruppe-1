@@ -3,10 +3,10 @@ window.resqMapRegistration = {
         return function showRegistrationChoices(latlng) {
             const content = L.DomUtil.create('div', 'map-register-popup');
             const heading = L.DomUtil.create('strong', 'map-register-popup-heading', content);
-            heading.textContent = 'GPS-posisjon';
+            heading.textContent = 'Valgt posisjon';
 
             const coordinates = L.DomUtil.create('span', 'map-register-popup-coordinates', content);
-            coordinates.textContent = `${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}`;
+            coordinates.textContent = `Koordinater: ${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}`;
 
             const actions = [
                 { type: 'need', label: 'Registrer behov her', icon: 'bi-clipboard-plus' },
@@ -67,18 +67,6 @@ window.resqMapRegistration = {
                 .bindPopup(popupText + ': ' + lat.toFixed(5) + ', ' + lng.toFixed(5))
                 .openPopup();
             selectedMarker = marker;
-
-            marker.on('popupclose', () => {
-                if (selectedMarker !== marker) {
-                    return;
-                }
-
-                map.removeLayer(marker);
-                selectedMarker = null;
-                latInput.value = '';
-                lngInput.value = '';
-                positionText.textContent = 'Ingen posisjon valgt.';
-            });
 
             latInput.value = lat;
             lngInput.value = lng;
