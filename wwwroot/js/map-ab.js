@@ -41,13 +41,15 @@ window.resqAbMap = {
         function setAbMode(mode) {
             abMode = mode;
             map.getContainer().classList.toggle('placing', mode !== null);
-            abButton?.classList.toggle('active', abActive);
         }
 
         const AbControl = L.Control.extend({
             options: { position: 'topleft' },
             onAdd: function () {
-                const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+                const container = L.DomUtil.create(
+                    'div',
+                    'leaflet-bar leaflet-control map-overlay-control'
+                );
                 abButton = L.DomUtil.create('a', 'ab-button', container);
                 abButton.href = '#';
                 abButton.title = 'Marker punkt A og B';
@@ -65,6 +67,7 @@ window.resqAbMap = {
                         abActive = true;
                         setAbMode('A');
                     }
+                    abButton.classList.toggle('is-active', abActive);
                 });
                 return container;
             }
