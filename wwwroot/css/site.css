@@ -595,6 +595,11 @@ body {
 .resq-map-marker--available-resource {
     background-color: var(--map-available-resource);
 }
+/* Oransje markør for tildelte/utilgjengelige ressurser. */
+.map-color-dot--unavailable-resource,
+.resq-map-marker--unavailable-resource {
+    background-color: #3B3A3A;
+}
 
 .map-color-dot--public-team,
 .resq-map-marker--public-team {

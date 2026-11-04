@@ -17,6 +17,7 @@
         <div id="map" role="application" aria-label="Interaktivt kart"
              data-resource-registration-url="@(canRegisterResource ? Url.Action("Index", "Home") : null)"
              data-need-registration-url="@Url.Action("DashboardIndex", "PublicActor")"
+             data-resource-markers-url="@Url.Action("GetResourceMarkers", "PublicActor")"
              data-registration-type="need"></div>
         <partial name="_MapColorLegend" />
         <div class="map-filtering is-collapsed" id="survival-filter-panel">
@@ -34,6 +35,11 @@
                     {
                         <label><input type="checkbox" class="registered-resources-filter" value="@category.CategoryName" checked /> @category.CategoryName</label>
                     }
+                 <!-- Only shows unavailable resources only when the user activates it. -->
+                <label>
+                    <input type="checkbox" id="show-unavailable-resources" />
+                    Vis utilgjengelige ressurser
+                </label>
                 </div>
                 <p id="registered-resources-status" role="status">Laster registrerte ressurser...</p>
             </div>

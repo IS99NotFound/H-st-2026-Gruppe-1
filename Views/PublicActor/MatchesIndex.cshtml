@@ -10,6 +10,16 @@
         <h1>Match ressurser</h1>
     </div>
 
+    @if (TempData["MatchMessage"] is string matchMessage)
+    {
+        <div class="alert-success" role="status">@matchMessage</div>
+    }
+    
+    @if (TempData["MatchError"] is string matchError)
+    {
+        <div class="alert-failed" role="alert">@matchError</div>
+    }
+
     @if (!Model.UserNeeds.Any())
     {
         <div class="empty-state-panel">
@@ -98,6 +108,10 @@
 
                             <p class="dashboard-card-description">@match.Resource.Description</p>
 
+                            @if (match.MatchStatus == "accepted")
+                            {
+                                <p><span class="status-label status-assigned">Resource assigned to need - temporarily unavailable for others</span></p>
+                            }
                             <dl class="dashboard-details match-details">
                                 <div>
                                     <dt>Kontakt</dt>
@@ -126,15 +140,26 @@
                                 </div>
                             </dl>
 
-                            <form asp-controller="PublicActor" asp-action="UpdateResourceStatus"
-                                  method="post" class="match-status-form">
-                                @Html.AntiForgeryToken()
+                            @*ASP.NET automatically saves anti-forgery fields for POST
+                            We are therefore not requred to put in  *@
+                            <form asp-controller="PublicActor" 
+                                asp-action="UpdateResourceStatus"
+                                method="post" 
+                                class="match-status-form">
+
+                            @* @Html.AntiForgeryToken() *@
+
                                 <input type="hidden" name="resourceId" value="@match.Resource.Id" />
                                 <input type="hidden" name="needId" value="@Model.Need.Id" />
+
                                 <label for="comment-@match.Resource.Id">Kommentar</label>
-                                <textarea id="comment-@match.Resource.Id" name="statusComment"
-                                          class="form-control" maxlength="500"
-                                          placeholder="Skriv en kommentar">@match.Comment</textarea>
+
+                                <textarea id="comment-@match.Resource.Id" 
+                                        name="statusComment"
+                                        class="form-control" 
+                                        maxlength="500"
+                                        placeholder="Skriv en kommentar">@match.Comment</textarea>
+                                
                                 <div class="match-status-buttons">
                                     <button type="submit" name="newStatus" value="accepted"
                                             class="btn btn-sm match-action match-action-accepted @(match.MatchStatus == "accepted" ? "status-selected" : "")">
@@ -158,9 +183,19 @@
     }
 </section>
 
-@if (hasSelectedNeed)
-{
-    <script nonce="@Context.Items["CspNonce"]">
-        window.resqRadius.initialize('radiusKm', 'radiusKmValue');
-    </script>
+@section Scripts {
+    @if (hasSelectedNeed)
+    {
+        <script nonce="@Context.Items["CspNonce"]">
+
+            // Initialiser avstandsskyveknappen.
+            if (window.resqRadius) {
+                window.resqRadius.initialize(
+                    'radiusKm',
+                    'radiusKmValue'
+                );
+            }
+
+        </script>
+    }
 }

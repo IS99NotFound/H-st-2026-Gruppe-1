@@ -30,31 +30,85 @@ public class PublicActorController : Controller
         _db = db;
         _lifecycle = lifecycle;
     }
-    private void LoadResourceMarkers()
-{
-    var resources = _db.Resources
-        .Include(r => r.Category)
-        .Where(r =>
-            r.Status == "available" &&
-            r.Latitude.HasValue &&
-            r.Longitude.HasValue)
-        .Select(r => new
-        {
-            name = r.Name,
-            resourceType = r.Category != null
-                ? r.Category.CategoryName
-                : "Annet",
-            description = r.Description,
-            phone = r.PhoneNumber,
-            latitude = r.Latitude,
-            longitude = r.Longitude
-        })
-        .ToList();
+    
 
-    ViewBag.ResourceMarkersJson =
+   //Fetches the resources from map.
+    private IQueryable<ResourceEntry> GetResourceMarkerQuery(
+        bool includeUnavailable = false)
+    {
+        IQueryable<ResourceEntry> query = _db.Resources
+            .AsNoTracking()
+            .Where(r =>
+                r.Latitude.HasValue &&
+                r.Longitude.HasValue);
+
+    if (includeUnavailable)
+    {
+        // If the user activates filtering on the map,
+        // we will also include unavailable resources.
+        query = query.Where(r =>
+            r.Status == "available" ||
+            r.Status == "unavailable");
+    }
+    else
+        {
+           //Standard view: Only availabke resources
+           query = query.Where(r =>
+                r.Status == "available");
+        }
+        return query;
+    }
+    private void LoadResourceMarkers()
+    {
+        var resources = GetResourceMarkerQuery()
+            .Select(r => new
+            {
+                id = r.Id,
+                name = r.Name,
+                resourceType = r.Category != null
+                    ? r.Category.CategoryName
+                    :"Annet",
+                description = r.Description,
+                phone = r.PhoneNumber,
+                latitude = r.Latitude,
+                longitude = r.Longitude,
+                status = r.Status
+            })
+            .ToList();
+        //Makes the resources available for JavaScript on the map
+        ViewBag.ResourceMarkersJson =
         System.Text.Json.JsonSerializer.Serialize(resources);
 }
+    // API-endpoint like JavaScript is used to fetch fresh data.
+    //includeUnavailable is set to false as a standard
+    [HttpGet]
+    [Authorize(Roles = "PublicActor,Administrator")]
+    [ResponseCache(
+        Duration = 0,
+        Location = ResponseCacheLocation.None,
+        NoStore = true)]
+    public IActionResult GetResourceMarkers(bool includeUnavailable = false)
+    {
+        var resources = GetResourceMarkerQuery(includeUnavailable)
+            .Select(r => new
+            {
+                id = r.Id,
+                name = r.Name,
 
+                resourceType = r.Category != null
+                    ? r.Category.CategoryName
+                    : "Annet",
+
+                description = r.Description,
+                phone = r.PhoneNumber,
+                latitude = r.Latitude,
+                longitude = r.Longitude,
+                status = r.Status
+            })
+            .ToList();
+
+        return Json(resources);
+    }
     // Categories for the dropdown
     private void LoadDropdowns()
     {
@@ -102,6 +156,7 @@ public class PublicActorController : Controller
     private void LoadOperationalFeed()
     {
         ViewBag.FeedResources = _db.Resources
+            .Where(resource => resource.Status == "available")
             .Include(resource => resource.Category)
             .AsEnumerable()
             .Select(resource => new OperationalFeedItem
@@ -388,20 +443,26 @@ public class PublicActorController : Controller
          var records = _db.MatchRecords
             .Where(match => match.NeedId == selectedNeed.Id)
             .ToList();
-           
-        var assignedToThisNeed = records
-            .Where(record => record.Status == "accepted")
-            .Select(record => record.ResourceId)
-            .ToList();
 
         model.Matches = RadiusMatcher.FindResources(
             selectedNeed,
             radiusKm,
             _db.Resources
-            .Include(resource => resource.Category)
-            .Where(resource => resource.Status == "available" || assignedToThisNeed.Contains(resource.Id))
-            .ToList(),
+                .Include(resource => resource.Category)
+                .Where(resource => resource.Status == "available")
+                .ToList(),
             allCategories);
+        
+        // Fetch earlier match-status' and comments for resources
+        // that are still available.
+        foreach (var match in model.Matches)
+        {
+            var record = records.FirstOrDefault(
+                item => item.ResourceId == match.Resource.Id);
+
+            match.MatchStatus = record?.Status;
+            match.Comment = record?.Comment;
+        }
  
         foreach (var match in model.Matches)
         {
@@ -452,18 +513,32 @@ public class PublicActorController : Controller
         var wasAssigned = record?.Status == "accepted";
 
         //Assign: lock the resource FIRST. If someone else took it first, nothing is saved.
-        if (newStatus == "accepted" && !wasAssigned)
+        if (newStatus == "accepted")
         {
             if (need.Status is "resolved" or "cancelled")
             {
                 TempData["MatchError"] = "This need is closed, so resources can no longer be assigned to it.";
                 return RedirectToAction("Matches", new { needId });
             }
-
-            if (!_lifecycle.TryReserveResource(resourceId))
+            
+            //Checks to see if the resource is still avaiable in the database..
+            bool resourceIsAvailable = _db.Resources.Any(resource =>
+                resource.Id == resourceId &&
+                resource.Status == "available");
+            if (resourceIsAvailable)
             {
-                TempData["MatchError"] = "This resource is temporarily unavailable. It is already assigned to another need.";
-                 return RedirectToAction("Matches", new { needId });
+                if (!_lifecycle.TryReserveResource(resourceId))
+                {
+                    TempData["MatchError"] = "This resource is temporarily unavailable. It is already assigned to another need.";
+                    return RedirectToAction("Matches", new { needId });
+                }
+            }
+            else if (!wasAssigned)
+            {
+                //The resource is unavailable and no already assigned to this need
+                TempData["MatchError"] = "This resource is already assigned to another need.";
+
+                return RedirectToAction("Matches", new {needId});
             }
         }
         if (record == null)
@@ -499,6 +574,10 @@ public class PublicActorController : Controller
 
         return RedirectToAction("Matches", new { needId });
     }
+
+    [HttpPost]
+    [Authorize(Roles = "PublicActor")]
+    [ValidateAntiForgeryToken]
     public IActionResult ResolveNeed(int id)
     {
         var need = _db.Needs.Find(id);
@@ -513,10 +592,11 @@ public class PublicActorController : Controller
             return Unauthorized();
         }
 
-        if (!User.IsInRole("Administrator") && need.PublicActorId != currentUserId.Value)
+        //Ikke admin ennå
+       /* if (!User.IsInRole("Administrator") && need.PublicActorId != currentUserId.Value)
         {
             return Forbid();
-        }
+        }*/
 
         _lifecycle.CloseNeed(id, "resolved");
         return RedirectToAction(nameof(NeedsIndex));
