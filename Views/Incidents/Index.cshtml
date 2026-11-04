@@ -159,6 +159,15 @@
     }
     else
     {
+        @if (activeIncidents.Any())
+        {
+            <div class="match-results-heading">
+                <div>
+                    <p class="page-eyebrow">RESULTATER</p>
+                    <h2>Aktive hendelser</h2>
+                </div>
+            </div>
+        }
         <div class="incident-list">
             @foreach (var incident in activeIncidents)
             {
