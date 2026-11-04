@@ -332,8 +332,12 @@ body {
 }
 
 .feed-location-actions .btn {
-    flex: 1;
+    flex: 0.8;
     font-size: 0.75rem;
+}
+
+.feed-location-actions .btn[data-feed-current-location] {
+    flex: 1.2;
 }
 
 .feed-resizer {
@@ -1032,10 +1036,14 @@ html[data-theme="light"] .registration-modal .btn-close {
     }
 
     .feed-location-actions .btn {
-        flex: 1;
+        flex: 0.8;
         padding: 4px 5px;
         font-size: 0.65rem;
         white-space: nowrap;
+    }
+
+    .feed-location-actions .btn[data-feed-current-location] {
+        flex: 1.2;
     }
 
     .feed-location-column {
