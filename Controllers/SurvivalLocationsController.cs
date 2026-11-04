@@ -1,12 +1,41 @@
-
+using System.Globalization;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace H_st_2026_Gruppe_1.Controllers;
+
+public record SurvivalLocation(
+    string Name,
+    string Category,
+    double Latitude,
+    double Longitude,
+    string? Address);
 
 [ApiController]
 [Route("api/survival-locations")]
 public class SurvivalLocationsController : ControllerBase
+
+    //Mapsizing will we rounded off to a gridsize of ca. 1 km,
+    //this sizing is almost the same as the cache-key and wont use up new credits.
+    private const double GridSize = 0.01;
+
+    //Biggest allowed size in degrees (protects the credit limit so user cant "zool all the way out")
+    private const double MaxSpan = 1.0;
+
+    //Maximum amount of "hits" per search. Less "hits" == less credits.
+    private const int MaxResults = 100;
+
+    private static readonly TimeSpan CacheTime = TimeSpan.FromMinutes(30);
+
+    //Categories within Geoapify
+    private static readonly Dictionary<string, string> CategoryMap =
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["hospital"] = "healthcare.hospital",
+            ["drinking_water"] = "amenity.drinking_water",
+            [""]
+        }
 {
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IConfiguration _configuration;

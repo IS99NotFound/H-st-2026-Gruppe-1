@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using H_st_2026_Gruppe_1.Data;
 using H_st_2026_Gruppe_1.Models;
+using H_st_2026_Gruppe_1.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 
@@ -22,10 +23,12 @@ public class PublicActorController : Controller
     }
     
     private readonly AppDbContext _db;
+    private readonly MatchNeedLifecycle _lifecycle;
 
-    public PublicActorController (AppDbContext db)
+    public PublicActorController (AppDbContext db, MatchNeedLifecycle lifecycle)
     {
         _db = db;
+        _lifecycle = lifecycle;
     }
     private void LoadResourceMarkers()
 {
@@ -161,6 +164,8 @@ public class PublicActorController : Controller
         DateTime? endDate,
         int? id)
     {
+        _lifecycle.ReleaseFinishedAssignments();
+        
         var results = _db.Needs.Include(need => need.CategoryInfo).AsQueryable();
 
         if (!User.IsInRole("Administrator"))
@@ -294,7 +299,8 @@ public class PublicActorController : Controller
                 existingNeed.Deadline =need.Deadline;
                 existingNeed.Priority = need.Priority;
                 existingNeed.RegisteredAt = DateTime.Now;
-                existingNeed.Status = need.Status; 
+               // existingNeed.Status = need.Status; 
+               // <- Bug, no status-field. After changes, status will always be new
                 _db.SaveChanges();
             }
         }
@@ -353,6 +359,9 @@ public class PublicActorController : Controller
 
     private MatchViewModel BuildMatchViewModel(int? needId, double radiusKm, bool allCategories = false)
     {
+       //Will free room for resources if a need is set as resolved or deadline has passed
+        _lifecycle.ReleaseFinishedAssignments();
+
         var needs = _db.Needs.Include(need => need.CategoryInfo).ToList();
         var selectedNeed = needId.HasValue
             ? needs.FirstOrDefault(need => need.Id == needId.Value)
@@ -376,15 +385,24 @@ public class PublicActorController : Controller
             return model;
         }
 
+         var records = _db.MatchRecords
+            .Where(match => match.NeedId == selectedNeed.Id)
+            .ToList();
+           
+        var assignedToThisNeed = records
+            .Where(record => record.Status == "accepted")
+            .Select(record => record.ResourceId)
+            .ToList();
+
         model.Matches = RadiusMatcher.FindResources(
             selectedNeed,
             radiusKm,
-            _db.Resources.Include(resource => resource.Category).ToList(),
+            _db.Resources
+            .Include(resource => resource.Category)
+            .Where(resource => resource.Status == "available" || assignedToThisNeed.Contains(resource.Id))
+            .ToList(),
             allCategories);
-
-        var records = _db.MatchRecords
-            .Where(match => match.NeedId == selectedNeed.Id)
-            .ToList();
+ 
         foreach (var match in model.Matches)
         {
             var record = records.FirstOrDefault(item => item.ResourceId == match.Resource.Id);
@@ -408,13 +426,12 @@ public class PublicActorController : Controller
         }
 
         var need = _db.Needs.Find(needId);
-        if (need == null || _db.Resources.Find(resourceId) == null)
+        if (need == null || !_db.Resources.Any(resource => resource.Id == resourceId))
         {
             return NotFound();
         }
 
         var currentUserId = GetCurrentUserId();
-
         if (currentUserId is null)
         {
             return Unauthorized();
@@ -432,6 +449,23 @@ public class PublicActorController : Controller
         }
 
         var record = _db.MatchRecords.Find(needId, resourceId);
+        var wasAssigned = record?.Status == "accepted";
+
+        //Assign: lock the resource FIRST. If someone else took it first, nothing is saved.
+        if (newStatus == "accepted" && !wasAssigned)
+        {
+            if (need.Status is "resolved" or "cancelled")
+            {
+                TempData["MatchError"] = "This need is closed, so resources can no longer be assigned to it.";
+                return RedirectToAction("Matches", new { needId });
+            }
+
+            if (!_lifecycle.TryReserveResource(resourceId))
+            {
+                TempData["MatchError"] = "This resource is temporarily unavailable. It is already assigned to another need.";
+                 return RedirectToAction("Matches", new { needId });
+            }
+        }
         if (record == null)
         {
             record = new MatchRecord
@@ -448,7 +482,44 @@ public class PublicActorController : Controller
         record.MatchDate = DateTime.Now;
         _db.SaveChanges();
 
+        if (wasAssigned && newStatus != "accepted")
+        {
+            _lifecycle.ReleaseResource(resourceId);
+        }
+
+        _lifecycle.RefreshNeedStatus(needId);
+
+        TempData["MatchMessage"] = newStatus switch
+        {
+            "accepted" => "Resource assigned. It is now marked as temporarily unavailable for other public actors.",
+            "proposed" when wasAssigned => "Resource set to under review and is available again.",
+            "declined" when wasAssigned => "Resource rejected and is available again",
+            _ => "Status saved."
+        };
+
         return RedirectToAction("Matches", new { needId });
+    }
+    public IActionResult ResolveNeed(int id)
+    {
+        var need = _db.Needs.Find(id);
+        if (need == null)
+        {
+            return NotFound();
+        }
+
+        var currentUserId = GetCurrentUserId();
+        if (currentUserId is null)
+        {
+            return Unauthorized();
+        }
+
+        if (!User.IsInRole("Administrator") && need.PublicActorId != currentUserId.Value)
+        {
+            return Forbid();
+        }
+
+        _lifecycle.CloseNeed(id, "resolved");
+        return RedirectToAction(nameof(NeedsIndex));
     }
 }
 
@@ -466,10 +537,12 @@ public class HomeController : Controller
     }
     
     private readonly AppDbContext _db;
+    private readonly MatchNeedLifecycle _lifecycle;
 
-    public HomeController(AppDbContext db)
+    public HomeController(AppDbContext db, MatchNeedLifecycle lifecycle)
     {
         _db = db;
+        _lifecycle = lifecycle;
     }
 
     [Authorize(Roles = "CivilianProvider,Administrator")]
@@ -701,7 +774,10 @@ public class HomeController : Controller
         {
             return Forbid();
         }
-        
+
+        // Fjern match-radene først (fremmednøkkel) og frigi assigned ressurser
+        _lifecycle.RemoveMatchesFromNeed(Need.Id);
+
         _db.Needs.Remove(Need);
         await _db.SaveChangesAsync();
         return RedirectToAction("NeedsIndex", "PublicActor");    }
