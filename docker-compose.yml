@@ -7,13 +7,15 @@ services:
     environment:
       MARIADB_ROOT_PASSWORD: root
       MARIADB_DATABASE: heimevernet
+      TZ: Europe/Oslo
     ports:
       # Maps host port 3307 to container port 3306 (default MariaDB port)
       # This allows database clients (Rider, DBeaver) to connect via localhost:3307
       - "3307:3306"
     volumes:
       # Automatically initializes the schema on first startup
-      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./database/seed-demo.sql:/docker-entrypoint-initdb.d/02-seed-demo.sql:ro
       # Persists database data across container restarts
       - mariadb_data:/var/lib/mysql
 
@@ -29,14 +31,17 @@ services:
       - "8081:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - TZ=Europe/Oslo
       # Tells the application inside the container to listen on port 8080
       - ASPNETCORE_HTTP_PORTS=8080
       # Connects to the database service container ('db') over the internal Docker network on port 3306
       - ConnectionStrings__DefaultConnection=Server=db;Port=3306;Database=heimevernet;User=root;Password=root;
+      # Ny API-Key for kart og lokasjon
+      - Geoapify__ApiKey=${GEOAPIFY_API_KEY}
     depends_on:
       # Ensures the database container starts before the web application
       - db
-
+      
 # Named volumes for data storage
 volumes:
   mariadb_data:

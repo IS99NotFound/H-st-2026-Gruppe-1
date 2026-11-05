@@ -1,0 +1,224 @@
+@model List<H_st_2026_Gruppe_1.Models.ResourceNeed>
+
+@{
+    ViewData["Title"] = "Behov";
+    var categories = ViewBag.Categories as List<H_st_2026_Gruppe_1.Models.Category> ?? new();
+    var incidents = ViewBag.Incidents as List<H_st_2026_Gruppe_1.Models.Incident> ?? new();
+}
+
+<section class="subpage">
+    <div class="subpage-header">
+        <h1>Behov</h1>
+    </div>
+
+    <form id="needFilterForm" method="get" asp-controller="PublicActor" asp-action="NeedsIndex" class="dashboard-filter-bar">
+        <div class="dashboard-filter-field">
+            <label for="priorityFilter" class="form-label text-muted small fw-bold">Filtrer på prioritet</label>
+            <select name="priority" id="priorityFilter" class="form-select">
+                <option value="">Alle prioriteter</option>
+                <option value="Critical" selected="@(Context.Request.Query["priority"] == "Critical")">Akutt</option>
+                <option value="Planned" selected="@(Context.Request.Query["priority"] == "Planned")">Planlagt</option>
+            </select>
+        </div>
+
+        <div class="dashboard-filter-field">
+            <label for="categoryFilter" class="form-label text-muted small fw-bold">Filtrer på kategori</label>
+            <select name="category" id="categoryFilter" class="form-select">
+                <option value="">Alle kategorier</option>
+                @foreach (var category in categories)
+                {
+                    <option value="@category.CategoryId"
+                            selected="@(Context.Request.Query["category"] == category.CategoryId.ToString())">
+                        @category.CategoryName
+                    </option>
+                }
+            </select>
+        </div>
+
+        <div class="dashboard-filter-field">
+            <label for="needStartDate" class="form-label text-muted small fw-bold">Dato fra</label>
+            <input type="date" name="startDate" id="needStartDate" class="form-control"
+                   value="@Context.Request.Query["startDate"]" />
+        </div>
+
+        <div class="dashboard-filter-field">
+            <label for="needEndDate" class="form-label text-muted small fw-bold">Dato til</label>
+            <input type="date" name="endDate" id="needEndDate" class="form-control"
+                   value="@Context.Request.Query["endDate"]" />
+        </div>
+
+        <div class="dashboard-filter-field dashboard-distance-field">
+            <label for="needRadiusFilter" class="form-label text-muted small fw-bold">Avstand</label>
+            <input id="needRadiusFilter" type="range" class="form-range" min="0" max="100" step="5" value="0" />
+            <div class="dashboard-radius-value" id="needRadiusValue">Alle avstander</div>
+        </div>
+
+        <div class="dashboard-filter-actions">
+            <button type="submit" class="btn btn-primary">Filtrer</button>
+            <a asp-controller="PublicActor" asp-action="NeedsIndex"
+               class="btn btn-outline-secondary">Nullstill</a>
+        </div>
+    </form>
+    <p id="need-location-error" class="dashboard-location-error" role="alert" aria-live="polite" hidden>
+        Tilgang til posisjon kreves for å bruke avstandsfilteret.
+    </p>
+
+    @if (!Model.Any())
+    {
+        <p class="placeholder-copy needs-empty-state">Ingen behov er registrert akkurat nå.</p>
+    }
+    else
+    {
+        <div class="need-list">
+            @foreach (var need in Model)
+            {
+                var incident = incidents.FirstOrDefault(item => item.IncidentId == need.CrisisEventId);
+
+                <article class="dashboard-card need-card"
+                         data-latitude="@need.Latitude"
+                         data-longitude="@need.Longitude">
+                    <div class="dashboard-card-header">
+                        <h2>@need.Title</h2>
+                        <div class="need-card-badges">
+                            @if (need.Priority == H_st_2026_Gruppe_1.Models.NeedPriorityEnum.Planned)
+                            {
+                                <span class="feed-color-badge feed-color-badge--planned-need" title="Planlagt">
+                                    <span>Planlagt behov</span>
+                                </span>
+                            }
+                            else if (need.Priority == H_st_2026_Gruppe_1.Models.NeedPriorityEnum.Critical)
+                            {
+                                <span class="feed-color-badge feed-color-badge--critical-need" title="Akutt">
+                                    <span>Akutt behov</span>
+                                </span>
+                            }
+                            @{
+                                //Coverterts the status value stored in the database (example: "under_review")
+                                //into a readable text for the user. Unknown values are shown as they are.
+                                var needStatusText = need.Status switch
+                                {
+                                    "new" => "Ny",
+                                    "under_review" => "Vurderes",
+                                    "assigned" => "Tildelt",
+                                    "resolved" => "Løst",
+                                    "cancelled" => "Kansellert",
+                                    "rejected" => "Avvist",
+                                    _ => need.Status
+                                };
+                            }
+                        @*Shows the current status of the need*@
+                            <span class ="status-label">@needStatusText</span>
+                        </div>
+                    </div>
+
+                    <p class="dashboard-card-description">@need.Description</p>
+
+                    <dl class="dashboard-details need-details">
+                        <div>
+                            <dt>Kontakt</dt>
+                            <dd>@need.Email<br />@need.PhoneNumber</dd>
+                        </div>
+                        <div>
+                            <dt>Krisehendelse</dt>
+                            <dd>
+                                @(incident?.Title ?? $"Hendelse #{need.CrisisEventId}")
+                            </dd>
+                        </div>
+                        <div>
+                            <dt>Kategori</dt>
+                            <dd>@(need.CategoryInfo?.CategoryName ?? "Ikke oppgitt")</dd>
+                        </div>
+                        <div>
+                            <dt>Antall</dt>
+                            <dd>@need.Quantity</dd>
+                        </div>
+                        <div>
+                            <dt>Trengs fra</dt>
+                            <dd>@(need.RequiredFrom?.ToString("dd.MM.yyyy") ?? "Ikke oppgitt")</dd>
+                        </div>
+                        <div>
+                            <dt>Trengs til</dt>
+                            <dd>@(need.Deadline?.ToString("dd.MM.yyyy") ?? "Ikke oppgitt")</dd>
+                        </div>
+                        <div>
+                            <dt>Sted (breddegrad/lengdegrad)</dt>
+                            <dd>@need.Latitude.ToString("F5"), @need.Longitude.ToString("F5")</dd>
+                        </div>
+                        <div>
+                            <dt>Registrert</dt>
+                            <dd>@need.RegisteredAt.ToString("dd.MM.yyyy HH:mm")</dd>
+                        </div>
+                    </dl>
+
+                    <div class="dashboard-card-footer">
+                        <form class="dashboard-card-actions" asp-controller="Home" asp-action="DeleteNeed"
+                              asp-route-id="@need.Id" method="post"
+                              data-confirm="Er du sikker på at du vil slette dette behovet?">
+                            @Html.AntiForgeryToken()
+                            <a asp-controller="PublicActor" asp-action="NeedsIndex" asp-route-id="@need.Id"
+                               class="btn btn-sm btn-primary">Rediger</a>
+                            <button type="submit" class="btn btn-sm btn-danger">Slett</button>
+                        </form>
+                    </div>
+                </article>
+            }
+        </div>
+    }
+</section>
+
+@if (ViewBag.EditNeed is H_st_2026_Gruppe_1.Models.ResourceNeed editNeed)
+{
+    <div class="modal fade registration-modal" id="registrationModal" tabindex="-1"
+         aria-labelledby="registrationModalTitle" aria-hidden="true" data-bs-backdrop="static"
+         data-registration-modal data-open-registration-modal="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg modal-fullscreen-md-down">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title" id="registrationModalTitle">
+                        <i class="bi bi-clipboard-plus" aria-hidden="true"></i>
+                        <span>Rediger ressursbehov</span>
+                    </h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                            aria-label="Lukk registreringsskjema"></button>
+                </div>
+                <div class="modal-body" data-registration-modal-body>
+                    <partial name="_NeedRegistrationForm" model="editNeed" />
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script nonce="@Context.Items["CspNonce"]">
+        window.resqRegistration.initializeDateTimeFields('needForm', [
+            { dateId: 'requiredFromDate', timeId: 'requiredFromTime', valueId: 'requiredFromValue' },
+            { dateId: 'deadlineDate', timeId: 'deadlineTime', valueId: 'deadlineValue',
+              rangeErrorId: 'needDateRangeError' }
+        ]);
+        window.resqRegistration.bindCurrentLocationButton('useCurrentLocation', {
+            onPosition: (latitude, longitude) => {
+                document.getElementById('latInput').value = latitude;
+                document.getElementById('lngInput').value = longitude;
+                document.getElementById('posText').textContent =
+                    'Valgt posisjon: bredde: ' + latitude.toFixed(5) + ', lengde: ' + longitude.toFixed(5);
+            }
+        });
+        const modalElement = document.getElementById('registrationModal');
+        if (modalElement?.dataset.openRegistrationModal === 'true') {
+            bootstrap.Modal.getOrCreateInstance(modalElement).show();
+        }
+
+        window.resqDateRange.bindFilter(
+            'needFilterForm',
+            'needStartDate',
+            'needEndDate');
+        window.resqRadius.initializeDistanceFilter({
+            sliderId: 'needRadiusFilter',
+            valueId: 'needRadiusValue',
+            errorId: 'need-location-error',
+            cardSelector: '.need-card'
+        });
+    </script>
+}

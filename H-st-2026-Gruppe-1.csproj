@@ -7,4 +7,9 @@
     <RootNamespace>H_st_2026_Gruppe_1</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.0" />
+    <PackageReference Include="Microting.EntityFrameworkCore.MySql" Version="10.0.13" />
+  </ItemGroup>
+
 </Project>

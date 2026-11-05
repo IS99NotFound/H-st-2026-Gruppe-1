@@ -1,54 +1,225 @@
-@model List<H_st_2026_Gruppe_1.Models.ResourceEntry>
+@model H_st_2026_Gruppe_1.Models.ResourceDashboard
+
 @{
-    ViewData["Title"] = "My Resources";
+    ViewData["Title"] = "Ressurser";
+    string StatusLabel(string? statusValue) => statusValue switch { "active" => "Aktiv", "new" => "Ny", "under_review" => "Vurderes", "assigned" => "Tildelt", "resolved" => "Løst", "cancelled" => "Kansellert", "rejected" => "Avvist", "available" => "Tilgjengelig", "unavailable" => "Utilgjengelig", "withdrawn" => "Trukket tilbake", _ => statusValue ?? "" };
+    var categories = ViewBag.Categories as List<H_st_2026_Gruppe_1.Models.Category> ?? new();
+    var statuses = Model.Resources
+        .Select(resource => resource.Status)
+        .Where(status => !string.IsNullOrWhiteSpace(status))
+        .Distinct()
+        .OrderBy(status => status)
+        .ToList();
 }
 
-<h2>Registered resources</h2>
+<section class="subpage">
+    <div class="subpage-header">
+        <h1>Ressurser</h1>
+    </div>
 
-<div class="d-flex justify-content-end align-items-end mb-3">
-    <a asp-controller="Home" asp-action="Index" class="btn btn-custom">Register a new resource</a>
-</div>
+    <form id="resourceFilterForm" method="get" asp-controller="Resources" asp-action="Index" class="dashboard-filter-bar">
+        <div class="dashboard-filter-field">
+            <label for="resourceSearch" class="form-label text-muted small fw-bold">Søk</label>
+            <input type="search" name="search" id="resourceSearch" class="form-control"
+                   value="@Model.Search" placeholder="Søk etter ressursnavn" />
+        </div>
 
-@if (!Model.Any())
-{
-    <p>No resources are registered right now</p>
-}
-else
-{
-    <table class="table table-dark table-striped">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Telephone</th>
-                <th>Type</th>
-                <th>Description</th>
-                <th>Expiry date</th>
-                <th>Position</th>
-                <th>Registered</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var r in Model)
+        <div class="dashboard-filter-field">
+            <label for="resourceStatusFilter" class="form-label text-muted small fw-bold">Filtrer på status</label>
+            <select name="status" id="resourceStatusFilter" class="form-select">
+                <option value="">Alle</option>
+                @foreach (var status in statuses)
+                {
+                    <option value="@status" selected="@(Model.Status == status)">@StatusLabel(status)</option>
+                }
+            </select>
+        </div>
+
+        <div class="dashboard-filter-field">
+            <label for="resourceTypeFilter" class="form-label text-muted small fw-bold">Filtrer på type</label>
+            <select name="resourceType" id="resourceTypeFilter" class="form-select">
+                <option value="">Alle</option>
+                @foreach (var category in categories)
+                {
+                    <option value="@category.CategoryId" selected="@(Model.ResourceType == category.CategoryId)">
+                        @category.CategoryName
+                    </option>
+                }
+            </select>
+        </div>
+
+        <div class="dashboard-filter-field">
+            <label for="resourceStartDate" class="form-label text-muted small fw-bold">Dato fra</label>
+            <input type="date" name="startDate" id="resourceStartDate" class="form-control"
+                   value="@Model.StartDate?.ToString("yyyy-MM-dd")" />
+        </div>
+
+        <div class="dashboard-filter-field">
+            <label for="resourceEndDate" class="form-label text-muted small fw-bold">Dato til</label>
+            <input type="date" name="endDate" id="resourceEndDate" class="form-control"
+                   value="@Model.EndDate?.ToString("yyyy-MM-dd")" />
+        </div>
+
+        <div class="dashboard-filter-field dashboard-distance-field">
+            <label for="resourceRadiusFilter" class="form-label text-muted small fw-bold">Avstand</label>
+            <input id="resourceRadiusFilter" type="range" class="form-range" min="0" max="100" step="5" value="0" />
+            <div class="dashboard-radius-value" id="resourceRadiusValue">Alle avstander</div>
+        </div>
+
+        <div class="dashboard-filter-actions">
+            <button type="submit" class="btn btn-primary">Søk</button>
+            <a asp-controller="Resources" asp-action="Index" class="btn btn-outline-secondary">Nullstill</a>
+        </div>
+    </form>
+
+    <p id="resource-location-error" class="dashboard-location-error" role="alert" aria-live="polite" hidden>
+        Tilgang til posisjon kreves for å bruke avstandsfilteret.
+    </p>
+
+    @if (!Model.Resources.Any())
+    {
+        <p class="placeholder-copy">Ingen ressurser er registrert akkurat nå.</p>
+    }
+    else
+    {
+        <div class="resource-list">
+            @foreach (var resource in Model.Resources)
             {
-                <tr>
-                    <td>@r.Name</td>
-                    <td>@r.Phone</td>
-                    <td>@r.ResourceType</td>
-                    <td>@r.Description</td>
-                    <td>@r.ExpiryDate?.ToString("dd.MM.yyyy")</td>
-                    <td>
-                        @if (r.Latitude != null && r.Longitude != null)
-                        {
-                            @($"{r.Latitude:F5}, {r.Longitude:F5}")
-                        }
-                        else
-                        {
-                            <span>No position selected</span>
-                        }
-                    </td>
-                    <td>@r.RegisteredAt.ToString("dd.MM.yyyy HH:mm")</td>
-                </tr>
+                var normalizedStatus = (resource.Status ?? "").Trim().ToLowerInvariant();
+                var statusClass = normalizedStatus switch
+                {
+                    "ny" or "new" => "status-new",
+                    "available" => "status-available",
+                    "assigned" => "status-assigned",
+                    "under_review" => "status-under-review",
+                    "rejected" => "status-rejected",
+                    "unavailable" => "status-unavailable",
+                    "withdrawn" => "status-withdrawn",
+                    _ => ""
+                };
+                var statusText = normalizedStatus switch
+                {
+                    "ny" or "new" => "Ny",
+                    "under_review" => "Vurderes",
+                    _ => StatusLabel(resource.Status)
+                };
+
+                <article class="dashboard-card resource-card"
+                         data-latitude="@resource.Latitude"
+                         data-longitude="@resource.Longitude">
+                    <div class="dashboard-card-header">
+                        <h2>@resource.Name</h2>
+                        <span class="status-label @statusClass">@statusText</span>
+                    </div>
+
+                    <p class="dashboard-card-description">@resource.Description</p>
+
+                    <dl class="dashboard-details resource-details">
+                        <div>
+                            <dt>Type</dt>
+                            <dd>@resource.Category?.CategoryName</dd>
+                        </div>
+                        <div>
+                            <dt>Kontakt</dt>
+                            <dd>@resource.Email<br />@resource.PhoneNumber</dd>
+                        </div>
+                        <div>
+                            <dt>Sted (breddegrad/lengdegrad)</dt>
+                            <dd>
+                                @if (resource.Latitude.HasValue && resource.Longitude.HasValue)
+                                {
+                                    @($"{resource.Latitude:F5}, {resource.Longitude:F5}")
+                                }
+                                else
+                                {
+                                    @:Ingen posisjon valgt
+                                }
+                            </dd>
+                        </div>
+                        <div>
+                            <dt>Gyldig fra</dt>
+                            <dd>@resource.AvailableFrom.ToString("dd.MM.yyyy")</dd>
+                        </div>
+                        <div>
+                            <dt>Utløpsdato</dt>
+                            <dd>@(resource.ExpirationDate?.ToString("dd.MM.yyyy") ?? "—")</dd>
+                        </div>
+                        <div>
+                            <dt>Registrert</dt>
+                            <dd>@resource.RegisteredAt.ToString("dd.MM.yyyy HH:mm")</dd>
+                        </div>
+                    </dl>
+
+                    <div class="dashboard-card-footer">
+                        <form class="dashboard-card-actions" asp-controller="Home" asp-action="DeleteResource"
+                              asp-route-id="@resource.Id" method="post"
+                              data-confirm="Er du sikker på at du vil slette denne ressursen?">
+                            @Html.AntiForgeryToken()
+                            <a asp-controller="Resources" asp-action="Index" asp-route-id="@resource.Id"
+                               class="btn btn-sm btn-primary">Rediger</a>
+                            <button type="submit" class="btn btn-sm btn-danger">Slett</button>
+                        </form>
+                    </div>
+                </article>
             }
-        </tbody>
-    </table>
+        </div>
+    }
+</section>
+
+@if (ViewBag.EditResource is H_st_2026_Gruppe_1.Models.ResourceEntry editResource)
+{
+    <div class="modal fade registration-modal" id="registrationModal" tabindex="-1"
+         aria-labelledby="registrationModalTitle" aria-hidden="true" data-bs-backdrop="static"
+         data-registration-modal data-open-registration-modal="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg modal-fullscreen-md-down">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title" id="registrationModalTitle">
+                        <i class="bi bi-box-seam" aria-hidden="true"></i>
+                        <span>Rediger ressurs</span>
+                    </h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                            aria-label="Lukk registreringsskjema"></button>
+                </div>
+                <div class="modal-body" data-registration-modal-body>
+                    <partial name="~/Views/Home/_ResourceRegistrationForm.cshtml" model="editResource" />
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script nonce="@Context.Items["CspNonce"]">
+        window.resqRegistration.initializeDateTimeFields('resourceForm', [
+            { dateId: 'availableFromDate', timeId: 'availableFromTime', valueId: 'availableFromValue' },
+            { dateId: 'expiryDate', timeId: 'expirationTime', valueId: 'expirationValue',
+              rangeErrorId: 'resourceDateRangeError' }
+        ]);
+        window.resqRegistration.bindCurrentLocationButton('useCurrentLocation', {
+            onPosition: (latitude, longitude) => {
+                document.getElementById('latInput').value = latitude;
+                document.getElementById('lngInput').value = longitude;
+                document.getElementById('posText').textContent =
+                    'Valgt posisjon: bredde: ' + latitude.toFixed(5) + ', lengde: ' + longitude.toFixed(5);
+            }
+        });
+
+        const modalElement = document.getElementById('registrationModal');
+        if (modalElement?.dataset.openRegistrationModal === 'true') {
+            bootstrap.Modal.getOrCreateInstance(modalElement).show();
+        }
+
+        window.resqDateRange.bindFilter(
+            'resourceFilterForm',
+            'resourceStartDate',
+            'resourceEndDate');
+        window.resqRadius.initializeDistanceFilter({
+            sliderId: 'resourceRadiusFilter',
+            valueId: 'resourceRadiusValue',
+            errorId: 'resource-location-error',
+            cardSelector: '.resource-card'
+        });
+    </script>
 }

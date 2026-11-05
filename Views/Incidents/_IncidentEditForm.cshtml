@@ -1,0 +1,55 @@
+@model H_st_2026_Gruppe_1.Models.IncidentCreateViewModel
+
+<form asp-controller="Incidents" asp-action="Edit" method="post" class="incident-edit-form">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="IncidentId" />
+
+    <div class="incident-register-layout">
+        <div class="incident-form-fields">
+            <div>
+                <label asp-for="Title" class="form-label">Navn på hendelse</label>
+                <input asp-for="Title" class="form-control compact-field" />
+                <span asp-validation-for="Title" class="text-danger"></span>
+            </div>
+            <div>
+                <label asp-for="IncidentType" class="form-label">Hendelsestype</label>
+                <select asp-for="IncidentType" class="form-select compact-field">
+                    <option value="">Velg type</option>
+                    <option value="Forest fire">Skogbrann</option>
+                    <option value="Landslide">Jordskred</option>
+                    <option value="Flood">Flom</option>
+                    <option value="Storm">Storm</option>
+                    <option value="Power outage">Strømbrudd</option>
+                    <option value="Other">Annet</option>
+                </select>
+                <span asp-validation-for="IncidentType" class="text-danger"></span>
+            </div>
+            <div>
+                <label asp-for="Description" class="form-label">Beskrivelse</label>
+                <textarea asp-for="Description" class="form-control compact-field" rows="3"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="incident-map-panel">
+            <label class="form-label">Sted</label>
+            <div id="incident-edit-map" class="incident-map" role="application" tabindex="0"
+                 aria-label="Velg sted for hendelsen på kartet"
+                 aria-describedby="incident-edit-map-status"
+                 data-latitude="@Model.Latitude" data-longitude="@Model.Longitude"></div>
+            <p id="incident-edit-map-status" class="map-status" role="status" aria-live="polite">
+                Klikk på kartet for å endre sted for hendelsen.
+            </p>
+            <input asp-for="Latitude" type="hidden" id="incident-edit-latitude" />
+            <input asp-for="Longitude" type="hidden" id="incident-edit-longitude" />
+            <span asp-validation-for="Latitude" class="text-danger"></span>
+            <span asp-validation-for="Longitude" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div asp-validation-summary="ModelOnly" class="text-danger mt-3"></div>
+    <div class="registration-actions">
+        <button type="button" class="btn registration-cancel" data-bs-dismiss="modal">Avbryt</button>
+        <button type="submit" class="btn btn-primary registration-submit">Lagre endringer</button>
+    </div>
+</form>

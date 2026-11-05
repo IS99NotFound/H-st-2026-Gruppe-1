@@ -1,226 +1,182 @@
-﻿@model H_st_2026_Gruppe_1.Models.ResourceViewModel
+@model H_st_2026_Gruppe_1.Models.ResourceEntry
 @{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Startside";
     ViewData["FullWidth"] = true;
+    ViewData["RegistrationType"] = "resource";
+    var canRegisterNeed = User.IsInRole("PublicActor") || User.IsInRole("Administrator");
+    var openRegistrationModal = ViewBag.OpenRegistrationModal is bool shouldOpen
+        ? shouldOpen
+        : Context.Request.Query["register"] == "resource" ||
+          Model.Id > 0;
 }
-<div class="main-layout">
 
-    <aside id="side-panel" class="side-panel" aria-label="Resource registration">
-        <div class="side-panel-header">
-            <div>
-                <h1>Register a resource</h1>
-            </div>
-            <button class="panel-toggle panel-close" type="button" aria-controls="side-panel" aria-expanded="false">
-                <span class="visually-hidden">Close resource panel</span>
-                <i class="bi bi-x-lg" aria-hidden="true"></i>
-            </button>
-        </div>
-
-        <!-- Skjema for å registrere en ressurs -->
-        <form id="resourceForm" asp-controller="Home" asp-action="RegisterResource" method="post" novalidate>
-            <div class="mb-2">
-                <label for="nameInput">Full name</label>
-                <input type="text" name="Name" id="nameInput" value="@Model.Name" class="form-control" required />
-                <small id="nameError" class="text-danger"></small>
-            </div>
-            <div class="mb-2">
-                <label for="contactInput">Contact information</label>
-                <input type="text" name="Phone" id="contactInput" value="@Model.Phone" class="form-control" placeholder="Phone number or email" required />
-                <small id="contactError" class="text-danger"></small>
-            </div>
-            <div class="mb-2">
-                <label for="resourceType">Resource type</label>
-                <select name="ResourceType" id="resourceType" class="form-control" required>
-                    <option value="">Select an option</option>
-                    <option value="Shelter" selected="@(Model.ResourceType == "Shelter" ? "selected" : null)">Shelter</option>
-                    <option value="Mat" selected="@(Model.ResourceType == "Mat" ? "selected" : null)">Food</option>
-                    <option value="Transport" selected="@(Model.ResourceType == "Transport" ? "selected" : null)">Transport</option>
-                    <option value="Medisinsk" selected="@(Model.ResourceType == "Medisinsk" ? "selected" : null)">Medical</option>
-                    <option value="Materialer" selected="@(Model.ResourceType == "Materialer" ? "selected" : null)">Materialer</option>
-                    <option value="Annet" selected="@(Model.ResourceType == "Annet" ? "selected" : null)">Other</option>
-                </select>
-                <small id="resourceTypeError" class="text-danger"></small>
-            </div>
-            <div class="mb-2">
-                <label for="descriptionInput">Description</label>
-                <textarea name="Description" id="descriptionInput" class="form-control">@Model.Description</textarea>
-            </div>
-            <div class="mb-2">
-                <label for="expiryDate">Expiry date</label>
-                <input type="date" name="ExpiryDate" id="expiryDate" value="@Model.ExpiryDate?.ToString("yyyy-MM-dd")" class="form-control" readonly />
-            </div>
-
-            <!-- Skjulte felt som fylles ut av JavaScript når brukeren klikker i kartet -->
-            <input type="hidden" name="Latitude" id="latInput" value="@Model.Latitude" />
-            <input type="hidden" name="Longitude" id="lngInput" value="@Model.Longitude" />
-            <p id="posText" class="placeholder-text">No position marked on the map</p>
-            <span asp-validation-for="Latitude" class="text-danger d-block mb-2" id="posError"></span>
-
-            <button type="submit" class="btn btn-primary">Register resource</button>
-        </form>
-    </aside>
-
-    <!-- Kartområdet (2/3 av bredden) -->
+<div class="main-layout registration-modal-page">
+    <partial name="_OperationalFeed" />
+    <div class="feed-resizer" role="separator" aria-orientation="vertical"
+         aria-label="Endre størrelse på operativ oversikt" tabindex="0"></div>
     <section class="map-area">
-        <div id="map" role="application" aria-label="Interactive map"></div>
-        <p id="map-status" class="map-status" role="status" aria-live="polite">Loading map ...</p>
+        <div id="map" role="application" aria-label="Interaktivt kart"
+             data-resource-registration-url="@Url.Action("Index", "Home")"
+             data-need-registration-url="@(canRegisterNeed ? Url.Action("DashboardIndex", "PublicActor") : null)"
+             data-registration-type="resource"></div>
+        <partial name="_MapColorLegend" />
+        <div class="map-filtering is-collapsed" id="survival-filter-panel">
+            <div class="map-filter-header">
+                <strong class="map-filter-title">Filtrer steder</strong>
+                <button type="button" id="survival-filter-button" class="map-filter-button"
+                        aria-expanded="false" aria-controls="survival-filter-content"
+                        aria-label="Utvid filter for beredskapssteder">
+                    <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div id="survival-filter-content">
+                <div class="map-filter-options">
+                    <label><input type="checkbox" class="survival-filter" value="hospital" checked /> Sykehus</label>
+                    <label><input type="checkbox" class="survival-filter" value="drinking_water" checked /> Drikkevann</label>
+                    <label><input type="checkbox" class="survival-filter" value="shelter" checked /> Tilfluktsrom/bunkere</label>
+                </div>
+                <p id="survival-filter-status" role="status">Laster eksisterende steder...</p>
+            </div>
+        </div>
+        <p id="map-status" class="map-status" role="status" aria-live="polite">Laster kart ...</p>
     </section>
+</div>
 
+<div class="modal fade registration-modal" id="registrationModal" tabindex="-1"
+     aria-labelledby="registrationModalTitle" aria-hidden="true" data-bs-backdrop="static"
+     data-registration-modal data-open-registration-modal="@(openRegistrationModal ? "true" : "false")">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg modal-fullscreen-md-down">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="registrationModalTitle">
+                    <i class="bi bi-box-seam" aria-hidden="true"></i>
+                    <span>@(Model.Id > 0 ? "Rediger ressurs" : "Registrer en ressurs")</span>
+                </h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Lukk registreringsskjema"></button>
+            </div>
+            <div class="modal-body" data-registration-modal-body>
+                <partial name="_ResourceRegistrationForm" model="Model" />
+            </div>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-}
-<script>
+    <script src="~/js/map-base.js" asp-append-version="true"></script>
+    <script src="~/js/map-registration.js" asp-append-version="true"></script>
+    <script src="~/js/map-ab.js" asp-append-version="true"></script>
+    <script src="~/js/survival-location-filters.js" asp-append-version="true" defer></script>
+    <script src="~/js/map-filter-button.js" asp-append-version="true" defer></script>
+    <script nonce="@Context.Items["CspNonce"]">
+        window.operationalFeedItems = {
+            resources: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                ViewBag.FeedResources ?? new List<object>(),
+                new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase })),
+            needs: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                ViewBag.FeedNeeds ?? new List<object>(),
+                new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase })),
+            incidents: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                ViewBag.FeedIncidents ?? new List<object>(),
+                new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }))
+        };
+    </script>
+    <script src="~/js/operational-feed.js" asp-append-version="true" defer></script>
+    <script nonce="@Context.Items["CspNonce"]">
+        window.resqRegistration.initializeDateTimeFields('resourceForm', [
+            { dateId: 'availableFromDate', timeId: 'availableFromTime', valueId: 'availableFromValue' },
+            { dateId: 'expiryDate', timeId: 'expirationTime', valueId: 'expirationValue',
+              rangeErrorId: 'resourceDateRangeError' }
+        ]);
 
-    // Oppretter kartet og starter i Grimstad
-    const map = L.map('map').setView([58.4614, 8.7683], 13);
-    // Mobilpanelet bruker denne referansen når kartets synlige størrelse endres
-    window.resqMap = map;
-
-    // Legger på kartfliser fra OpenStreetMap
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
-
-    const mapStatus = document.getElementById('map-status');
-    mapStatus.textContent = 'The map is ready. Select a position or use your current location.';
-
-    // Prøver å finne brukerens posisjon og flytte kartet dit
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function (position) {
-            const lat = position.coords.latitude;
-            const lng = position.coords.longitude;
-
-            map.setView([lat, lng], 13);
-            L.marker([lat, lng]).addTo(map).bindPopup('You are here').openPopup();
-            mapStatus.textContent = 'The map is showing your current location.';
-        }, function (error) {
-            console.log('Could not get position:', error.message);
-            mapStatus.textContent = 'Your location could not be found. You can still select a position on the map.';
+        // Felles kartoppsett brukes også her, mens denne siden beholder filteret for beredskapssteder.
+        const mapSetup = window.resqMapBase.initialize({
+            center: [58.4614, 8.7683],
+            zoom: 13
         });
-    } else {
-        console.log('This browser does not support geolocation');
-        mapStatus.textContent = 'This browser does not support geolocation. Select a position on the map.';
-    }
+        const map = mapSetup.map;
+        window.resqMap = map;
+        const mapElement = document.getElementById('map');
+        const registrationLinks = window.resqMapRegistration.bind(map, {
+            resource: mapElement.dataset.resourceRegistrationUrl,
+            need: mapElement.dataset.needRegistrationUrl,
+            currentType: mapElement.dataset.registrationType
+        });
+        document.getElementById('map-status').textContent =
+            'Kartet er klart. Velg en posisjon eller bruk din nåværende posisjon.';
 
-    // Henter elementene i skjemaet som JavaScript trenger
-    const resourceType = document.getElementById('resourceType');
-    const expiryDate = document.getElementById('expiryDate');
-    const resourceForm = document.getElementById('resourceForm');
-    const nameInput = document.getElementById('nameInput');
-    const nameError = document.getElementById('nameError');
-    const resourceTypeError = document.getElementById('resourceTypeError');
-    const contactInput = document.getElementById('contactInput');
-    const contactError = document.getElementById('contactError');
+        const latInput = document.getElementById('latInput');
+        const lngInput = document.getElementById('lngInput');
+        const setPosition = window.resqMapRegistration.bindSelectedPosition(map, {
+            latInput: latInput,
+            lngInput: lngInput,
+            positionText: document.getElementById('posText'),
+            positionError: document.getElementById('posError'),
+            popupText: 'Valgt posisjon'
+        });
+        const requestedLocation = window.resqMapRegistration.readRequestedLocation();
+        const initialLat = Number(latInput?.value);
+        const initialLng = Number(lngInput?.value);
+        const selectedLat = requestedLocation?.lat ?? initialLat;
+        const selectedLng = requestedLocation?.lng ?? initialLng;
 
-    // Viser en enkel feilmelding og stopper innsendingen hvis et påkrevd felt er tomt
-    resourceForm.addEventListener('submit', function (event) {
-        let hasErrors = false;
-
-        if (!nameInput.value.trim()) {
-            nameError.textContent = 'Name is required.';
-            nameError.hidden = false;
-            hasErrors = true;
+        if (Number.isFinite(selectedLat) && Number.isFinite(selectedLng) &&
+            (requestedLocation || selectedLat !== 0 || selectedLng !== 0)) {
+            setPosition(selectedLat, selectedLng);
+            map.setView([selectedLat, selectedLng], 13);
+        } else if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(position =>
+                map.setView([position.coords.latitude, position.coords.longitude], 13));
         }
-
-        if (!contactInput.value.trim()) {
-            contactError.textContent = 'A phone number or email address is required.';
-            contactError.hidden = false;
-            hasErrors = true;
-        }
-
-        if (!resourceType.value) {
-            resourceTypeError.textContent = 'Select a resource type.';
-            resourceTypeError.hidden = false;
-            hasErrors = true;
-        }
-
-        if (hasErrors) {
-            event.preventDefault();
-        }
-    });
-
-    // Skjuler feilmeldingen når brukeren begynner å skrive
-    nameInput.addEventListener('input', function () {
-        nameError.hidden = nameInput.value.trim() === '';
-    });
-
-    contactInput.addEventListener('input', function () {
-        contactError.hidden = contactInput.value.trim() === '';
-    });
-
-    // Viser utløpsdatoen når brukeren velger en ressurstype
-    resourceType.addEventListener('change', function () {
-        resourceTypeError.hidden = resourceType.value === '';
-        const renewalDate = new Date();
-
-        switch (resourceType.value) {
-            case 'Mat':
-                renewalDate.setDate(renewalDate.getDate() + 14);
-                break;
-            case 'Medisinsk':
-                renewalDate.setMonth(renewalDate.getMonth() + 1);
-                break;
-            case 'Materialer':
-                renewalDate.setMonth(renewalDate.getMonth() + 6);
-                break;
-            case 'Shelter':
-            case 'Transport':
-            case 'Annet':
-                renewalDate.setFullYear(renewalDate.getFullYear() + 1);
-                break;
-            default:
-                expiryDate.value = '';
-                return;
-        }
-
-        // Gjør om datoen til formatet åååå-mm-dd
-        const year = renewalDate.getFullYear();
-        const month = String(renewalDate.getMonth() + 1).padStart(2, '0');
-        const day = String(renewalDate.getDate()).padStart(2, '0');
-        expiryDate.value = `${year}-${month}-${day}`;
-    });
-
-    // Husker markøren brukeren har valgt, slik at den kan fjernes ved nytt klikk
-    let selectedMarker = null;
-
-    // Stopper innsendingen hvis brukeren ikke har valgt en posisjon i kartet
-    document.querySelector('form').addEventListener('submit', function (e) {
-        const lat = document.getElementById('latInput').value;
-        const posError = document.getElementById('posError');
-
-        if (!lat) {
-            e.preventDefault(); // Stopper innsendingen av skjemaet
-            if (posError) {
-                posError.textContent = 'Du må velge en posisjon på kartet før du kan registrere.';
+        window.resqAbMap.initialize(map, {
+            onMapClick: event => {
+                setPosition(event.latlng.lat, event.latlng.lng);
+                registrationLinks(event.latlng);
             }
+        });
+        // A-B legges til før Layers for å få ønsket rekkefølge på kartkontrollene.
+        mapSetup.addLayersControl();
+
+        document.getElementById('resourceType')?.addEventListener('change', event => {
+            const expiryDate = document.getElementById('expiryDate');
+            const renewalDate = new Date();
+            switch (event.target.value) {
+                case 'Medical':
+                    renewalDate.setMonth(renewalDate.getMonth() + 1);
+                    break;
+                case 'Heavy machinery':
+                case 'Power Supply / Generator':
+                    renewalDate.setMonth(renewalDate.getMonth() + 6);
+                    break;
+                case 'Transport/logistics':
+                case 'Evacuation / Shelter':
+                case 'Plowing & Snow Clearing':
+                case 'Manpower':
+                case 'Other':
+                    renewalDate.setFullYear(renewalDate.getFullYear() + 1);
+                    break;
+                default:
+                    expiryDate.value = '';
+                    return;
+            }
+            expiryDate.value = renewalDate.toISOString().slice(0, 10);
+        });
+        document.getElementById('resourceForm')?.addEventListener('submit', event => {
+            if (!latInput?.value || !lngInput?.value) {
+                event.preventDefault();
+                document.getElementById('posError').textContent =
+                    'Posisjon på kartet må velges.';
+            }
+        });
+        window.resqRegistration.bindCurrentLocationButton('useCurrentLocation', {
+            onPosition: (latitude, longitude) => {
+                setPosition(latitude, longitude);
+                map.setView([latitude, longitude], 13);
+            }
+        });
+        const modalElement = document.getElementById('registrationModal');
+        if (modalElement.dataset.openRegistrationModal === 'true') {
+            bootstrap.Modal.getOrCreateInstance(modalElement).show();
         }
-    });
-
-    // Fjerner eventuell feilmelding når brukeren klikker på kartet
-    map.on('click', function (e) {
-        const posError = document.getElementById('posError');
-        if (posError) {
-            posError.textContent = '';
-        }
-    });
-
-    // Et klikk i kartet plasserer markøren og fyller koordinatene inn i skjemaet
-    map.on('click', function (e) {
-        const lat = e.latlng.lat;
-        const lng = e.latlng.lng;
-
-        if (selectedMarker) {
-            map.removeLayer(selectedMarker);
-        }
-
-        selectedMarker = L.marker([lat, lng]).addTo(map)
-            .bindPopup('Selected position: ' + lat.toFixed(5) + ', ' + lng.toFixed(5))
-            .openPopup();
-
-        document.getElementById('latInput').value = lat;
-        document.getElementById('lngInput').value = lng;
-        document.getElementById('posText').innerText = 'Selected position: ' + lat.toFixed(5) + ', ' + lng.toFixed(5);
-    });
-</script>
+    </script>
+}
