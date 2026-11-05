@@ -640,22 +640,21 @@ public class HomeController : Controller
         {
             return RedirectToAction("DashboardIndex", "PublicActor");
         }
-
+        
         ViewBag.Categories = _db.Categories.OrderBy(c => c.CategoryId).ToList();
-        LoadOperationalFeed();
+        var currentUserId = GetCurrentUserId();
+        if (currentUserId is null)
+        {
+            return Unauthorized();
+        }
+
+        LoadOperationalFeed(currentUserId.Value, User.IsInRole("Administrator"));
 
         if (id.HasValue)
         {
             var existingResource = _db.Resources.Find(id.Value);
             if (existingResource != null)
             {
-                var currentUserId = GetCurrentUserId();
-
-                if (currentUserId is null)
-                {
-                    return Unauthorized();
-                }
-
                 if (!User.IsInRole("Administrator") &&
                     existingResource.ProviderId != currentUserId.Value)
                 {
@@ -670,25 +669,32 @@ public class HomeController : Controller
         return View(new ResourceEntry());     
     }
 
-    private void LoadOperationalFeed()
+    private void LoadOperationalFeed(int CurrentUserId, bool includeAllResources)
     {
-        ViewBag.FeedResources = _db.Resources
+        var resources = _db.Resources.AsQueryable();
+
+        if (!includeAllResources)
+        {
+            resources = resources.Where(resource => resource.ProviderId == CurrentUserId);
+        }
+        
+        ViewBag.FeedResources = resources
             .Include(resource => resource.Category)
             .AsEnumerable()
             .Select(resource => new OperationalFeedItem
             {
-                Type = "resource",
-                Id = resource.Id,
-                Title = resource.Name,
-                Description = resource.Description,
-                Status = resource.Status,
-                Category = resource.Category?.CategoryName,
-                ColorKey = "available-resource",
-                Latitude = resource.Latitude ?? 0,
-                Longitude = resource.Longitude ?? 0,
-                CreatedAt = resource.RegisteredAt
+                Type = "resource",                             
+                Id = resource.Id,                              
+                Title = resource.Name,                         
+                Description = resource.Description,            
+                Status = resource.Status,                      
+                Category = resource.Category?.CategoryName,    
+                ColorKey = "available-resource",               
+                Latitude = resource.Latitude ?? 0,             
+                Longitude = resource.Longitude ?? 0,           
+                CreatedAt = resource.RegisteredAt              
             })
-            .ToList();
+            .ToList();            
         ViewBag.FeedNeeds = _db.Needs
             .Include(need => need.CategoryInfo)
             .AsEnumerable()
@@ -737,17 +743,22 @@ public class HomeController : Controller
         {
             return RedirectToAction(nameof(Index));
         }
+        
+        var currentUserId = GetCurrentUserId();                 
+        if (currentUserId is null)             
+        {                                                       
+            return Forbid();                                    
+        }                                                       
 
         if (!ModelState.IsValid)
         {
             // sends the user to form with attributes and error messages filled out
             ViewBag.Categories = _db.Categories.OrderBy(c => c.CategoryId).ToList();
-            LoadOperationalFeed();
+            LoadOperationalFeed(currentUserId.Value, User.IsInRole("Administrator"));
             ViewBag.OpenRegistrationModal = true;
             return View("Index", resource);
         }
         
-        var currentUserId = GetCurrentUserId();
         if (currentUserId is null)
         {
             return Unauthorized();
