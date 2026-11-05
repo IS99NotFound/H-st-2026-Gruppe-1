@@ -14,8 +14,18 @@ Webapplikasjonen er en ASP.NET Core MVC-applikasjon som kjøres i en Docker-cont
 - Nettleseren må ha internettilgang for å laste kartdata fra Leaflet/OpenStreetMap.
 
 ### Starte applikasjonen
+Siden prosjektet fortsatt er i testfasen, så kjører vi disse to kodene, dette er hver gnag vi gjør endringer og ønsker å starte med red database. Dette sletter tidligere testdata.
+Ved nye endringer, i vårt tilfelle:
+```bash
+docker compose down -v
+```
 
-Kjør følgende kommando fra prosjektmappen:
+Til vanlig bruker man bare :
+```bash
+docker compose down
+```
+
+Deretter starte den opp igjen:
 
 ```bash
 docker compose up --build
@@ -25,16 +35,8 @@ Når containerne er startet, er webapplikasjonen tilgjengelig på:
 
 `http://localhost:8081`
 
-Ressurser lagres midlertidig i minnet gjennom `ResourceStore` og er tapt når
-webcontaineren starter på nytt.
+Ressurser, behov, brukere og tilhørende informasjon lagres nå permanent i MariaDB-databasen. Webapplikasjonen kommuniserer med databasen for å hente og lagre data. Dataene blir bevart selv om webcontaineren starter på nytt, så lenge databasen og dataen ikke slettes
 
-### Stoppe applikasjonen
-
-For å stoppe containerne:
-
-```bash
-docker compose down
-```
 
 ### Feilsøking
 
@@ -48,22 +50,32 @@ docker compose logs web
 Dersom port `8081` allerede er i bruk, må portmappingen i `docker-compose.yml`
 endres.
 
-Ved endringer i koden bør applikasjonen bygges på nytt.
 
 ## MVC rammeverket og hvordan det henger sammen
 
-MVC rammeverket bestå+r av Models, Views og Controllers, hvor hver del har sitt eget ansvarsområde. Controller fungerer som et bindeledd mellom brukeren og webapplikasjonen. Den mottar forespørsler fra nettleseren, behandler forespørselen og bestemmer hva som skal returneres tilbake til brukeren. Controlleren kan hente eller lagre data gjennom webapplikasjonens datakomponenter før den returnerer et View.
+MVC rammeverket består av Models, Views og Controllers, hvor hver del har sitt eget ansvarsområde. Controller fungerer som et bindeledd mellom brukeren og webapplikasjonen. Den mottar forespørsler fra nettleseren, behandler forespørselen og bestemmer hva som skal returneres tilbake til brukeren. Controlleren kan hente eller lagre data gjennom webapplikasjonens datakomponenter før den returnerer et View.
 Et view er det brukeren ser og samhandler med i nettleseren. Det består av HTML markup og dynamisk innhold som sendes til nettleseren. En controller kan returnere en view som viser informasjon til brukeren.
-Til sist har vi Model som representerer dataen som brukes i webapplikasjonen. Den kan blant annet inneholde egenskaper for dataene og regler for validering. I webapplikasjonen brukes modeller og viewmodeller til å overføre og håndtere data mellom ulike deler av systemet. ResourceViewModel brukes av registreringsskjemaet, mens ResourceEntry representerer ressursen som lagres i ResourceStore.
+Til sist har vi Model som representerer dataen som brukes i webapplikasjonen. Den kan blant annet inneholde egenskaper for dataene og regler for validering. I webapplikasjonen brukes modeller og viewmodeller til å overføre og håndtere data mellom ulike deler av systemet. I webapplikasjonen brukes modeller til å representere informasjonen som systemet jobber med. 
+
+ResourceEntry representerer en ressurs som registreres i systemet. Når informasjonen skal lagres eller hentes, kommuniserer den med MariaDB-databasen. 
 Sammen gjør disse komponentene at webapplikasjonen får en tydelig struktur, hvor presentasjon, håndtering av forespørsler og data er delt opp i separate deler (Walther, 2022).
 
 ## Hvordan data flyter gjennom systemet (eksempel fra koden)
-Data flyter gjennom systemet ved at brukeren sender en forespørsel fra nettleseren, dette blir mottatt av Controlleren som behandler den og eventuelt sender eller henter data fra Models eller andre komponenter. Controlleren returnerer deretter en view som presenterer resultatet for brukeren.
-Ved innsending av et skjema vil dataen sendes til serveren gjennom en POST forespørsel. Controlleren mottar dataene, behandler og validerer dem før resultatet kan vises til brukeren gjennom et nytt view. Når brukeren fyller ut registreringsskjemaet og trykker på «Register resource», sendes dataene til HomeController gjennom en POST-forespørsel. Controlleren mottar dataene gjennom RegisterResource-metoden som et ResourceViewModel-objekt. ResourceViewModel inneholder valideringsreglene for dataene som brukeren skriver inn. Etter at dataene er validert, konverterer HomeController ResourceViewModel til et ResourceEntry-objekt, som lagres i ResourceStore gjennom ResourceStore.Add(entry). Deretter videresendes brukeren til Index-handlingen i ResourcesController, som viser listen over registrerte ressurser i Views/Resources/Index.cshtml.
+Data flyter gjennom systemet ved at brukeren sender en forespørsel fra nettleseren til webapplikasjonen. Forespørselen mottas av en Controller, som behandler informasjon og vil da eventuelt kommuniserer med databasen gjennom AppDbContect om dette er relevant. Controlleren retunerer deretter en View som presenterer resultatet for brukeren.
+
+Et eksempel på dette er når en bruker registrerer en ny ressurs. Brukeren fyller ut registreringsskjemaet på nettsiden og trykker på "Register resource". Skjemaet sender informasjonen til HomeController gjennom en POST-forespørsel til metoden RegisterResource.
+Dataene sendes til controlleren som et ResourceEntry-objekt. Dette objektet inneholder informasjon brukeren har fylt inn om ressursen. 
+
+Før ressursen lagres, kontrollerer systemet om informasjonen er gyldig ved hjelp av ModelState.IsValid. Dersom informasjonen ikke består valideringen, sendes brukeren tilbake til registreringsskjemaet med en eller flere feilmeldinger som forklarer hva som "feilet". Hvis informajsonen er gyldig, kontrollerer systemet hvilken rolle brukeren har, og knytter deretter ressursen til riktig bruk ved å sette blant annet ProviderId, RegionId og registeringspunktet.
+
+Til slutt legges ressursen inn i databasen gjennom AppDbContext ved hjelp av _db.Resource.Add(resource). Og endringer lagres med _db.SaveChanges(), da vil Entity Framework Core håndtere kommunikasjonen med MariaDb-databasen. 
 
 ## Hvordan bruker, webapplikasjon og eventuelle andre komponenter henger sammen
-Systemet består av en bruker som kommuniserer med webapplikasjonen gjennom en nettleser. Webapplikasjonen er utviklet med ASP.NET Core og MVC og håndterer forespørsler, data og visning. Webapplikasjonen har også mulighet til å kommunisere med andre komponenter, som karttjenesten, for å hente og lagre nødvendig informasjon. I den nåværende versjonen lagres ressursdata midlertidig gjennom ResourceStore i minnet.
-Webapplikasjonen kjøres i en Docker-container. Docker brukes til å pakke webapplikasjonen og dens avhengigheter inn i et isolert miljø, dette gjør at webapplikasjonen kan kjøres på samme måte på ulike maskiner og miljøer (dockerdocs, u.d.). I prosjektet bruker vi Docker Compose til å starte og administrere webapplikasjonen lokalt. ASP.NET Core-webapplikasjonen bygges ved hjelp av en Dockerfile.
+Systemet består av en bruker som kommuniserer med webapplikasjonen gjennom en nettleser. Webapplikasjonen er utviklet med ASP.NET Core og MVC og håndterer forespørsler, data og visning. Webapplikasjonen har også mulighet til å kommunisere med andre komponenter, som karttjenesten, for å hente og lagre nødvendig informasjon. 
+
+Ressurser, behov, brukere og annen informasjon lagres i MariaDB-databasen. Webapplikasjonen bruker AppDbContext og Entity Framework Core for å hente og lagre informasjon. Databasen kjører i egen Docker-container, adskilt fra selve webapplikasjonen.
+
+Docker brukes til å pakke webapplikasjonen og dens avhengigheter inn i et isolert miljø, dette gjør at webapplikasjonen kan kjøres på samme måte på ulike maskiner og miljøer (dockerdocs, u.d.). I prosjektet bruker vi Docker Compose til å starte og administrere webapplikasjonen lokalt. ASP.NET Core-webapplikasjonen bygges ved hjelp av en Dockerfile.
 
 Slik henger komponentene sammen illustrert med et diagram:
 ### Systemarkitektur
@@ -78,20 +90,24 @@ flowchart TD
         App["ASP.NET Core MVC-webapplikasjon"]
 
         subgraph MVC["MVC"]
-            Controller["Controller"]
-            Model["Model"]
-            View["View"]
+            Controller["Controllers"]
+            Model["Model / ViewModels"]
+            View["Views"]
         end
 
-        Database["Database (planlagt)"]
+        DbContext["AppDbContext / Entity Framework Core"]
+        Database[("MariaDB Database")]
 
         App --> Controller
         Controller --> Model
         Controller --> View
-        Model -.-> Database
+        Controller --> DbContext
+        DbContext <--> Database
     end
 
-    Nettleser --> App
+    Nettleser <--> App
+
+    KartAPI  --> Leaflet["Leaflet"]
 
     App --> KartAPI["Kart / API"]
 ```
@@ -104,15 +120,24 @@ Det responsive oppsettet er laget med CSS media queries og fleksible høyder og 
 
 Navigasjonen bruker Bootstrap Icons for å gjøre knappene og sidene lettere å kjenne igjen.
 
-## Tema
+# Bruk av kunstelig intelligens (KI/AI) under prosjektet
+Vi har brukt KI som et støtteverktøy gjennom prosjektet. Vi har ikke brukt KI for å genere ferdig tekst eller kode, men heller som læringsverktøy, til å skjønner hva oppgaven spør om, feilsøking og forklaring av feilmeldinger, men også om vi mangler noe i teksten, eller dokumentasjon.
 
-Applikasjonen støtter darkmode og lightmode. Temaet endres fra brukerprofilmenyen og lagres lokalt i nettleseren, slik at valget beholdes når brukeren navigerer mellom sidene. Fargene styres av CSS-variabler i `wwwroot/css/site.css`.
+## KI-Verktøy ##
+Disse har hovedsakelig blitt brukt til å forklare tekniske konsepter innenfor programmering, forstå feilmeldinger, videreutvikle ideer til systemets funksjonalitet.
+•	Claude, Sonnet 5/5.5
+•	GitHub Copilot
 
-# KI bruk i prosjektet
-I prosjektet har vi brukt KI som et hjelpemiddel gjennom ulike deler av utviklingsprosessen. Verktøyene vi har tatt i bruk er blant annet ChatGPT, Copilot og andre ulike KI modeller. Disse har hovedsakelig blitt brukt til å forklare tekniske konsepter innenfor programmering, forstå feilmeldinger, strukturere tekster og videreutvikle ideer til systemets funksjonalitet. Vi har selv vurdert, tilpasset og testet forslagene fra KI før implementasjon. KI har dermed blitt brukt som et støtteverktøy for læring, ideutvikling og problemløsning.
+Disse ble brukt for å vise til skrivefeil i tekst og omstrukturering, slik at alt blir gramatisk riktig.
+•	ChatGPT
+•	Microsoft Copilot
+
+Vi har selv vurdert, tilpasset og testet forslagene fra KI før implementasjon. KI har dermed blitt brukt som et støtteverktøy for læring, ideutvikling og problemløsning.
 ### Noen prompts vi har brukt aktivt gjennom innleveringen er:
 
 •	Kan du hjelpe oss med å forstå denne feilmeldingen?
+
+•	Hvorfor sliter docker/mariaDB med å starte?
 
 •	Kan du forklare denne kodeblokken?
 
@@ -120,7 +145,10 @@ I prosjektet har vi brukt KI som et hjelpemiddel gjennom ulike deler av utviklin
 
 •	Hvorfor vil ikke webapplikasjonen kjøre?
 
+•   Gi meg tilbakemelding på besvarelse ifht. oppgavetekst
 
+## Refleksjon ##
+Alle forslag fra KI ble vurdert og testet før det ble tatt i bruk. KI ble brukt som støtte for læring og problemløsning, ikke som erstatning for eget arbeid. Gruppen hadde selv ansvaret for implementasjon og endelige beslutninger.
 
 # Bibliografi
 
