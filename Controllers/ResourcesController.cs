@@ -6,6 +6,7 @@ using H_st_2026_Gruppe_1.Models;
 
 namespace H_st_2026_Gruppe_1.Controllers;
 
+
 public class ResourcesController : Controller
 {
     private readonly AppDbContext _db;
@@ -22,6 +23,7 @@ public class ResourcesController : Controller
         int? resourceType,
         DateTime? startDate,
         DateTime? endDate)
+    
     {
         var now = DateTime.Today;
         var fiveDaysAhead = now.AddDays(5);
@@ -74,6 +76,19 @@ public class ResourcesController : Controller
             .OrderBy(resource => resource.Id)
             .ToList();
         ViewBag.Categories = _db.Categories.OrderBy(category => category.CategoryId).ToList();
+
+        var resourceIds = allResources.Select(resource => resource.Id).ToList();
+
+        var matchStatus = (from match in _db.MatchRecords
+            join need in _db.Needs on match.NeedId equals need.Id
+            where resourceIds.Contains(match.ResourceId)
+            select new ResourceMatchStatusViewModel()
+            { ResourceId = match.ResourceId,
+                NeedTitle = need.Title,
+                Status = match.Status,
+                Comment = match.Comment
+            }).ToList();
+        
         var dashboardModel = new ResourceDashboard
         {
             TotalResources = allResources.Count,
@@ -94,9 +109,11 @@ public class ResourcesController : Controller
             Status = status,
             ResourceType = resourceType,
             StartDate = startDate,
+            MatchStatuses = matchStatus,
             EndDate = endDate
+            
         };
-
+        
         if (id.HasValue)
         {
             var resource = allResources.FirstOrDefault(item => item.Id == id.Value);
@@ -109,5 +126,8 @@ public class ResourcesController : Controller
         }
 
         return View(dashboardModel);
+
     }
+    
+    
 }

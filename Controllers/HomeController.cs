@@ -148,6 +148,7 @@ public class PublicActorController : Controller
             }
 
             return View(need);
+            
         }
 
         return View(new ResourceNeed());
@@ -520,15 +521,17 @@ public class PublicActorController : Controller
         var record = _db.MatchRecords.Find(needId, resourceId);
         var wasAssigned = record?.Status == "accepted";
 
+        if (need.Status is "resolved" or "cancelled"
+            || need.Deadline.HasValue && need.Deadline.Value < DateTime.Now)
+        {
+            TempData["MatchError"] = "Dette behovet er lukket eller fristen har gått ut. Statusen kan ikke lenger endres.";
+            TempData["MatchFeedbackResourceId"] = resourceId;
+            return RedirectToAction("Matches", new { needId });
+        }
+
         //Assign: lock the resource FIRST. If someone else took it first, nothing is saved.
         if (newStatus == "accepted")
         {
-            if (need.Status is "resolved" or "cancelled")
-            {
-                TempData["MatchError"] = "Dette behovet er lukket, så ressurser kan ikke lenger tildeles det.";
-                return RedirectToAction("Matches", new { needId });
-            }
-            
             //Checks to see if the resource is still avaiable in the database..
             bool resourceIsAvailable = _db.Resources.Any(resource =>
                 resource.Id == resourceId &&
@@ -538,6 +541,7 @@ public class PublicActorController : Controller
                 if (!_lifecycle.TryReserveResource(resourceId))
                 {
                     TempData["MatchError"] = "Denne ressursen er midlertidig utilgjengelig. Den er allerede tildelt et annet behov.";
+                    TempData["MatchFeedbackResourceId"] = resourceId;
                     return RedirectToAction("Matches", new { needId });
                 }
             }
@@ -545,6 +549,7 @@ public class PublicActorController : Controller
             {
                 //The resource is unavailable and no already assigned to this need
                 TempData["MatchError"] = "Denne ressursen er allerede tildelt et annet behov.";
+                TempData["MatchFeedbackResourceId"] = resourceId;
 
                 return RedirectToAction("Matches", new {needId});
             }
@@ -579,6 +584,8 @@ public class PublicActorController : Controller
             "declined" when wasAssigned => "Ressursen er avslått og er tilgjengelig igjen.",
             _ => "Status er lagret."
         };
+        TempData["MatchFeedbackResourceId"] = resourceId;
+        TempData["MatchFeedbackType"] = newStatus;
 
         return RedirectToAction("Matches", new { needId });
     }
@@ -846,7 +853,8 @@ public class HomeController : Controller
         
         resource.Status = "withdrawn";
         await _db.SaveChangesAsync();
-        return RedirectToAction(nameof(Index));
+        TempData["SuccessMessage"] = "Ressursen er trukket tilbake. Den er ikke lenger tilgjengelig, og matchhistorikken er bevart.";
+        return RedirectToAction("Index", "Resources");
     }
 
     [HttpPost]
