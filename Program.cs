@@ -48,7 +48,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         };
         options.Cookie.HttpOnly = true;
         options.Cookie.IsEssential = true;
-        options.ExpireTimeSpan = TimeSpan.FromDays(365);
+        options.ExpireTimeSpan = TimeSpan.FromHours(8);
         options.SlidingExpiration = true;
     });
 builder.Services.AddAuthorization();

@@ -1,5 +1,10 @@
+// Helpers for registering a need or a resource by clicking on the map.
 window.resqMapRegistration = {
+    // Returns a function that shows a popup with the register buttons where the user clicked.
     bind(map, registrationUrls) {
+        // The place names come from OpenStreetMap, also when another map layer is shown
+        map.attributionControl?.addAttribution('Stedsnavn &copy; OpenStreetMap');
+
         return function showRegistrationChoices(latlng) {
             const content = L.DomUtil.create('div', 'map-register-popup');
             const heading = L.DomUtil.create('strong', 'map-register-popup-heading', content);
@@ -21,6 +26,7 @@ window.resqMapRegistration = {
                 url.searchParams.set('lat', latlng.lat.toString());
                 url.searchParams.set('lng', latlng.lng.toString());
                 link.href = url.toString();
+                // If the form is on this page already, open it as a popup instead of loading a new page.
                 if (action.type === registrationUrls.currentType) {
                     link.addEventListener('click', event => {
                         event.preventDefault();
@@ -36,13 +42,24 @@ window.resqMapRegistration = {
             }
 
             L.DomEvent.disableClickPropagation(content);
-            L.popup({ maxWidth: 280, minWidth: 220 })
+            const popup = L.popup({ maxWidth: 280, minWidth: 220 })
                 .setLatLng(latlng)
                 .setContent(content)
                 .openOn(map);
+
+            window.resqReverseGeocode.lookup(latlng.lat, latlng.lng).then(placeName => {
+                if (!placeName) return;
+                const address = L.DomUtil.create('span', 'map-register-popup-address');
+                address.textContent = placeName;
+                content.insertBefore(address, coordinates);
+ 
+                if (popup.isOpen()) popup.update();
+            });
         };
     },
 
+    // Reads ?register=...&lat=...&lng=... from the address.
+    // Gives null if something is missing or not a valid position.
     readRequestedLocation() {
         const query = new URLSearchParams(window.location.search);
         if (!query.has('register') || !query.has('lat') || !query.has('lng')) return null;
@@ -55,6 +72,8 @@ window.resqMapRegistration = {
         return { lat, lng };
     },
 
+    // Returns a function that puts a marker on the map
+    // and saves the position in the form fields.
     bindSelectedPosition(map, { latInput, lngInput, positionText, positionError, popupText }) {
         let selectedMarker = null;
 
@@ -63,20 +82,32 @@ window.resqMapRegistration = {
                 map.removeLayer(selectedMarker);
             }
 
+            const coordinates = 'bredde: ' + lat.toFixed(5) + ', lengde: ' + lng.toFixed(5);
+
+            const popupContent = document.createElement('span');
+            popupContent.textContent = popupText + ': ' + lat.toFixed(5) + ', ' + lng.toFixed(5);
+
             const marker = L.marker([lat, lng]).addTo(map)
-                .bindPopup(popupText + ': ' + lat.toFixed(5) + ', ' + lng.toFixed(5))
+                .bindPopup(popupContent)
                 .openPopup();
             selectedMarker = marker;
 
             latInput.value = lat;
             lngInput.value = lng;
-            positionText.textContent =
-                'Valgt posisjon: bredde: ' + lat.toFixed(5) + ', lengde: ' + lng.toFixed(5);
+            positionText.textContent = 'Valgt posisjon: ' + coordinates;
             positionError.textContent = '';
+
+            window.resqReverseGeocode.lookup(lat, lng).then(placeName => {
+                if (!placeName || marker !== selectedMarker) return;
+                popupContent.textContent = popupText + ': ' + placeName;
+                marker.getPopup()?.update();
+                positionText.textContent = 'Valgt posisjon: ' + placeName + ' (' + coordinates + ')';
+            });
         };
     }
 };
 
+// Opens the registration form (a Bootstrap modal) when a popup button asks for it.
 document.addEventListener('resq:open-registration-modal', event => {
     const modal = document.querySelector('[data-registration-modal]');
     if (!modal || event.detail?.type !== modal.closest('body')?.querySelector('[data-registration-type]')?.dataset.registrationType) {

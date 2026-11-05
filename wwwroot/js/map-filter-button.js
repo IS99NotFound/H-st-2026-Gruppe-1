@@ -1,3 +1,4 @@
+// Runs when the page has loaded. Makes the filter panel on the map open and close.
 document.addEventListener("DOMContentLoaded", function () {
     const filterPanel = document.getElementById("survival-filter-panel");
     const filterButton = document.getElementById("survival-filter-button");

@@ -1,7 +1,9 @@
 namespace H_st_2026_Gruppe_1.Models;
 
+// One row in the live feed on the dashboard. A row can be a resource, a need or an incident.
 public class OperationalFeedItem
 {
+    // Type is "resource", "need" or "incident".
     public string Type { get; set; } = "";
     public int Id { get; set; }
     public string Title { get; set; } = "";

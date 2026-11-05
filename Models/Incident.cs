@@ -5,9 +5,11 @@ public class Incident
         public int IncidentId { get; set; }
         public int PublicActorId { get; set; }
         public string Title { get; set; } = "";
+        // Lower case version of the title. It is used for searching.
         public string NormalizedTitle { get; set; } = "";
         public string IncidentType { get; set; } = "Other";
         public string? Description { get; set; }
+        // Status is "active" or "resolved".
         public string Status { get; set; } = "active";
         public decimal Latitude { get; set; }
         public decimal Longitude { get; set; }

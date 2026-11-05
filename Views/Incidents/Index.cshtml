@@ -317,6 +317,7 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/map-reverse-geocode.js" asp-append-version="true"></script>
     @if (isPublicActor)
     {
     <script nonce="@Context.Items["CspNonce"]">
@@ -341,7 +342,11 @@
             incidentMarker = L.marker([latitude, longitude]).addTo(incidentMap);
             latitudeInput.value = latitude.toFixed(6);
             longitudeInput.value = longitude.toFixed(6);
-            mapStatus.textContent = `Valgt sted: ${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+            const coordinates = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+            mapStatus.textContent = `Valgt sted: ${coordinates}`;
+            window.resqReverseGeocode.lookup(latitude, longitude).then(placeName => {
+                if (placeName) mapStatus.textContent = `Valgt sted: ${placeName} (${coordinates})`;
+            });
         });
 
         setTimeout(() => incidentMap.invalidateSize(), 50);
@@ -380,8 +385,11 @@
                 editMarker.setLatLng([latitude, longitude]);
                 editLatitudeInput.value = latitude.toFixed(6);
                 editLongitudeInput.value = longitude.toFixed(6);
-                editMapStatus.textContent =
-                    `Valgt sted: ${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+                const coordinates = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+                editMapStatus.textContent = `Valgt sted: ${coordinates}`;
+                window.resqReverseGeocode.lookup(latitude, longitude).then(placeName => {
+                    if (placeName) editMapStatus.textContent = `Valgt sted: ${placeName} (${coordinates})`;
+                });
             });
 
             const modal = bootstrap.Modal.getOrCreateInstance(incidentEditModal);

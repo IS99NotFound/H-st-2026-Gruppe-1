@@ -44,10 +44,11 @@ public class SecurityHeadersMiddleware
 
     // Builds the CSP text. Each part says where one kind of content may come from.
     // Unpkg is Leaflet (map), jsdelivr is Bootstrap Icons, OpenStreetMap gives the map tiles
-    // and Overpass gives the survival locations. In development, localhost is allowed for browser refresh.
+    // Overpass gives the survival locations and Nominatim gives place names for map positions.
+    // In development, localhost is allowed for browser refresh.
     public static string CreatePolicy(string nonce, bool isDevelopment)
     {
-        var connectSource = "connect-src 'self' https://overpass-api.de https://unpkg.com/leaflet@1.9.4/dist/leaflet.js.map";
+        var connectSource = "connect-src 'self' https://overpass-api.de https://nominatim.openstreetmap.org https://unpkg.com/leaflet@1.9.4/dist/leaflet.js.map";
         if (isDevelopment)
         {
             connectSource += " http://localhost:* ws://localhost:*";

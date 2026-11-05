@@ -96,11 +96,7 @@
                 return;
             }
 
-<<<<<<< HEAD
             //Unavailable resource will never be shown
-=======
-            //Unavailable resource will never be shown 
->>>>>>> ae5324f (Assign knapper fix (#68))
             //Unless a user has activated it
             if (
                 resourceStatus === "unavailable" &&
