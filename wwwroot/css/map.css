@@ -374,6 +374,11 @@ html[data-theme="light"] .layers-menu-control.leaflet-control-layers-expanded {
     line-height: 1.3;
 }
 
+.map-register-popup-address {
+    font-size: 0.9rem;
+    line-height: 1.3;
+}
+
 .map-register-popup-coordinates {
     color: var(--text-muted);
     font-size: 0.8rem;
