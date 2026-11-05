@@ -1,3 +1,5 @@
+// The live feed on the dashboard: search, filter, sort by distance, export, and show items on the map.
+// Everything is inside a function, so the variables do not leak into the rest of the page.
 (function () {
     const list = document.getElementById("operational-feed-list");
     const search = document.getElementById("feed-search");
@@ -17,6 +19,7 @@
     const exportButtons = document.querySelectorAll("[data-feed-export]");
     const exportBackButton = document.querySelector("[data-feed-export-back]");
     const items = Array.from(document.querySelectorAll("[data-feed-item]"));
+    // State: the chosen tab (all, resource, need or incident), the position of the user, and map markers.
     let activeType = "all";
     let currentLocation = null;
     let currentLocationMarker = null;
@@ -45,6 +48,7 @@
                 return;
             }
 
+            // Build the popup with textContent (not innerHTML), so text from the database cannot add HTML to the page.
             const popup = document.createElement("div");
             const title = document.createElement("strong");
             title.textContent = item.title || "Uten tittel";
@@ -70,6 +74,8 @@
         });
     }
 
+    // Distance in km from the user's position to a point (haversine formula).
+    // Gives infinity if we do not know where the user is.
     function distanceInKm(latitude, longitude) {
         if (!currentLocation) return Number.POSITIVE_INFINITY;
         const earthRadius = 6371;
@@ -142,6 +148,7 @@
         focusedFeedMarker.bindPopup(item.dataset.feedTitle || "Selected location").openPopup();
     }
 
+    // Puts a value in quotes for a CSV file. A quote inside the value becomes two quotes.
     function csvValue(value) {
         return `"${String(value ?? "").replaceAll('"', '""')}"`;
     }
@@ -215,9 +222,11 @@
         }
 
         const csv = "\uFEFF" + resourceRows.map(row => row.map(csvValue).join(";")).join("\r\n");
+        // CSV: the text starts with a BOM character, so Excel shows the Norwegian letters correctly.
         downloadFile(csv, "resources.csv", "text/csv;charset=utf-8");
     }
 
+    // Updates the list: sorts by distance and hides items that do not match the tab, the search or the radius.
     function render() {
         const query = search.value.trim().toLowerCase();
         const maxRadius = Number(radius.value);

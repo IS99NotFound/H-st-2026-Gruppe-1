@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace H_st_2026_Gruppe_1.Services;
 
+// Rules for how needs and resources change status when they are matched, released or closed.
 public class MatchNeedLifecycle
 {
     private readonly AppDbContext _db;
@@ -98,6 +99,7 @@ public class MatchNeedLifecycle
     {
         var now = DateTime.Now;
 
+        // Needs where the deadline has passed are marked as resolved.
         var expiredNeeds = _db.Needs
             .Where(n => n.Deadline != null && n.Deadline < now
                     && (n.Status == "new" || n.Status == "under_review" || n.Status == "assigned"))
@@ -108,6 +110,7 @@ public class MatchNeedLifecycle
         }
         _db.SaveChanges();
 
+        // Find accepted matches that belong to a resolved or cancelled need.
         var finished = _db.MatchRecords
             .Where(m => m.Status == "accepted")
             .Join(_db.Needs, m => m.NeedId, n => n.Id, (m, n) => new { Match = m, Need = n })
@@ -149,6 +152,7 @@ public class MatchLifecycleWorker : BackgroundService
         _logger = logger;
     }
 
+    // Runs in the background as long as the app runs. It repeats the clean-up once a minute.
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         using var timer = new PeriodicTimer(TimeSpan.FromMinutes(1));
@@ -160,6 +164,7 @@ public class MatchLifecycleWorker : BackgroundService
                 using var scope = _scopeFactory.CreateScope();
                 scope.ServiceProvider.GetRequiredService<MatchNeedLifecycle>().ReleaseFinishedAssignments();
             }
+            // An error must not stop the worker. We write it to the log and try again next minute.
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Could not release finished assigned resources");

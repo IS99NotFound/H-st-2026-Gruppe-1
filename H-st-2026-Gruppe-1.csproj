@@ -5,6 +5,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>H_st_2026_Gruppe_1</RootNamespace>
+    <!-- The test project lives in a sub folder. Keep its files out of this project. -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);H-st-2026-Gruppe-1.Tests/**</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>

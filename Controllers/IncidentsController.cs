@@ -15,6 +15,7 @@ public class IncidentsController : Controller
         _db = db;
     }
     
+    // If an id is given, that incident is opened for editing.
     public IActionResult Index(
         string? search,
         string? status,
@@ -28,6 +29,7 @@ public class IncidentsController : Controller
         if (id.HasValue)
         {
             var incident = incidents.FirstOrDefault(item => item.IncidentId == id.Value);
+            // The incident must exist, and only a public actor may edit it.
             if (incident == null || !User.IsInRole("PublicActor"))
             {
                 return NotFound();
@@ -62,6 +64,7 @@ public class IncidentsController : Controller
             return Unauthorized();
         }
 
+        // An administrator has no public actor id of their own, so the demo id is used.
         var publicActorId = User.IsInRole("Administrator")
             ? DemoDefaults.PublicActorId
             : currentUserId;
@@ -84,6 +87,7 @@ public class IncidentsController : Controller
         _db.Incidents.Add(incident);
         _db.SaveChanges();
 
+        // TempData shows a short message on the next page.
         TempData["IncidentCreated"] = "Hendelsen ble registrert.";
         return RedirectToAction(nameof(Index));
     }
@@ -129,6 +133,7 @@ public class IncidentsController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    // Marks an incident as resolved. Only the owner or an administrator can do this.
     [HttpPost]
     [Authorize(Roles = "PublicActor, Administrator")]
     [ValidateAntiForgeryToken]
@@ -201,6 +206,7 @@ public class IncidentsController : Controller
 
         if (!string.IsNullOrWhiteSpace(search))
         {
+            // The search is not case sensitive because both sides are lower case.
             var normalizedSearch = NormalizeTitle(search);
             incidents = incidents.Where(incident => incident.NormalizedTitle.Contains(normalizedSearch));
         }
@@ -225,6 +231,7 @@ public class IncidentsController : Controller
             incidents = incidents.Where(incident => incident.CreatedAt < endDate.Value.Date.AddDays(1));
         }
 
+        // Active incidents first, resolved ones last. Newest first inside each group.
         return incidents
             .OrderBy(incident => incident.Status == "resolved" ? 1 : 0)
             .ThenByDescending(incident => incident.CreatedAt)

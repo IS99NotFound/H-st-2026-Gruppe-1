@@ -56,7 +56,9 @@
     <header class="topbar">
         <!-- Top, left corner, logo and text  -->
         <div class="topbar-brand">
-            <a class="brand-name" asp-controller="Home" asp-action="Index">ResQ</a>
+            <a class="brand-name"
+                asp-controller="@(isPublicActor ? "PublicActor" : "Home")"
+                asp-action="@(isPublicActor ? "DashboardIndex" : "Index")">ResQ</a>
             <div class="brand-tagline">
             </div>
         </div>
