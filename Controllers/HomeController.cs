@@ -21,6 +21,28 @@ public class PublicActorController : Controller
             ? userId
             : null;
     }
+
+    private int? GetCurrentOrganizationId()
+    {
+        var currentUserId = GetCurrentUserId();
+
+        return currentUserId.HasValue
+            ? _db.PublicActors
+                .Where(actor => actor.PublicActorId == currentUserId.Value)
+                .Select(actor => (int?)actor.OrganizationId)
+                .FirstOrDefault()
+            : null;
+    }
+
+    private bool BelongsToCurrentOrganization(int publicActorId)
+    {
+        var organizationId = GetCurrentOrganizationId();
+
+        return organizationId.HasValue &&
+            _db.PublicActors.Any(actor =>
+                actor.PublicActorId == publicActorId &&
+                actor.OrganizationId == organizationId.Value);
+    }
     
     private readonly AppDbContext _db;
     private readonly MatchNeedLifecycle _lifecycle;
@@ -82,7 +104,7 @@ public class PublicActorController : Controller
     // API-endpoint like JavaScript is used to fetch fresh data.
     //includeUnavailable is set to false as a standard
     [HttpGet]
-    [Authorize(Roles = "PublicActor,Administrator")]
+    [Authorize(Roles = "PublicActor")]
     [ResponseCache(
         Duration = 0,
         Location = ResponseCacheLocation.None,
@@ -116,6 +138,7 @@ public class PublicActorController : Controller
         ViewBag.Incidents = _db.Incidents.OrderBy(i => i.IncidentId).ToList();
     }
     
+    [Authorize(Roles = "PublicActor")]
     public IActionResult DashboardIndex(int? id)
     {
         if (!CanRegisterNeed())
@@ -135,14 +158,7 @@ public class PublicActorController : Controller
                 return RedirectToAction(nameof(MatchesIndex));
             }
 
-            var currentUserId = GetCurrentUserId();
-
-            if (currentUserId is null)
-            {
-                return Unauthorized();
-            }
-
-            if (!User.IsInRole("Administrator") && need.PublicActorId != currentUserId.Value)
+            if (!BelongsToCurrentOrganization(need.PublicActorId))
             {
                 return Forbid();
             }
@@ -211,7 +227,7 @@ public class PublicActorController : Controller
     }
     
     
-    [Authorize(Roles = "PublicActor,Administrator")]
+    [Authorize(Roles = "PublicActor")]
     public IActionResult NeedsIndex(
         NeedPriorityEnum? priority,
         int? category,
@@ -223,17 +239,18 @@ public class PublicActorController : Controller
         
         var results = _db.Needs.Include(need => need.CategoryInfo).AsQueryable();
 
-        if (!User.IsInRole("Administrator"))
+        var organizationId = GetCurrentOrganizationId();
+
+        if (organizationId is null)
         {
-            var currentUserId = GetCurrentUserId();
-
-            if (currentUserId is null)
-            {
-                return Unauthorized();
-            }
-
-            results = results.Where(need => need.PublicActorId == currentUserId.Value);
+            throw new InvalidOperationException(
+                "The authenticated PublicActor is missing an organization.");
         }
+
+        results = results.Where(need =>
+            _db.PublicActors.Any(actor =>
+                actor.PublicActorId == need.PublicActorId &&
+                actor.OrganizationId == organizationId.Value));
 
         if (priority.HasValue)
         {
@@ -290,14 +307,11 @@ public class PublicActorController : Controller
         };
     }
 
-    private bool CanRegisterNeed()
-    {
-        return User.IsInRole("PublicActor") || User.IsInRole("Administrator");
-    }
+    private bool CanRegisterNeed() => User.IsInRole("PublicActor");
 
 
-    [HttpPost] 
-    [Authorize(Roles = "PublicActor,Administrator")] 
+    [HttpPost]
+    [Authorize(Roles = "PublicActor")]
     [ValidateAntiForgeryToken]
     public IActionResult RegisterNeed(ResourceNeed need)
     {
@@ -325,15 +339,7 @@ public class PublicActorController : Controller
                 return NotFound();
             }
 
-            var currentUserId = GetCurrentUserId();
-
-            if (currentUserId is null)
-            {
-                return Unauthorized();
-            }
-
-            if (!User.IsInRole("Administrator") &&
-                existingNeed.PublicActorId != currentUserId.Value)
+            if (!BelongsToCurrentOrganization(existingNeed.PublicActorId))
             {
                 return Forbid();
             }
@@ -383,12 +389,14 @@ public class PublicActorController : Controller
         return RedirectToAction("NeedsIndex");
     }
 
+    [Authorize(Roles = "PublicActor")]
     public IActionResult MatchesIndex(int? needId, double radiusKm = 0)
     {
         return View("MatchesIndex", BuildMatchViewModel(needId, radiusKm));
     }
     
     // Shows the resources within radiusKm of a need, nearest first.
+    [Authorize(Roles = "PublicActor")]
     public IActionResult Matches(int? needId, double radiusKm = 0)
     {
         var model = BuildMatchViewModel(needId, radiusKm);
@@ -400,6 +408,7 @@ public class PublicActorController : Controller
         return View("MatchesIndex", model);
     }
     
+    [Authorize(Roles = "PublicActor")]
     public IActionResult ShowAllResourcesInMatches(int needId, double radiusKm = 0)
     {
         var model = BuildMatchViewModel(needId, radiusKm, allCategories: true);
@@ -417,7 +426,22 @@ public class PublicActorController : Controller
        //Will free room for resources if a need is set as resolved or deadline has passed
         _lifecycle.ReleaseFinishedAssignments();
 
-        var needs = _db.Needs.Include(need => need.CategoryInfo).ToList();
+        var needsQuery = _db.Needs.Include(need => need.CategoryInfo).AsQueryable();
+
+        var organizationId = GetCurrentOrganizationId();
+
+        if (organizationId is null)
+        {
+            throw new InvalidOperationException(
+                "The authenticated PublicActor is missing an organization.");
+        }
+
+        needsQuery = needsQuery
+            .Where(need => _db.PublicActors.Any(actor =>
+                actor.PublicActorId == need.PublicActorId &&
+                actor.OrganizationId == organizationId.Value));
+
+        var needs = needsQuery.ToList();
         var selectedNeed = needId.HasValue
             ? needs.FirstOrDefault(need => need.Id == needId.Value)
             : needs.OrderByDescending(need => need.Id).FirstOrDefault();
@@ -493,13 +517,7 @@ public class PublicActorController : Controller
             return NotFound();
         }
 
-        var currentUserId = GetCurrentUserId();
-        if (currentUserId is null)
-        {
-            return Unauthorized();
-        }
-
-        if (need.PublicActorId != currentUserId.Value)
+        if (!BelongsToCurrentOrganization(need.PublicActorId))
         {
             return Forbid();
         }
@@ -587,14 +605,7 @@ public class PublicActorController : Controller
             return NotFound();
         }
 
-        var currentUserId = GetCurrentUserId();
-        if (currentUserId is null)
-        {
-            return Unauthorized();
-        }
-
-        // Bare den som eier behovet kan lukke det
-        if (need.PublicActorId != currentUserId.Value)
+        if (!BelongsToCurrentOrganization(need.PublicActorId))
         {
             return Forbid();
         }
@@ -616,7 +627,29 @@ public class HomeController : Controller
             ? userId
             : null;
     }
-    
+
+    private int? GetCurrentOrganizationId()
+    {
+        var currentUserId = GetCurrentUserId();
+
+        return currentUserId.HasValue
+            ? _db.PublicActors
+                .Where(actor => actor.PublicActorId == currentUserId.Value)
+                .Select(actor => (int?)actor.OrganizationId)
+                .FirstOrDefault()
+            : null;
+    }
+
+    private bool BelongsToCurrentOrganization(int publicActorId)
+    {
+        var organizationId = GetCurrentOrganizationId();
+
+        return organizationId.HasValue &&
+            _db.PublicActors.Any(actor =>
+                actor.PublicActorId == publicActorId &&
+                actor.OrganizationId == organizationId.Value);
+    }
+
     private readonly AppDbContext _db;
     private readonly MatchNeedLifecycle _lifecycle;
 
@@ -843,7 +876,7 @@ public class HomeController : Controller
     }
 
     [HttpPost]
-    [Authorize(Roles = "PublicActor, Administrator")]
+    [Authorize(Roles = "PublicActor")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteNeed(int id)
     {
@@ -853,16 +886,7 @@ public class HomeController : Controller
             return NotFound();
         }
         
-        var currentUserId = GetCurrentUserId();
-
-        if (currentUserId is null)
-        {
-            return Unauthorized();
-        }
-        
-        bool isAdmin = User.IsInRole("Administrator");
-
-        if (!isAdmin && Need.PublicActorId != (currentUserId))
+        if (!BelongsToCurrentOrganization(Need.PublicActorId))
         {
             return Forbid();
         }

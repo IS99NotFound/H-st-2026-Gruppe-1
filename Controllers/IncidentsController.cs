@@ -14,6 +14,31 @@ public class IncidentsController : Controller
     {
         _db = db;
     }
+
+    private int? GetCurrentOrganizationId()
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (!int.TryParse(userIdClaim, out var currentUserId))
+        {
+            return null;
+        }
+
+        return _db.PublicActors
+            .Where(actor => actor.PublicActorId == currentUserId)
+            .Select(actor => (int?)actor.OrganizationId)
+            .FirstOrDefault();
+    }
+
+    private bool BelongsToCurrentOrganization(int publicActorId)
+    {
+        var organizationId = GetCurrentOrganizationId();
+
+        return organizationId.HasValue &&
+            _db.PublicActors.Any(actor =>
+                actor.PublicActorId == publicActorId &&
+                actor.OrganizationId == organizationId.Value);
+    }
     
     public IActionResult Index(
         string? search,
@@ -28,7 +53,9 @@ public class IncidentsController : Controller
         if (id.HasValue)
         {
             var incident = incidents.FirstOrDefault(item => item.IncidentId == id.Value);
-            if (incident == null || !User.IsInRole("PublicActor"))
+            if (incident == null ||
+                !User.IsInRole("PublicActor") ||
+                !BelongsToCurrentOrganization(incident.PublicActorId))
             {
                 return NotFound();
             }
@@ -44,7 +71,7 @@ public class IncidentsController : Controller
     }
 
     [HttpPost]
-    [Authorize(Roles = "PublicActor, Administrator")]
+    [Authorize(Roles = "PublicActor")]
     [ValidateAntiForgeryToken]
     public IActionResult Create(IncidentIndexViewModel model)
     {
@@ -62,13 +89,9 @@ public class IncidentsController : Controller
             return Unauthorized();
         }
 
-        var publicActorId = User.IsInRole("Administrator")
-            ? DemoDefaults.PublicActorId
-            : currentUserId;
-
         var incident = new Incident
         {
-            PublicActorId = publicActorId,
+            PublicActorId = currentUserId,
             Title = createModel.Title.Trim(),
             NormalizedTitle = NormalizeTitle(createModel.Title),
             IncidentType = createModel.IncidentType,
@@ -99,7 +122,7 @@ public class IncidentsController : Controller
             return NotFound();
         }
 
-        if (!User.IsInRole("PublicActor"))
+        if (!BelongsToCurrentOrganization(incident.PublicActorId))
         {
             return Forbid();
         }
@@ -130,7 +153,7 @@ public class IncidentsController : Controller
     }
 
     [HttpPost]
-    [Authorize(Roles = "PublicActor, Administrator")]
+    [Authorize(Roles = "PublicActor")]
     [ValidateAntiForgeryToken]
     public IActionResult MarkAsResolved(int incidentId)
     {
@@ -139,15 +162,7 @@ public class IncidentsController : Controller
         {
             return NotFound();
         }
-        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (!int.TryParse(userIdClaim, out var currentUserId))
-        {
-            return Unauthorized();
-        }
-
-        if (!User.IsInRole("Administrator") &&
-            incident.PublicActorId != currentUserId)
+        if (!BelongsToCurrentOrganization(incident.PublicActorId))
         {
             return Forbid();
         }
@@ -160,7 +175,7 @@ public class IncidentsController : Controller
     }
 
     [HttpPost]
-    [Authorize(Roles = "PublicActor, Administrator")]
+    [Authorize(Roles = "PublicActor")]
     [ValidateAntiForgeryToken]
     public IActionResult Reactivate(int incidentId)
     {
@@ -170,15 +185,7 @@ public class IncidentsController : Controller
             return NotFound();
         }
         
-        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (!int.TryParse(userIdClaim, out var currentUserId))
-        {
-            return Unauthorized();
-        }
-
-        if (!User.IsInRole("Administrator") &&
-            incident.PublicActorId != currentUserId)
+        if (!BelongsToCurrentOrganization(incident.PublicActorId))
         {
             return Forbid();
         }
