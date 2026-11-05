@@ -90,7 +90,6 @@ public class ResourcesController : Controller
                 r.ExpirationDate.HasValue &&
                 r.ExpirationDate.Value.Date < now),
             Resources = allResources,
-            Resources = allResources,
             Search = search,
             Status = status,
             ResourceType = resourceType,
