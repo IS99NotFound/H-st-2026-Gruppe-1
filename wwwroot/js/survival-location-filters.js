@@ -2,7 +2,7 @@
     const map = window.resqMap;
 
     if (!map) {
-        console.error("The Resource Provider map was not found.");
+        console.error("Kart ble ikke funnet.");
         return;
     }
 
