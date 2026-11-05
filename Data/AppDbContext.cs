@@ -11,6 +11,7 @@ public class AppDbContext : DbContext
     }
     
 
+    // Each DbSet is one table. Use _db.Resources to read or save rows in that table.
     public DbSet<ResourceEntry> Resources => Set<ResourceEntry>();
     public DbSet<ResourceNeed> Needs => Set<ResourceNeed>();
     public DbSet<Category> Categories => Set<Category>();
@@ -73,6 +74,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<MatchRecord>(entity =>
         {
             entity.ToTable("ResourceMatch");
+            // A match is identified by the need and the resource together (a composite key).
             entity.HasKey(m => new { m.NeedId, m.ResourceId });
             entity.Property(m => m.NeedId).HasColumnName("NeedID");
             entity.Property(m => m.ResourceId).HasColumnName("ResourceID");

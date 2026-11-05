@@ -1,4 +1,6 @@
+// Helpers for registering a need or a resource by clicking on the map.
 window.resqMapRegistration = {
+    // Returns a function that shows a popup with the register buttons where the user clicked.
     bind(map, registrationUrls) {
         return function showRegistrationChoices(latlng) {
             const content = L.DomUtil.create('div', 'map-register-popup');
@@ -21,6 +23,7 @@ window.resqMapRegistration = {
                 url.searchParams.set('lat', latlng.lat.toString());
                 url.searchParams.set('lng', latlng.lng.toString());
                 link.href = url.toString();
+                // If the form is on this page already, open it as a popup instead of loading a new page.
                 if (action.type === registrationUrls.currentType) {
                     link.addEventListener('click', event => {
                         event.preventDefault();
@@ -43,6 +46,8 @@ window.resqMapRegistration = {
         };
     },
 
+    // Reads ?register=...&lat=...&lng=... from the address.
+    // Gives null if something is missing or not a valid position.
     readRequestedLocation() {
         const query = new URLSearchParams(window.location.search);
         if (!query.has('register') || !query.has('lat') || !query.has('lng')) return null;
@@ -55,6 +60,8 @@ window.resqMapRegistration = {
         return { lat, lng };
     },
 
+    // Returns a function that puts a marker on the map
+    // and saves the position in the form fields.
     bindSelectedPosition(map, { latInput, lngInput, positionText, positionError, popupText }) {
         let selectedMarker = null;
 
@@ -77,6 +84,7 @@ window.resqMapRegistration = {
     }
 };
 
+// Opens the registration form (a Bootstrap modal) when a popup button asks for it.
 document.addEventListener('resq:open-registration-modal', event => {
     const modal = document.querySelector('[data-registration-modal]');
     if (!modal || event.detail?.type !== modal.closest('body')?.querySelector('[data-registration-type]')?.dataset.registrationType) {

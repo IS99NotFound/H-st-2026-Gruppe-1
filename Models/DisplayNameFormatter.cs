@@ -2,6 +2,7 @@ using System.Globalization;
 
 namespace H_st_2026_Gruppe_1.Models;
 
+// Cleans up names, so " oLA NORDMANN " becomes "Ola Nordmann".
 public static class DisplayNameFormatter
 {
     public static string Format(string name)

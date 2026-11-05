@@ -1,5 +1,6 @@
 window.addEventListener("resize", () => window.resqMap?.invalidateSize());
 
+// Colours for the map markers. The names match the ColorKey values from the server.
 window.resqMapColors = {
     "critical-need": "#ef4444",
     "planned-need": "#f59e0b",
@@ -21,6 +22,7 @@ document.querySelectorAll("[data-map-legend-toggle]").forEach(toggle => {
 });
 
 window.resqRegistration = {
+    // Combines a date field and a time field into one hidden value that is sent to the server.
     initializeDateTimeFields(formId, mappings) {
         const form = document.getElementById(formId);
         if (!form) return;
@@ -87,6 +89,7 @@ window.resqRegistration = {
     }
 };
 
+// Checks that the end date is not before the start date.
 window.resqDateRange = {
     message: "Sluttdato kan ikke være før startdato.",
 
@@ -142,6 +145,8 @@ window.resqRadius = {
         update();
     },
 
+    // Hides the cards that are farther away than the slider value.
+    // The slider value is remembered in localStorage.
     initializeDistanceFilter({ sliderId, valueId, errorId, cardSelector, storageKey }) {
         const slider = document.getElementById(sliderId);
         const output = document.getElementById(valueId);
@@ -237,6 +242,7 @@ window.resqRadius = {
     }
 };
 
+// Dark and light mode button. The choice is saved in localStorage.
 const themeToggle = document.querySelector("#theme-toggle");
 
 if (themeToggle) {
@@ -281,6 +287,7 @@ document.addEventListener("change", event => {
     }
 });
 
+// A dialog that shows the demo 2FA code, with a button that copies it.
 const demoCodeDialog = document.querySelector("#demo-code-dialog");
 
 if (demoCodeDialog) {
@@ -299,6 +306,7 @@ if (demoCodeDialog) {
     });
 }
 
+// The boxes for the 2FA code: move between the boxes, accept paste, and join the digits into one value.
 const codeForm = document.querySelector("[data-code-form]");
 
 if (codeForm) {

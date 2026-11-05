@@ -11,8 +11,11 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace H_st_2026_Gruppe_1.Controllers;
 
+// Pages for public actors: the dashboard, their needs, and matching resources to needs.
 public class PublicActorController : Controller
 {
+    // Reads the id of the logged in user from the login cookie.
+    // Gives null if it is missing or not a number.
     private int? GetCurrentUserId()
     {
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -280,6 +283,7 @@ public class PublicActorController : Controller
         return View(sortedResults);
     }
     
+    // A lower number is shown first. Critical needs come before planned needs.
     private int GetPriorityOrder(NeedPriorityEnum priority)
     {
         return priority switch
@@ -296,6 +300,7 @@ public class PublicActorController : Controller
     }
 
 
+    // Saves a new need, or updates an existing need if the form has an id.
     [HttpPost] 
     [Authorize(Roles = "PublicActor,Administrator")] 
     [ValidateAntiForgeryToken]
@@ -383,6 +388,7 @@ public class PublicActorController : Controller
         return RedirectToAction("NeedsIndex");
     }
 
+    // Shows the matching page for a need. If no need is chosen, the newest need is used.
     public IActionResult MatchesIndex(int? needId, double radiusKm = 0)
     {
         return View("MatchesIndex", BuildMatchViewModel(needId, radiusKm));
@@ -400,6 +406,7 @@ public class PublicActorController : Controller
         return View("MatchesIndex", model);
     }
     
+    // Same as Matches, but also shows resources from other categories.
     public IActionResult ShowAllResourcesInMatches(int needId, double radiusKm = 0)
     {
         var model = BuildMatchViewModel(needId, radiusKm, allCategories: true);
@@ -422,6 +429,7 @@ public class PublicActorController : Controller
             ? needs.FirstOrDefault(need => need.Id == needId.Value)
             : needs.OrderByDescending(need => need.Id).FirstOrDefault();
 
+        // A radius that makes no sense means "no limit" (0).
         if (!double.IsFinite(radiusKm) || radiusKm < 0)
         {
             radiusKm = 0;
@@ -583,6 +591,7 @@ public class PublicActorController : Controller
         return RedirectToAction("Matches", new { needId });
     }
 
+    // Closes a need as resolved. Only the owner of the need can do this.
     [HttpPost]
     [Authorize(Roles = "PublicActor")]
     [ValidateAntiForgeryToken]
@@ -613,9 +622,12 @@ public class PublicActorController : Controller
 
 
 
+// Pages for civilian providers: register, edit and delete resources.
 public class HomeController : Controller
 
 {
+    // Reads the id of the logged in user from the login cookie.
+    // Gives null if it is missing or not a number.
     private int? GetCurrentUserId()
     {
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -669,6 +681,8 @@ public class HomeController : Controller
         return View(new ResourceEntry());     
     }
 
+    // Loads the live feed into ViewBag. A provider only sees their own resources,
+    // an administrator sees all of them.
     private void LoadOperationalFeed(int CurrentUserId, bool includeAllResources)
     {
         var resources = _db.Resources.AsQueryable();
@@ -819,6 +833,7 @@ public class HomeController : Controller
         return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
     }
 
+    // Deletes a resource. A provider can only delete their own resources.
     [HttpPost]
     [Authorize(Roles = "CivilianProvider, Administrator")]
     [ValidateAntiForgeryToken]
@@ -849,6 +864,7 @@ public class HomeController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    // Deletes a need. A public actor can only delete their own needs.
     [HttpPost]
     [Authorize(Roles = "PublicActor, Administrator")]
     [ValidateAntiForgeryToken]

@@ -38,6 +38,7 @@ public class AuthController : Controller
         return View(new LoginViewModel());
     }
 
+    // Step 1 of login: check username and password, then create the 2FA code.
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(LoginViewModel model)
@@ -94,12 +95,14 @@ public class AuthController : Controller
         });
     }
 
+    // The 2FA page cannot be opened directly, so we send the user back to the login page.
     [HttpGet]
     public IActionResult TwoFactor()
     {
         return RedirectToAction(nameof(Login));
     }
 
+    // Step 2 of login: check the 2FA code. If it is correct, the user is signed in.
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> VerifyTwoFactor(TwoFactorViewModel model)
@@ -172,6 +175,7 @@ public class AuthController : Controller
             new ClaimsPrincipal(identity),
             properties);
 
+        // Public actors start on their dashboard. Everyone else starts on the home page.
         if (user.Role.ToString() == "PublicActor")
         {
             return RedirectToAction("DashboardIndex", "PublicActor");
