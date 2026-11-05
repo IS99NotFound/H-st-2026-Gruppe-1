@@ -23,12 +23,14 @@ public class ResourcesController : Controller
         DateTime? startDate,
         DateTime? endDate)
     {
+        // Today and the date 5 days ahead. They are used to find resources that expire soon.
         var now = DateTime.Today;
         var fiveDaysAhead = now.AddDays(5);
         var resourcesQuery = _db.Resources
             .Include(resource => resource.Category)
             .AsQueryable();
 
+        // A civilian provider may only see the resources they registered themselves.
         if (User.IsInRole("CivilianProvider"))
         {
             var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -97,6 +99,7 @@ public class ResourcesController : Controller
             EndDate = endDate
         };
 
+        // If an id is in the address, open that resource for editing.
         if (id.HasValue)
         {
             var resource = allResources.FirstOrDefault(item => item.Id == id.Value);

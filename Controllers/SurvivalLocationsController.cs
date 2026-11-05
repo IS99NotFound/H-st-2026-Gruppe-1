@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace H_st_2026_Gruppe_1.Controllers;
 
+// Gives the map hospitals and drinking water places. The data comes from the Geoapify website.
+// This is an API: it returns JSON data, not a web page.
 [ApiController]
 [Route("api/survival-locations")]
 public class SurvivalLocationsController : ControllerBase
@@ -19,6 +21,7 @@ public class SurvivalLocationsController : ControllerBase
         _configuration = configuration;
     }
 
+    // Called by the map with the visible area (south, west, north, east).
     [HttpGet]
     public async Task<IActionResult> GetLocations(
         [FromQuery] double south,
@@ -28,6 +31,7 @@ public class SurvivalLocationsController : ControllerBase
         [FromQuery] string categories = "hospital,drinking_water",
         CancellationToken cancellationToken = default)
     {
+        // Check the map area. The numbers must be real, inside the world, and south < north, west < east.
         if (!double.IsFinite(south) ||
             !double.IsFinite(west) ||
             !double.IsFinite(north) ||
@@ -39,6 +43,7 @@ public class SurvivalLocationsController : ControllerBase
             return BadRequest(new { message = "Invalid map bounds." });
         }
 
+        // Our category names on the left, the Geoapify category names on the right.
         var categoryMap = new Dictionary<string, string>(
             StringComparer.OrdinalIgnoreCase)
         {
@@ -46,6 +51,7 @@ public class SurvivalLocationsController : ControllerBase
             ["drinking_water"] = "amenity.drinking_water"
         };
 
+        // Split the text "hospital,drinking_water" into a list without empty or repeated items.
         var selectedCategories = categories
             .Split(',', StringSplitOptions.RemoveEmptyEntries |
                         StringSplitOptions.TrimEntries)
@@ -61,6 +67,7 @@ public class SurvivalLocationsController : ControllerBase
             });
         }
 
+        // The API key is a secret, so it is not in the code. It comes from the settings.
         var apiKey = _configuration["Geoapify:ApiKey"];
 
         if (string.IsNullOrWhiteSpace(apiKey))
@@ -76,6 +83,7 @@ public class SurvivalLocationsController : ControllerBase
 
         var filter = $"rect:{west},{south},{east},{north}";
 
+        // Build the web address for Geoapify. EscapeDataString makes text safe to use in a URL.
         var url =
             "https://api.geoapify.com/v2/places" +
             $"?categories={Uri.EscapeDataString(geoCategories)}" +
@@ -92,6 +100,7 @@ public class SurvivalLocationsController : ControllerBase
                 HttpCompletionOption.ResponseHeadersRead,
                 cancellationToken);
 
+            // If Geoapify answers with an error, we answer with 502 (bad gateway).
             if (!response.IsSuccessStatusCode)
             {
                 return StatusCode(502, new
@@ -107,6 +116,7 @@ public class SurvivalLocationsController : ControllerBase
                 stream,
                 cancellationToken: cancellationToken);
 
+            // The answer should contain a list called "features". Each feature is one place.
             if (!document.RootElement.TryGetProperty(
                     "features", out var features) ||
                 features.ValueKind != JsonValueKind.Array)
@@ -185,6 +195,7 @@ public class SurvivalLocationsController : ControllerBase
 
             return Ok(locations);
         }
+        // Error handling: timeout (504), cannot reach Geoapify (502) or unreadable answer (502).
         catch (OperationCanceledException)
             when (!cancellationToken.IsCancellationRequested)
         {

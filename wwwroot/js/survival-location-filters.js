@@ -1,3 +1,5 @@
+// Shows hospitals, drinking water and shelters on the map.
+// The data comes from OpenStreetMap through the Overpass API.
 (function () {
     const map = window.resqMap;
 
@@ -15,6 +17,8 @@
         shelter: "Tilfluktsrom/bunker"
     };
 
+    // locations: the places we found. requestController: lets us cancel an old request.
+    // moveTimer: waits until the map has stopped moving.
     let locations = [];
     let requestController = null;
     let moveTimer = null;
@@ -105,6 +109,7 @@
             bounds.getEast()
         ].join(",");
 
+        // The Overpass query: all places of the types we want inside the visible area (bbox).
         const query = `
             [out:json][timeout:25];
             (
@@ -188,6 +193,7 @@
             input.addEventListener("change", renderMarkers);
         });
 
+    // Load new places half a second after the user has stopped moving the map.
     map.on("moveend", function (){
         clearTimeout(moveTimer);
         moveTimer = setTimeout(loadLocations, 500);  

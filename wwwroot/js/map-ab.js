@@ -1,5 +1,8 @@
+// Adds an A-B tool to the map: click point A and point B to see the distance between them.
 window.resqAbMap = {
+    // map is the Leaflet map. onMapClick is called for clicks that are not part of the A-B tool.
     initialize(map, { onMapClick }) {
+        // abMode: null = waiting, 'A' = the next click sets A, 'B' = the next click sets B.
         let abMode = null;
         let markerA = null;
         let markerB = null;
@@ -25,6 +28,8 @@ window.resqAbMap = {
             markerA = markerB = abLine = abDistanceMarker = null;
         }
 
+        // Haversine formula: the distance between two points on the earth in km.
+        // It is the same idea as RadiusMatcher in the C# code.
         function distanceInKilometres(pointA, pointB) {
             const earthRadius = 6371;
             const latitudeDifference = (pointB.lat - pointA.lat) * Math.PI / 180;
@@ -74,6 +79,8 @@ window.resqAbMap = {
         });
 
         new AbControl().addTo(map);
+        // Handle clicks on the map: first click = A, second click = B.
+        // Then the line and the distance are drawn.
         map.on('click', event => {
             if (abActive && abMode === null) {
                 resetAb();
@@ -108,6 +115,7 @@ window.resqAbMap = {
                 setAbMode(null);
                 return;
             }
+            // The tool is not placing points, so give the click to the normal map code.
             onMapClick(event);
         });
     }

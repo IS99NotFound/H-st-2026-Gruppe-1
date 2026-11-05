@@ -12,6 +12,7 @@ public class RegisterController : Controller
 {
     private readonly UserManager<User> _userManager;
     private readonly AppDbContext _db;
+    // _env tells us if the app runs in Development or Production.
     private readonly IWebHostEnvironment _env;
 
 
@@ -66,9 +67,11 @@ public class RegisterController : Controller
         // The User row and the role row are saved, or none of them
         await using var transaction = await _db.Database.BeginTransactionAsync();
 
+        // Identity saves the user and stores a hash of the password (never the password itself).
         var result = await _userManager.CreateAsync(user, model.Password);
         if (!result.Succeeded)
         {
+            // Turn the Identity error codes into Norwegian messages the user can read.
             foreach (var error in result.Errors)
             {
                 ModelState.AddModelError(string.Empty, error.Code switch
@@ -88,6 +91,7 @@ public class RegisterController : Controller
             return View(await AddOrganizationsAsync(model));
         }
 
+        // Each role gets an extra row in its own table.
         switch (model.Role)
         {
             case IdentityUserRole.CivilianProvider:
