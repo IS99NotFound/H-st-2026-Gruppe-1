@@ -1,0 +1,105 @@
+﻿@model H_st_2026_Gruppe_1.Models.RegisterViewModel
+@{
+    ViewData["Title"] = "Registrer deg";
+}
+
+<div class="auth-page">
+    <partial name="_AuthBrandPanel" />
+
+    <section class="auth-content">
+        <div class="auth-form-container auth-register-container">
+            <p class="auth-step-label">STEG 1 AV 2</p>
+            <h2>Opprett kontoen din</h2>
+            <p class="auth-description">Fyll inn opplysningene dine for å komme i gang. Alle felt må fylles ut.</p>
+
+            <form asp-controller="Register" asp-action="Index" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger registration-validation"></div>
+                <div class="auth-form-grid">
+                <div class="auth-field">
+                    <label asp-for="Name">Fullt navn</label>
+                    <input asp-for="Name" class="form-control" placeholder="Fullt navn" autocomplete="name" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+                <div class="auth-field">
+                    <label asp-for="UserName">Brukernavn</label>
+                    <input asp-for="UserName" class="form-control" placeholder="Velg et brukernavn" autocomplete="username" />
+                    <span asp-validation-for="UserName" class="text-danger"></span>
+                </div>
+                <div class="auth-field">
+                    <label asp-for="Email">E-post</label>
+                    <input asp-for="Email" class="form-control" placeholder="navn@organisasjon.no" autocomplete="email" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+                <div class="auth-field">
+                    <label asp-for="PhoneNumber">Telefonnummer</label>
+                    <input asp-for="PhoneNumber" class="form-control" placeholder="+47 400 00 000" autocomplete="tel" />
+                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                </div>
+                <div class="auth-password-grid">
+                    <div class="auth-field">
+                        <label asp-for="Password">Passord</label>
+                        <input asp-for="Password" class="form-control" placeholder="Lag et passord" autocomplete="new-password" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+                    <div class="auth-field">
+                        <label asp-for="ConfirmPassword">Bekreft passord</label>
+                        <input asp-for="ConfirmPassword" class="form-control" placeholder="Skriv passordet på nytt" autocomplete="new-password" />
+                        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                    </div>
+                    <p class="auth-password-requirements">Bruk minst 8 tegn med en blanding av bokstaver, tall og symboler.</p>
+                </div>
+                </div>
+
+                <fieldset class="auth-demo-fields">
+                    <legend>Demofunksjon</legend>
+                    <div class="auth-form-grid">
+                        <div class="auth-field">
+                            <label asp-for="Role">Brukerrolle</label>
+                            <select asp-for="Role" class="form-select" id="register-role">
+                                <option value="">Velg rolle</option>
+                                <option value="CivilianProvider">Ressursleverandør</option>
+                                <option value="PublicActor">Offentlig aktør</option>
+                                <option value="Administrator">Administrator</option>
+                            </select>
+                            <span asp-validation-for="Role" class="text-danger"></span>
+                        </div>
+                        <div class="auth-field" id="organization-field">
+                            <label asp-for="OrganizationId">Organisasjon</label>
+                            <select asp-for="OrganizationId" class="form-select">
+                                <option value="0">Velg organisasjon</option>
+                                @foreach (var organization in Model.Organizations)
+                                {
+                                    <option value="@organization.OrganizationId">@organization.OrganizationName</option>
+                                }
+                            </select>
+                            <span asp-validation-for="OrganizationId" class="text-danger"></span>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <button type="submit" class="btn auth-submit">Opprett konto</button>
+            </form>
+
+            <p class="auth-back-link">Har du allerede en konto? <a asp-controller="Auth" asp-action="Login">Logg inn</a></p>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script nonce="@Context.Items["CspNonce"]">
+        (() => {
+            const role = document.getElementById("register-role");
+            const organizationField = document.getElementById("organization-field");
+
+            function updateOrganizationField() {
+                const isPublicActor = role.value === "PublicActor";
+                organizationField.classList.toggle("d-none", !isPublicActor);
+                organizationField.setAttribute("aria-hidden", (!isPublicActor).toString());
+            }
+
+            role.addEventListener("change", updateOrganizationField);
+            updateOrganizationField();
+        })();
+    </script>
+}

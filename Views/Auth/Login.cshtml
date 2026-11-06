@@ -1,0 +1,47 @@
+@model H_st_2026_Gruppe_1.Models.LoginViewModel
+@{
+    ViewData["Title"] = "Logg inn";
+}
+
+<div class="auth-page">
+    <partial name="_AuthBrandPanel" />
+
+    <section class="auth-content">
+        <div class="auth-form-container">
+            <p class="auth-step-label">STEG 1 AV 2</p>
+            <h2>Velkommen tilbake</h2>
+            <p class="auth-description">Logg inn for å bruke ResQ.</p>
+
+            @if (TempData["RegisterMessage"] != null)
+            {
+                <p class="text-success">@TempData["RegisterMessage"]</p>
+            }
+
+            <form asp-controller="Auth" asp-action="Login" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <div class="auth-field">
+                    <label asp-for="UserName">Brukernavn</label>
+                    <input asp-for="UserName" class="form-control" autocomplete="username" />
+                    <span asp-validation-for="UserName" class="text-danger"></span>
+                </div>
+
+                <div class="auth-field">
+                    <label asp-for="Password">Passord</label>
+                    <input asp-for="Password" class="form-control" autocomplete="current-password" />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+
+                <button type="submit" class="btn auth-submit">Logg inn</button>
+            </form>
+
+            <p class="auth-back-link">
+                <a asp-controller="Register" asp-action="Index">Opprett konto</a>
+            </p>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

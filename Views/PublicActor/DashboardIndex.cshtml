@@ -1,0 +1,170 @@
+@model H_st_2026_Gruppe_1.Models.ResourceNeed
+@{
+    ViewData["Title"] = "Oversikt for offentlig aktør";
+    ViewData["FullWidth"] = true;
+    ViewData["RegistrationType"] = "need";
+    var canRegisterResource = User.IsInRole("ResourceProvider") || User.IsInRole("Administrator");
+    var openRegistrationModal = ViewBag.OpenRegistrationModal is bool shouldOpen
+        ? shouldOpen
+        : Context.Request.Query["register"] == "need" || Model.Id > 0;
+}
+
+<div class="main-layout registration-modal-page">
+    <partial name="_OperationalFeed" />
+    <div class="feed-resizer" role="separator" aria-orientation="vertical"
+         aria-label="Endre størrelse på operativ oversikt" tabindex="0"></div>
+    <section class="map-area">
+        <div id="map" role="application" aria-label="Interaktivt kart"
+             data-resource-registration-url="@(canRegisterResource ? Url.Action("Index", "Home") : null)"
+             data-need-registration-url="@Url.Action("DashboardIndex", "PublicActor")"
+             data-resource-markers-url="@Url.Action("GetResourceMarkers", "PublicActor")"
+             data-registration-type="need"></div>
+        <partial name="_MapColorLegend" />
+        <div class="map-filtering is-collapsed" id="survival-filter-panel">
+            <div class="map-filter-header">
+                <button type="button" id="survival-filter-button" class="map-filter-button"
+                        aria-expanded="false" aria-controls="survival-filter-content"
+                        aria-label="Skjul filter for registrerte ressurser">
+                    <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                </button>
+                <strong class="map-filter-title">Filtrer ressurser</strong>
+            </div>
+            <div id="survival-filter-content">
+                <div class="map-filter-options">
+                    @foreach (var category in (IEnumerable<Category>)(ViewBag.Categories ?? Array.Empty<Category>()))
+                    {
+                        <label><input type="checkbox" class="registered-resources-filter" value="@category.CategoryName" checked /> @category.CategoryName</label>
+                    }
+                 <!-- Only shows unavailable resources only when the user activates it. -->
+                <label>
+                    <input type="checkbox" id="show-unavailable-resources" />
+                    Vis utilgjengelige ressurser
+                </label>
+                </div>
+                <p id="registered-resources-status" role="status">Laster registrerte ressurser...</p>
+            </div>
+        </div>
+        <p id="map-status" class="map-status" role="status" aria-live="polite">Laster kart ...</p>
+    </section>
+</div>
+
+<div class="modal fade registration-modal" id="registrationModal" tabindex="-1"
+     aria-labelledby="registrationModalTitle" aria-hidden="true" data-bs-backdrop="static"
+     data-registration-modal data-open-registration-modal="@(openRegistrationModal ? "true" : "false")">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg modal-fullscreen-md-down">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="registrationModalTitle">
+                    <i class="bi bi-clipboard-plus" aria-hidden="true"></i>
+                    <span>@(Model.Id > 0 ? "Rediger ressursbehov" : "Registrer ressursbehov")</span>
+                </h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Lukk registreringsskjema"></button>
+            </div>
+            <div class="modal-body" data-registration-modal-body>
+                <partial name="_NeedRegistrationForm" model="Model" />
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/map-base.js" asp-append-version="true"></script>
+    <script nonce="@Context.Items["CspNonce"]">
+        window.publicActorResources = @Html.Raw(ViewBag.ResourceMarkersJson ?? "[]");
+        window.resqRegistration.initializeDateTimeFields('needForm', [
+            { dateId: 'requiredFromDate', timeId: 'requiredFromTime', valueId: 'requiredFromValue' },
+            { dateId: 'deadlineDate', timeId: 'deadlineTime', valueId: 'deadlineValue',
+              rangeErrorId: 'needDateRangeError' }
+        ]);
+    </script>
+    <script src="~/js/map-reverse-geocode.js" asp-append-version="true"></script>
+    <script src="~/js/map-registration.js" asp-append-version="true"></script>
+    <script src="~/js/map-ab.js" asp-append-version="true"></script>
+    <script src="~/js/public-actor-resource-filters.js" asp-append-version="true" defer></script>
+    <script src="~/js/map-filter-button.js" asp-append-version="true" defer></script>
+    <script nonce="@Context.Items["CspNonce"]">
+        window.operationalFeedItems = {
+            resources: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                ViewBag.FeedResources ?? new List<object>(),
+                new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase })),
+            needs: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                ViewBag.FeedNeeds ?? new List<object>(),
+                new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase })),
+            incidents: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                ViewBag.FeedIncidents ?? new List<object>(),
+                new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }))
+        };
+    </script>
+    <script src="~/js/operational-feed.js" asp-append-version="true" defer></script>
+    <script nonce="@Context.Items["CspNonce"]">
+
+        // Felles kartoppsett brukes her, mens denne siden beholder filteret for registrerte ressurser.
+        const mapSetup = window.resqMapBase.initialize({
+            center: [58.16322, 8.00230],
+            zoom: 13
+        });
+        const map = mapSetup.map;
+
+        window.resqMap = map;
+        const mapElement = document.getElementById('map');
+        const registrationLinks = window.resqMapRegistration.bind(map, {
+            resource: mapElement.dataset.resourceRegistrationUrl,
+            need: mapElement.dataset.needRegistrationUrl,
+            currentType: mapElement.dataset.registrationType
+        });
+
+        document.getElementById('map-status').textContent =
+            'Kartet er klart. Velg posisjon for krisebehovet.';
+
+        const latInput = document.getElementById('latInput');
+        const lngInput = document.getElementById('lngInput');
+        const setPosition = window.resqMapRegistration.bindSelectedPosition(map, {
+            latInput: latInput,
+            lngInput: lngInput,
+            positionText: document.getElementById('posText'),
+            positionError: document.getElementById('posError'),
+            popupText: 'Sted for behov'
+        });
+        const requestedLocation = window.resqMapRegistration.readRequestedLocation();
+        const initialLat = Number(latInput?.value);
+        const initialLng = Number(lngInput?.value);
+        const selectedLat = requestedLocation?.lat ?? initialLat;
+        const selectedLng = requestedLocation?.lng ?? initialLng;
+
+        if (Number.isFinite(selectedLat) && Number.isFinite(selectedLng) &&
+            (requestedLocation || selectedLat !== 0 || selectedLng !== 0)) {
+            setPosition(selectedLat, selectedLng);
+            map.setView([selectedLat, selectedLng], 13);
+        } else if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(position =>
+                map.setView([position.coords.latitude, position.coords.longitude], 13));
+        }
+        window.resqAbMap.initialize(map, {
+            onMapClick: event => {
+                setPosition(event.latlng.lat, event.latlng.lng);
+                registrationLinks(event.latlng);
+            }
+        });
+        // A-B legges til før Layers for å få ønsket rekkefølge på kartkontrollene.
+        mapSetup.addLayersControl();
+
+        document.getElementById('needForm')?.addEventListener('submit', event => {
+            if (!latInput.value || latInput.value === '0') {
+                event.preventDefault();
+                document.getElementById('posError').textContent =
+                    'Posisjon på kartet må velges.';
+            }
+        });
+        window.resqRegistration.bindCurrentLocationButton('useCurrentLocation', {
+            onPosition: (latitude, longitude) => {
+                setPosition(latitude, longitude);
+                map.setView([latitude, longitude], 13);
+            }
+        });
+        const modalElement = document.getElementById('registrationModal');
+        if (modalElement.dataset.openRegistrationModal === 'true') {
+            bootstrap.Modal.getOrCreateInstance(modalElement).show();
+        }
+    </script>
+}

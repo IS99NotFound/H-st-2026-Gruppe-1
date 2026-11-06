@@ -1,0 +1,114 @@
+@model H_st_2026_Gruppe_1.Models.ResourceEntry
+
+<form id="resourceForm" class="registration-form" asp-controller="Home" asp-action="RegisterResource" method="post">
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" name="OpenRegistrationModal" value="true" />
+
+    <section class="registration-section">
+        <h3 class="registration-section-title">Klassifisering</h3>
+        <div class="registration-field">
+            <label asp-for="CategoryId" class="form-label">Ressurstype</label>
+            <select asp-for="CategoryId" id="resourceType" class="form-select" required>
+                <option value="">Velg et alternativ</option>
+                @foreach (var category in (List<Category>)ViewBag.Categories)
+                {
+                    <option value="@category.CategoryId">@category.CategoryName</option>
+                }
+            </select>
+            <span asp-validation-for="CategoryId" class="text-danger"></span>
+        </div>
+    </section>
+
+    <section class="registration-section">
+        <h3 class="registration-section-title">Detaljer og tidsrom</h3>
+        <div class="registration-field">
+            <label asp-for="Name" class="form-label">Tittel</label>
+            <input asp-for="Name" id="nameInput" class="form-control" required />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+
+        <div class="registration-field">
+            <label asp-for="Description" class="form-label">Beskrivelse</label>
+            <textarea asp-for="Description" id="descriptionInput" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
+
+        <div class="registration-grid registration-grid--details">
+            <div class="registration-field">
+                <label class="form-label" for="availableFromDate">Startdato/-tid</label>
+                <div class="registration-datetime">
+                    <input type="date" id="availableFromDate" class="form-control"
+                           value="@Model.AvailableFrom.ToString("yyyy-MM-dd")" />
+                    <input type="time" id="availableFromTime" class="form-control"
+                           value="@Model.AvailableFrom.ToString("HH:mm")" />
+                </div>
+                <span asp-validation-for="AvailableFrom" class="text-danger"></span>
+            </div>
+
+            <div class="registration-field">
+                <label class="form-label" for="expiryDate">Sluttdato/-tid (valgfritt)</label>
+                <div class="registration-datetime">
+                    <input type="date" id="expiryDate" class="form-control"
+                           value="@Model.ExpirationDate?.ToString("yyyy-MM-dd")" />
+                    <input type="time" id="expirationTime" class="form-control"
+                           value="@Model.ExpirationDate?.ToString("HH:mm")" />
+                </div>
+                <span asp-validation-for="ExpirationDate" class="text-danger"></span>
+                <span id="resourceDateRangeError" class="text-danger"></span>
+            </div>
+        </div>
+        <input type="hidden" asp-for="AvailableFrom" id="availableFromValue" />
+        <input type="hidden" asp-for="ExpirationDate" id="expirationValue" />
+    </section>
+
+    <section class="registration-section">
+        <h3 class="registration-section-title">Kontaktinformasjon</h3>
+        <div class="registration-grid registration-grid--details">
+            <div class="registration-field">
+                <label asp-for="Email" class="form-label">E-post</label>
+                <input asp-for="Email" class="form-control" type="email"
+                       placeholder="navn@eksempel.no" required />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+            <div class="registration-field">
+                <label asp-for="PhoneNumber" class="form-label">Telefonnummer</label>
+                <input asp-for="PhoneNumber" class="form-control" type="tel"
+                       placeholder="+47 00 00 00 00" required />
+                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+            </div>
+        </div>
+    </section>
+
+    <section class="registration-section registration-location">
+        <h3 class="registration-section-title">Sted og nøyaktighet</h3>
+        <div class="registration-field">
+            <label asp-for="LocationName" class="form-label">Stedsnavn</label>
+            <div class="registration-location-input">
+                <input asp-for="LocationName" id="locationNameInput" class="form-control"
+                       placeholder="Søk etter adresse eller anlegg (f.eks. Hellemyr Skole)" />
+                <button type="button" class="registration-icon-button" id="useCurrentLocation"
+                        title="Nåværende posisjon" aria-label="Bruk nåværende posisjon">
+                    <i class="bi bi-crosshair" aria-hidden="true"></i>
+                </button>
+            </div>
+            <span asp-validation-for="LocationName" class="text-danger"></span>
+        </div>
+        <input type="hidden" asp-for="Latitude" id="latInput" />
+        <input type="hidden" asp-for="Longitude" id="lngInput" />
+        <p id="posText" class="registration-help">
+            @(Model.Latitude.HasValue && Model.Longitude.HasValue
+                ? $"Valgt posisjon: bredde: {Model.Latitude:F5}, lengde: {Model.Longitude:F5}"
+                : "Ingen posisjon markert på kartet")
+        </p>
+        <span asp-validation-for="Latitude" class="text-danger d-block" id="posError"></span>
+        <span asp-validation-for="Longitude" class="text-danger d-block"></span>
+    </section>
+
+    <div asp-validation-summary="ModelOnly" class="text-danger registration-validation"></div>
+    <div class="registration-actions">
+        <button type="button" class="btn registration-cancel" data-bs-dismiss="modal">Avbryt</button>
+        <button type="submit" class="btn btn-primary registration-submit">
+            @(Model.Id > 0 ? "Lagre endringer" : "Registrer ressurs")
+        </button>
+    </div>
+</form>

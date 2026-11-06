@@ -1,0 +1,69 @@
+@model H_st_2026_Gruppe_1.Models.TwoFactorViewModel
+@{
+    ViewData["Title"] = "Bekreft innlogging";
+}
+
+<div class="auth-page">
+    <section class="auth-brand-panel" aria-label="ResQ">
+        <a class="auth-brand-name" asp-controller="Home" asp-action="Index">ResQ</a>
+        <div class="auth-brand-message">
+            <span class="auth-accent-line" aria-hidden="true"></span>
+            <h1>Kobler sammen<br />ressurser.</h1>
+        </div>
+        <i class="bi bi-shield-check auth-brand-icon" aria-hidden="true"></i>
+    </section>
+
+    <section class="auth-content">
+        <div class="auth-form-container">
+            <p class="auth-step-label">STEG 2 AV 2</p>
+            <div class="auth-shield"><i class="bi bi-shield-check" aria-hidden="true"></i></div>
+            <h2>Bekreft at det er deg</h2>
+            <p class="auth-description">Skriv inn den sekssifrede koden for å fortsette til ResQ.</p>
+
+            @if (!string.IsNullOrEmpty(Model.DemoCode))
+            {
+                <aside id="demo-code-dialog" class="auth-code-dialog" aria-labelledby="demo-code-title">
+                    <div class="auth-code-dialog-header">
+                        <span class="auth-code-dialog-icon"><i class="bi bi-chat-square-text" aria-hidden="true"></i></span>
+                        <div>
+                            <p class="auth-code-dialog-eyebrow">ResQ-verifisering</p>
+                            <h3 id="demo-code-title">Din innloggingskode</h3>
+                        </div>
+                    </div>
+                    <p class="auth-code-dialog-message">Bruk denne koden for å fullføre innloggingen.</p>
+                    <div class="auth-code-dialog-code" aria-label="Din innloggingskode">@Model.DemoCode</div>
+                    <button type="button" class="btn auth-code-copy" data-copy-code="@Model.DemoCode">
+                        <i class="bi bi-copy" aria-hidden="true"></i>
+                        <span>Kopier kode</span>
+                    </button>
+                    <span class="auth-code-copy-status" role="status" aria-live="polite"></span>
+                </aside>
+            }
+
+            <form asp-controller="Auth" asp-action="VerifyTwoFactor" method="post" data-code-form>
+                <input asp-for="PendingId" type="hidden" />
+
+                <div class="auth-field">
+                    <label asp-for="Code">Sekssifret kode</label>
+                    <div class="auth-code-inputs" data-code-inputs>
+                        @for (var index = 0; index < 6; index++)
+                        {
+                            <input class="auth-code-input" type="text" inputmode="numeric" maxlength="1"
+                                   autocomplete="@(index == 0 ? "one-time-code" : "off")"
+                                   aria-label="Siffer @(index + 1)" />
+                        }
+                    </div>
+                    <input asp-for="Code" type="hidden" data-code-value />
+                    <span asp-validation-for="Code" class="text-danger"></span>
+                </div>
+
+                <button type="submit" class="btn auth-submit">Bekreft kode</button>
+            </form>
+            <a class="auth-back-link" asp-controller="Auth" asp-action="Login">Tilbake til innlogging</a>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

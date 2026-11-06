@@ -1,2 +1,22 @@
 ﻿<script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
 <script src="~/lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.min.js"></script>
+<script>
+    // Norwegian default texts for jQuery Validation (used when the server has not supplied a message)
+    jQuery.extend(jQuery.validator.messages, {
+        required: "Dette feltet er påkrevd.",
+        remote: "Rett opp dette feltet.",
+        email: "Oppgi en gyldig e-postadresse.",
+        url: "Oppgi en gyldig nettadresse.",
+        date: "Oppgi en gyldig dato.",
+        dateISO: "Oppgi en gyldig dato (ÅÅÅÅ-MM-DD).",
+        number: "Oppgi et gyldig tall.",
+        digits: "Oppgi kun sifre.",
+        equalTo: "Oppgi samme verdi på nytt.",
+        maxlength: jQuery.validator.format("Oppgi maks {0} tegn."),
+        minlength: jQuery.validator.format("Oppgi minst {0} tegn."),
+        rangelength: jQuery.validator.format("Oppgi en verdi mellom {0} og {1} tegn."),
+        range: jQuery.validator.format("Oppgi en verdi mellom {0} og {1}."),
+        max: jQuery.validator.format("Oppgi en verdi som er mindre enn eller lik {0}."),
+        min: jQuery.validator.format("Oppgi en verdi som er større enn eller lik {0}.")
+    });
+</script>

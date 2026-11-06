@@ -1,16 +1,83 @@
 using System.Globalization;
 using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Authorization;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.EntityFrameworkCore;
+using H_st_2026_Gruppe_1.Data;
+using H_st_2026_Gruppe_1.Models;
+using H_st_2026_Gruppe_1.Middleware;
+using H_st_2026_Gruppe_1.Services;
 
-// Oppretter byggeren som setter opp applikasjonen
+// App builder 
 var builder = WebApplication.CreateBuilder(args);
 
-// Legger til støtte for controllere og views (MVC)
-builder.Services.AddControllersWithViews();
+// Hides the web server name (no "Server" header in the responses)
+builder.WebHost.ConfigureKestrel(options => options.AddServerHeader = false);
+
+builder.Services.AddMemoryCache();
+builder.Services.AddHttpClient();
+
+// Controllers and views (MVC). Every POST must have a valid antiforgery token (CSRF)
+builder.Services.AddControllersWithViews(options =>
+{
+    options.Filters.Add(new AuthorizeFilter());
+    options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
+
+    // Norwegian texts for model binding errors (e.g. letters in a number field)
+    options.ModelBindingMessageProvider.SetValueMustBeANumberAccessor(_ => "Oppgi et gyldig tall.");
+    options.ModelBindingMessageProvider.SetAttemptedValueIsInvalidAccessor((value, _) => $"Verdien '{value}' er ugyldig.");
+    options.ModelBindingMessageProvider.SetValueIsInvalidAccessor(value => $"Verdien '{value}' er ugyldig.");
+    options.ModelBindingMessageProvider.SetUnknownValueIsInvalidAccessor(_ => "Verdien er ugyldig.");
+    options.ModelBindingMessageProvider.SetValueMustNotBeNullAccessor(_ => "Dette feltet er påkrevd.");
+    options.ModelBindingMessageProvider.SetMissingBindRequiredValueAccessor(_ => "Dette feltet er påkrevd.");
+});
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Auth/Login";
+        options.AccessDeniedPath = "/Auth/Login";
+        options.Events = new CookieAuthenticationEvents
+        {
+            OnRedirectToAccessDenied = async context =>
+            {
+                await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                context.Response.Redirect("/Auth/Login");
+            }
+        };
+        options.Cookie.HttpOnly = true;
+        options.Cookie.IsEssential = true;
+        options.ExpireTimeSpan = TimeSpan.FromHours(8);
+        options.SlidingExpiration = true;
+    });
+builder.Services.AddAuthorization();
+
+
+// Database connection (from docker-compose, or appsettings.Development.json outside Docker)
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("The connection string 'DefaultConnection' is missing.");
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseMySql(connectionString, new MariaDbServerVersion(new Version(11, 4, 0))));
+
+//User registration, with lockout after 10 wrong passwords
+builder.Services.AddIdentityCore<User>(options =>
+{
+    options.User.RequireUniqueEmail = true;
+    options.Password.RequiredLength = 8;
+    options.Lockout.AllowedForNewUsers = true;
+    options.Lockout.MaxFailedAccessAttempts = 10;
+})
+.AddEntityFrameworkStores<AppDbContext>();
+
+//Action-buttons written in program now use the MatchNeedLifecycle method
+builder.Services.AddScoped<MatchNeedLifecycle>();
+builder.Services.AddHostedService<MatchLifecycleWorker>();
 
 var app = builder.Build();
 
-// Tvinger appen til å alltid bruke punktum som desimaltegn (en-US),
-// uavhengig av hvilket språk maskinen/serveren har, løser valideringsfeil på koordinater
+// Forces application to use period for decimal values (en-us)
+// Independent of device language, resolves validation error for coordinates
 var localizationOptions = new RequestLocalizationOptions
 {
     DefaultRequestCulture = new RequestCulture("en-US"),
@@ -20,28 +87,37 @@ var localizationOptions = new RequestLocalizationOptions
 localizationOptions.RequestCultureProviders.Clear();
 app.UseRequestLocalization(localizationOptions);
 
-// Oppsett av hvordan forespørsler behandles.
-// I produksjon vises en feilside i stedet for detaljert feilinformasjon.
+// Security headers on every response
+app.UseMiddleware<SecurityHeadersMiddleware>();
+
+// Setup for requests processing 
+// Only show error page while in production 
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // Standardverdien for HSTS er 30 dager. Kan endres for produksjon, se https://aka.ms/aspnetcore-hsts.
+    // Standard value for HSTS; 30 days. Can be changed for production
     app.UseHsts();
 }
 
-// Sender http-forespørsler videre til https
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage(); // Show yellow/red error screencapture with exact line number when crashes occurs 
+}
+
+// Forwards http-requests to https
 app.UseHttpsRedirection();
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
-// Gjør css, js og bilder tilgjengelige
+// Makes css, js and pictures available
 app.MapStaticAssets();
 
-// Standardrute: Home-controlleren og Index-metoden brukes hvis ingenting annet er oppgitt
+// Standard route: Home-controller and Index-method is used when nohing else is mentioned 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
+    pattern: "{controller=Auth}/{action=Login}/{id?}")
     .WithStaticAssets();
 
 

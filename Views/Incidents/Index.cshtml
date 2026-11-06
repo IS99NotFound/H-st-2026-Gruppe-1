@@ -1,9 +1,420 @@
+@model H_st_2026_Gruppe_1.Models.IncidentIndexViewModel
 @{
-    ViewData["Title"] = "Incidents";
+    ViewData["Title"] = "Hendelser";
+    var isPublicActor = User.IsInRole("PublicActor");
+    var incidentTypes = new[] { "Forest fire", "Landslide", "Flood", "Storm", "Power outage", "Other" };
+    string StatusLabel(string? statusValue) => statusValue switch { "active" => "Aktiv", "new" => "Ny", "under_review" => "Vurderes", "assigned" => "Tildelt", "resolved" => "Løst", "cancelled" => "Kansellert", "rejected" => "Avvist", "available" => "Tilgjengelig", "unavailable" => "Utilgjengelig", "withdrawn" => "Trukket tilbake", _ => statusValue ?? "" };
+    string TypeLabel(string? typeValue) => typeValue switch { "Forest fire" => "Skogbrann", "Landslide" => "Jordskred", "Flood" => "Flom", "Storm" => "Storm", "Power outage" => "Strømbrudd", "Other" => "Annet", _ => typeValue ?? "" };
+    var showCreatePanel = !ViewData.ModelState.IsValid && ViewBag.EditIncident is null;
 }
 
-<section class="placeholder-page">
-    <p class="section-label">Resq</p>
-    <h1>Incidents</h1>
-    <p class="placeholder-copy">No incidents have been reported yet.</p>
+<section class="subpage">
+    <div class="subpage-header">
+        <div>
+            <h1>Hendelser</h1>
+            <p class="page-intro">Oversikt over hendelser.</p>
+        </div>
+        @if (isPublicActor)
+        {
+            <button class="btn btn-primary" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#incident-create-panel" aria-expanded="@(showCreatePanel.ToString().ToLowerInvariant())"
+                    aria-controls="incident-create-panel" aria-label="Registrer hendelse">
+                <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                Registrer
+            </button>
+        }
+    </div>
+
+    <form id="incidentFilterForm" method="get" asp-controller="Incidents" asp-action="Index" class="dashboard-filter-bar">
+        <div class="dashboard-filter-field dashboard-search-field">
+            <label for="incidentSearch" class="form-label text-muted small fw-bold">Søk</label>
+            <input type="search" name="search" id="incidentSearch" class="form-control"
+                   value="@Model.Search" placeholder="Søk etter hendelsestittel" />
+        </div>
+
+        <div class="dashboard-filter-field">
+            <label for="statusFilter" class="form-label text-muted small fw-bold">Filtrer på status</label>
+            <select name="status" id="statusFilter" class="form-select">
+                <option value="" selected="@(Context.Request.Query["status"].ToString() == "")">Alle</option>
+                <option value="active" selected="@(Context.Request.Query["status"] == "active")">Aktive</option>
+                <option value="resolved" selected="@(Context.Request.Query["status"] == "resolved")">Løste</option>
+            </select>
+        </div>
+
+        <div class="dashboard-filter-field">
+            <label for="incidentTypeFilter" class="form-label text-muted small fw-bold">Filtrer på type</label>
+            <select name="incidentType" id="incidentTypeFilter" class="form-select">
+                <option value="">Alle</option>
+                @foreach (var incidentType in incidentTypes)
+                {
+                    <option value="@incidentType" selected="@(Context.Request.Query["incidentType"] == incidentType)">
+                        @TypeLabel(incidentType)
+                    </option>
+                }
+            </select>
+        </div>
+
+        <div class="dashboard-filter-field">
+            <label for="startDate" class="form-label text-muted small fw-bold">Dato fra</label>
+            <input type="date" name="startDate" id="startDate" class="form-control"
+                   value="@Context.Request.Query["startDate"]" />
+        </div>
+
+        <div class="dashboard-filter-field">
+            <label for="endDate" class="form-label text-muted small fw-bold">Dato til</label>
+            <input type="date" name="endDate" id="endDate" class="form-control"
+                   value="@Context.Request.Query["endDate"]" />
+        </div>
+
+        <div class="dashboard-filter-field dashboard-distance-field">
+            <label for="radiusFilter" class="form-label text-muted small fw-bold">Avstand</label>
+            <input id="radiusFilter" type="range" class="form-range" min="0" max="100" step="5" value="0" />
+            <div class="dashboard-radius-value" id="radiusValue">Alle avstander</div>
+        </div>
+
+        <div class="dashboard-filter-actions">
+            <button type="submit" class="btn btn-primary">Søk</button>
+            <a asp-controller="Incidents" asp-action="Index" class="btn btn-outline-secondary">Nullstill</a>
+        </div>
+    </form>
+    <p id="location-error" class="dashboard-location-error" role="alert" aria-live="polite" hidden>
+        Tilgang til posisjon kreves for å bruke avstandsfilteret.
+    </p>
+
+    @if (TempData["IncidentCreated"] is string successMessage)
+    {
+        <div class="alert alert-success" role="status">@successMessage</div>
+    }
+
+    @if (TempData["IncidentUpdated"] is string statusMessage)
+    {
+        <div class="alert alert-success" role="status">@statusMessage</div>
+    }
+
+    @if (isPublicActor)
+    {
+        <div id="incident-create-panel" class="collapse incident-create-panel @(showCreatePanel ? "show" : "")">
+            <form asp-controller="Incidents" asp-action="Create" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <div class="incident-register-layout">
+                    <div class="incident-form-fields">
+                        <div>
+                            <label asp-for="CreateModel.Title" class="form-label">Navn på hendelse</label>
+                            <input asp-for="CreateModel.Title" class="form-control compact-field"
+                                   placeholder="Eksempel: Flom nær Arendal" />
+                            <span asp-validation-for="CreateModel.Title" class="text-danger"></span>
+                        </div>
+                        <div>
+                            <label asp-for="CreateModel.IncidentType" class="form-label">Hendelsestype</label>
+                            <select asp-for="CreateModel.IncidentType" class="form-select compact-field">
+                                <option value="">Velg type</option>
+                                @foreach (var incidentType in incidentTypes)
+                                {
+                                    <option value="@incidentType">@TypeLabel(incidentType)</option>
+                                }
+                            </select>
+                            <span asp-validation-for="CreateModel.IncidentType" class="text-danger"></span>
+                        </div>
+                        <div>
+                            <label asp-for="CreateModel.Description" class="form-label">Beskrivelse</label>
+                            <textarea asp-for="CreateModel.Description" class="form-control compact-field" rows="3"
+                                      placeholder="Beskriv hva som har skjedd og hvor det trengs hjelp."></textarea>
+                            <span asp-validation-for="CreateModel.Description" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="incident-map-panel">
+                        <label class="form-label">Sted</label>
+                        <div id="incident-map" class="incident-map" role="application" tabindex="0"
+                             aria-label="Velg sted for hendelsen på kartet"
+                             aria-describedby="incident-map-status"></div>
+                        <p id="incident-map-status" class="map-status" role="status" aria-live="polite">
+                            Klikk på kartet for å velge sted for hendelsen.
+                        </p>
+                        <input asp-for="CreateModel.Latitude" type="hidden" id="incident-latitude" />
+                        <input asp-for="CreateModel.Longitude" type="hidden" id="incident-longitude" />
+                        @if (ViewData.ModelState["CreateModel.Latitude"]?.Errors.Count > 0
+                            || ViewData.ModelState["CreateModel.Longitude"]?.Errors.Count > 0)
+                        {
+                            <span class="text-danger d-block">Dette feltet er påkrevd.</span>
+                        }
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-sm btn-primary mt-3">Registrer hendelse</button>
+            </form>
+        </div>
+    }
+
+    @{
+        var activeIncidents = Model.Incidents.Where(incident => incident.Status == "active").ToList();
+        var resolvedIncidents = Model.Incidents.Where(incident => incident.Status == "resolved").ToList();
+        var showingResolvedOnly = Context.Request.Query["status"] == "resolved";
+    }
+
+    @if (Model.Incidents == null || !Model.Incidents.Any())
+    {
+        <p class="placeholder-copy">Ingen hendelser er rapportert ennå.</p>
+    }
+    else
+    {
+        @if (activeIncidents.Any())
+        {
+            <div class="match-results-heading">
+                <div>
+                    <p class="page-eyebrow">RESULTATER</p>
+                    <h2>Aktive hendelser</h2>
+                </div>
+            </div>
+        }
+        <div class="incident-list">
+            @foreach (var incident in activeIncidents)
+            {
+                <article class="dashboard-card incident-card"
+                         data-latitude="@incident.Latitude"
+                         data-longitude="@incident.Longitude">
+                    <div class="dashboard-card-header">
+                        <h2>@incident.Title</h2>
+                        <span class="incident-status @(incident.Status == "active" ? "incident-status-active" : "incident-status-resolved")">
+                            @StatusLabel(incident.Status)
+                        </span>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(incident.Description))
+                    {
+                        <p class="dashboard-card-description">@incident.Description</p>
+                    }
+
+                    <dl class="dashboard-details incident-details">
+                        <div>
+                            <dt><i class="bi bi-tag" aria-hidden="true"></i> Type</dt>
+                            <dd>@TypeLabel(incident.IncidentType)</dd>
+                        </div>
+                        <div>
+                            <dt><i class="bi bi-geo-alt" aria-hidden="true"></i> Sted (breddegrad/lengdegrad)</dt>
+                            <dd>@incident.Latitude, @incident.Longitude</dd>
+                        </div>
+                        <div>
+                            <dt><i class="bi bi-clock-history" aria-hidden="true"></i> Rapportert</dt>
+                            <dd>@incident.CreatedAt.ToString("dd.MM.yyyy HH:mm")</dd>
+                        </div>
+                    </dl>
+
+                    @if ((isPublicActor || User.IsInRole("Administrator")) && incident.Status == "active")
+                    {
+                        <div class="dashboard-card-footer incident-card-footer">
+                            @if (isPublicActor)
+                            {
+                                <a asp-controller="Incidents" asp-action="Index"
+                                   asp-route-id="@incident.IncidentId"
+                                   class="btn btn-sm btn-outline-primary">Rediger</a>
+                            }
+                            <form asp-controller="Incidents" asp-action="MarkAsResolved" method="post">
+                                <input type="hidden" name="incidentId" value="@incident.IncidentId" />
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-outline-success incident-action-resolve">
+                                    Marker som løst
+                                </button>
+                            </form>
+                        </div>
+                    }
+                </article>
+            }
+        </div>
+
+        @if (resolvedIncidents.Any())
+        {
+            <div class="resolved-incidents @(showingResolvedOnly ? "resolved-filter-results" : "")">
+                @if (!showingResolvedOnly)
+                {
+                    <button class="resolved-incidents-toggle" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#resolved-incidents-list" aria-expanded="false"
+                            aria-controls="resolved-incidents-list">
+                        <span>Løste hendelser</span>
+                        <span class="incident-count">@resolvedIncidents.Count</span>
+                        <i class="bi bi-chevron-down" aria-hidden="true"></i>
+                    </button>
+                }
+
+                <div id="resolved-incidents-list" class="@(showingResolvedOnly ? "" : "collapse")">
+                    <div class="incident-list">
+                        @foreach (var incident in resolvedIncidents)
+                        {
+                                        <article class="dashboard-card incident-card"
+                                     data-latitude="@incident.Latitude"
+                                     data-longitude="@incident.Longitude">
+                                <div class="dashboard-card-header">
+                                    <h2>@incident.Title</h2>
+                                    <span class="incident-status incident-status-resolved">@incident.Status</span>
+                                </div>
+
+                                @if (!string.IsNullOrWhiteSpace(incident.Description))
+                                {
+                                    <p class="dashboard-card-description">@incident.Description</p>
+                                }
+
+                                <dl class="dashboard-details incident-details">
+                                    <div>
+                                        <dt><i class="bi bi-tag" aria-hidden="true"></i> Type</dt>
+                                        <dd>@TypeLabel(incident.IncidentType)</dd>
+                                    </div>
+                                    <div>
+                                        <dt><i class="bi bi-geo-alt" aria-hidden="true"></i> Sted (breddegrad/lengdegrad)</dt>
+                                        <dd>@incident.Latitude, @incident.Longitude</dd>
+                                    </div>
+                                    <div>
+                                        <dt><i class="bi bi-clock-history" aria-hidden="true"></i> Rapportert</dt>
+                                        <dd>@incident.CreatedAt.ToString("dd.MM.yyyy HH:mm")</dd>
+                                    </div>
+                                </dl>
+
+                                @if (isPublicActor || User.IsInRole("Administrator"))
+                                {
+                                    <div class="dashboard-card-footer incident-card-footer">
+                                        @if (isPublicActor)
+                                        {
+                                            <a asp-controller="Incidents" asp-action="Index"
+                                               asp-route-id="@incident.IncidentId"
+                                               class="btn btn-sm btn-outline-primary">Rediger</a>
+                                        }
+                                        <form asp-controller="Incidents" asp-action="Reactivate" method="post">
+                                            <input type="hidden" name="incidentId" value="@incident.IncidentId" />
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-success incident-action-reactivate">
+                                                Aktiver på nytt
+                                            </button>
+                                        </form>
+                                    </div>
+                                }
+                            </article>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    }
 </section>
+
+@if (ViewBag.EditIncident is H_st_2026_Gruppe_1.Models.IncidentCreateViewModel editIncident)
+{
+    <div class="modal fade registration-modal" id="incidentEditModal" tabindex="-1"
+         aria-labelledby="incidentEditModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg modal-fullscreen-md-down">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title" id="incidentEditModalTitle">Rediger hendelse</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                            aria-label="Lukk redigering"></button>
+                </div>
+                <div class="modal-body">
+                    <partial name="_IncidentEditForm" model="editIncident" />
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/map-reverse-geocode.js" asp-append-version="true"></script>
+    @if (isPublicActor)
+    {
+    <script nonce="@Context.Items["CspNonce"]">
+        const incidentMap = L.map('incident-map').setView([58.4614, 8.7683], 6);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(incidentMap);
+
+        let incidentMarker = null;
+        const latitudeInput = document.getElementById('incident-latitude');
+        const longitudeInput = document.getElementById('incident-longitude');
+        const mapStatus = document.getElementById('incident-map-status');
+
+        incidentMap.on('click', function (event) {
+            const latitude = event.latlng.lat;
+            const longitude = event.latlng.lng;
+
+            if (incidentMarker) {
+                incidentMap.removeLayer(incidentMarker);
+            }
+
+            incidentMarker = L.marker([latitude, longitude]).addTo(incidentMap);
+            latitudeInput.value = latitude.toFixed(6);
+            longitudeInput.value = longitude.toFixed(6);
+            const coordinates = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+            mapStatus.textContent = `Valgt sted: ${coordinates}`;
+            window.resqReverseGeocode.lookup(latitude, longitude).then(placeName => {
+                if (placeName) mapStatus.textContent = `Valgt sted: ${placeName} (${coordinates})`;
+            });
+        });
+
+        setTimeout(() => incidentMap.invalidateSize(), 50);
+
+        const registerButton = document.querySelector('[data-bs-target="#incident-create-panel"]');
+        if (registerButton) {
+            registerButton.addEventListener('click', function () {
+                setTimeout(() => incidentMap.invalidateSize(), 100);
+            });
+        }
+    </script>
+    }
+
+    @if (ViewBag.EditIncident is not null)
+    {
+    <script nonce="@Context.Items["CspNonce"]">
+        const incidentEditModal = document.getElementById('incidentEditModal');
+        const editMapElement = document.getElementById('incident-edit-map');
+        const editLatitudeInput = document.getElementById('incident-edit-latitude');
+        const editLongitudeInput = document.getElementById('incident-edit-longitude');
+        const editMapStatus = document.getElementById('incident-edit-map-status');
+
+        if (incidentEditModal && editMapElement) {
+            const editLatitude = Number(editMapElement.dataset.latitude);
+            const editLongitude = Number(editMapElement.dataset.longitude);
+            const editMap = L.map(editMapElement).setView([editLatitude, editLongitude], 10);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(editMap);
+
+            let editMarker = L.marker([editLatitude, editLongitude]).addTo(editMap);
+            editMap.on('click', function (event) {
+                const latitude = event.latlng.lat;
+                const longitude = event.latlng.lng;
+
+                editMarker.setLatLng([latitude, longitude]);
+                editLatitudeInput.value = latitude.toFixed(6);
+                editLongitudeInput.value = longitude.toFixed(6);
+                const coordinates = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+                editMapStatus.textContent = `Valgt sted: ${coordinates}`;
+                window.resqReverseGeocode.lookup(latitude, longitude).then(placeName => {
+                    if (placeName) editMapStatus.textContent = `Valgt sted: ${placeName} (${coordinates})`;
+                });
+            });
+
+            const modal = bootstrap.Modal.getOrCreateInstance(incidentEditModal);
+            incidentEditModal.addEventListener('shown.bs.modal', () => {
+                editMap.invalidateSize();
+            });
+            modal.show();
+        } else if (incidentEditModal) {
+            bootstrap.Modal.getOrCreateInstance(incidentEditModal).show();
+        }
+    </script>
+    }
+
+    <script nonce="@Context.Items["CspNonce"]">
+
+        window.resqDateRange.bindFilter(
+            'incidentFilterForm',
+            'startDate',
+            'endDate');
+        window.resqRadius.initializeDistanceFilter({
+            sliderId: 'radiusFilter',
+            valueId: 'radiusValue',
+            errorId: 'location-error',
+            cardSelector: '.incident-card',
+            storageKey: 'incidentRadius'
+        });
+    </script>
+}

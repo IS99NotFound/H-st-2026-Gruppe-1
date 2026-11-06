@@ -1,0 +1,267 @@
+@model H_st_2026_Gruppe_1.Models.MatchViewModel
+
+@{
+    ViewData["Title"] = "Matching";
+    var hasSelectedNeed = Model.UserNeeds.Any() && Model.Need.Id > 0;
+    var selectedNeedIsClosed = Model.Need.Status is "resolved" or "cancelled";
+}
+
+<section class="subpage">
+    <div class="subpage-header">
+        <div>
+            <h1>Matching</h1>
+            <p class="page-intro">Finn og vurder ressurser som kan dekke et registrert behov.</p>
+        </div>
+    </div>
+
+    @if (TempData["MatchMessage"] is string matchMessage)
+    {
+        <div class="match-toast match-toast-success" role="status">
+            <i class="bi bi-check-circle" aria-hidden="true"></i>
+            <span>@matchMessage</span>
+        </div>
+    }
+
+    @if (TempData["MatchError"] is string matchError)
+    {
+        <div class="match-toast match-toast-error" role="alert">
+            <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
+            <span>@matchError</span>
+        </div>
+    }
+
+    @if (!Model.UserNeeds.Any())
+    {
+        <div class="empty-state-panel">
+            <i class="bi bi-link-45deg" aria-hidden="true"></i>
+            <h2>Ingen behov å matche</h2>
+            <p>Registrer et behov før du leter etter matchende ressurser.</p>
+            <a asp-controller="PublicActor" asp-action="DashboardIndex" asp-route-register="need"
+               class="btn btn-primary">Registrer behov</a>
+        </div>
+    }
+    else
+    {
+        <div class="match-toolbar" aria-label="Velg behov og søkeområde">
+            <div class="match-selection">
+                <form method="get" asp-controller="PublicActor" asp-action="MatchesIndex" class="match-need-selector">
+                    <label for="needId" class="form-label match-selector-label">Velg behov</label>
+                    <select name="needId" id="needId" class="form-select" data-auto-submit>
+                        @foreach (var need in Model.UserNeeds)
+                        {
+                            <option value="@need.Id" selected="@(need.Id == Model.Need.Id)">
+                                @need.Title (hendelses-ID: @need.CrisisEventId)@(need.Status is "resolved" or "cancelled" ? " – Lukket" : "")
+                            </option>
+                        }
+                    </select>
+                </form>
+
+                @if (hasSelectedNeed)
+                {
+                    <form asp-controller="PublicActor" asp-action="Matches" method="get" class="match-controls">
+                        <input type="hidden" name="needId" value="@Model.Need.Id" />
+                        <div class="match-radius-field">
+                            <div class="match-control-heading">
+                                <label for="radiusKm" class="form-label">Søkeradius</label>
+                                <span id="radiusKmValue" class="match-radius-value">
+                                    @(Model.RadiusKm <= 0 ? "Alle avstander" : $"{Model.RadiusKm} km")
+                                </span>
+                            </div>
+                            <input type="range" name="radiusKm" id="radiusKm" value="@Model.RadiusKm"
+                                   min="0" max="100" step="5" class="form-range" data-auto-submit />
+                        </div>
+                        <div class="match-control-actions">
+                            <button type="submit" class="btn btn-sm btn-primary">
+                                <i class="bi bi-search" aria-hidden="true"></i> Oppdater treff
+                            </button>
+                            <button type="submit"
+                                    formaction="@Url.Action("ShowAllResourcesInMatches", "PublicActor")"
+                                    class="btn btn-sm btn-outline-secondary">
+                                Vis alle
+                            </button>
+                        </div>
+                    </form>
+                }
+
+                @if (hasSelectedNeed)
+                {
+                    <div class="match-need-summary" aria-label="Valgt behov">
+                        <div class="match-summary-heading">
+                            <span class="summary-label">VALGT BEHOV</span>
+                            <span class="status-label @(Model.Need.Priority == NeedPriorityEnum.Critical ? "status-critical" : "status-planned")">
+                                @(Model.Need.Priority == NeedPriorityEnum.Critical ? "Kritisk" : "Planlagt")
+                            </span>
+                        </div>
+                        <strong>@Model.Need.Title</strong>
+                        <span>@Model.Need.Description</span>
+                        <div class="match-summary-meta">
+                            <span><i class="bi bi-geo-alt" aria-hidden="true"></i> @Model.Need.LocationName</span>
+                            <span><i class="bi bi-box-seam" aria-hidden="true"></i> @Model.Need.Quantity stk.</span>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            @if (hasSelectedNeed && selectedNeedIsClosed)
+            {
+                <p class="alert alert-warning mb-0" role="status">
+                    Dette behovet er lukket. Ressurser kan ikke lenger tildeles eller endres.
+                </p>
+            }
+
+        </div>
+
+        @if (hasSelectedNeed)
+        {
+            @if (selectedNeedIsClosed)
+            {
+                <div class="empty-state-panel empty-state-panel--compact">
+                    <i class="bi bi-lock-fill" aria-hidden="true"></i>
+                    <h2>Behovet er lukket</h2>
+                    <p>Velg et åpent behov for å tildele eller endre ressursstatus.</p>
+                </div>
+            }
+            else if (!Model.Matches.Any())
+            {
+                <div class="empty-state-panel empty-state-panel--compact">
+                    <i class="bi bi-box-seam" aria-hidden="true"></i>
+                    <p>
+                        Ingen ressurser funnet
+                        @(Model.RadiusKm <= 0 ? "for dette behovet" : $"innenfor {Model.RadiusKm} km").
+                    </p>
+                </div>
+            }
+            else
+            {
+                <div class="match-results-heading">
+                    <div>
+                        <p class="page-eyebrow">RESULTATER</p>
+                        <h2>Ressurser som passer</h2>
+                    </div>
+                    <span class="match-result-count">@Model.Matches.Count ressurs@(Model.Matches.Count == 1 ? "" : "er")</span>
+                </div>
+                <div class="match-list">
+                    @foreach (var match in Model.Matches)
+                    {
+                        var statusClass = match.MatchStatus switch
+                        {
+                            "accepted" => "status-assigned",
+                            "proposed" => "status-under-review",
+                            "declined" => "status-rejected",
+                            _ => "status-available"
+                        };
+                        var statusText = match.MatchStatus switch
+                        {
+                            "accepted" => "Tildelt",
+                            "proposed" => "Vurderes",
+                            "declined" => "Avslått",
+                            _ => "Tilgjengelig"
+                        };
+
+                        <article class="dashboard-card match-card">
+                            <div class="dashboard-card-header">
+                                <div>
+                                    <div class="match-card-title-row">
+                                        <h2>@match.Resource.Name</h2>
+                                        <span class="status-label @statusClass">@statusText</span>
+                                    </div>
+                                    <p class="match-card-type">
+                                        <i class="bi bi-tag" aria-hidden="true"></i>
+                                        @match.Resource.Category?.CategoryName
+                                    </p>
+                                </div>
+                                <span class="match-distance">
+                                    <i class="bi bi-geo-alt" aria-hidden="true"></i>
+                                    @match.DistanceKm.ToString("F1") km
+                                </span>
+                            </div>
+
+                            <p class="dashboard-card-description">@match.Resource.Description</p>
+
+                            <dl class="dashboard-details match-details">
+                                <div>
+                                    <dt><i class="bi bi-person" aria-hidden="true"></i> Kontakt</dt>
+                                    <dd>@match.Resource.Email<br />@match.Resource.PhoneNumber</dd>
+                                </div>
+                                <div>
+                                    <dt><i class="bi bi-geo-alt" aria-hidden="true"></i> Sted</dt>
+                                    <dd>
+                                        @if (match.Resource.Latitude.HasValue && match.Resource.Longitude.HasValue)
+                                        {
+                                            @($"{match.Resource.Latitude:F5}, {match.Resource.Longitude:F5}")
+                                        }
+                                        else
+                                        {
+                                            @:Ikke oppgitt
+                                        }
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt><i class="bi bi-calendar-event" aria-hidden="true"></i> Tilgjengelig fra</dt>
+                                    <dd>@match.Resource.AvailableFrom.ToString("dd.MM.yyyy")</dd>
+                                </div>
+                                <div>
+                                    <dt><i class="bi bi-calendar-x" aria-hidden="true"></i> Utløpsdato</dt>
+                                    <dd>@(match.Resource.ExpirationDate?.ToString("dd.MM.yyyy") ?? "Ikke oppgitt")</dd>
+                                </div>
+                            </dl>
+
+                            @*ASP.NET automatically saves anti-forgery fields for POST
+                            We are therefore not requred to put in  *@
+                            <form asp-controller="PublicActor" 
+                                asp-action="UpdateResourceStatus"
+                                method="post" 
+                                class="match-status-form">
+
+                            @* @Html.AntiForgeryToken() *@
+
+                                <input type="hidden" name="resourceId" value="@match.Resource.Id" />
+                                <input type="hidden" name="needId" value="@Model.Need.Id" />
+
+                                <label for="comment-@match.Resource.Id">Kommentar</label>
+
+                                <textarea id="comment-@match.Resource.Id" 
+                                        name="statusComment"
+                                        class="form-control" 
+                                        maxlength="500"
+                                        placeholder="Skriv en kommentar">@match.Comment</textarea>
+                                
+                                <div class="match-status-buttons">
+                                    <button type="submit" name="newStatus" value="accepted"
+                                            class="btn btn-sm match-action match-action-accepted @(match.MatchStatus == "accepted" ? "status-selected" : "")">
+                                        <i class="bi bi-check2" aria-hidden="true"></i> Tildel
+                                    </button>
+                                    <button type="submit" name="newStatus" value="proposed"
+                                            class="btn btn-sm match-action match-action-proposed @(match.MatchStatus == "proposed" ? "status-selected" : "")">
+                                        <i class="bi bi-hourglass-split" aria-hidden="true"></i> Vurder
+                                    </button>
+                                    <button type="submit" name="newStatus" value="declined"
+                                            class="btn btn-sm match-action match-action-declined @(match.MatchStatus == "declined" ? "status-selected" : "")">
+                                        <i class="bi bi-x-lg" aria-hidden="true"></i> Avslå
+                                    </button>
+                                </div>
+                            </form>
+                        </article>
+                    }
+                </div>
+            }
+        }
+    }
+</section>
+
+@section Scripts {
+    @if (hasSelectedNeed)
+    {
+        <script nonce="@Context.Items["CspNonce"]">
+
+            // Initialiser avstandsskyveknappen.
+            if (window.resqRadius) {
+                window.resqRadius.initialize(
+                    'radiusKm',
+                    'radiusKmValue'
+                );
+            }
+
+        </script>
+    }
+}
