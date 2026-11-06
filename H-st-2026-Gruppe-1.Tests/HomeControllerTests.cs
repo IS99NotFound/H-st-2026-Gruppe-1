@@ -173,7 +173,7 @@ public class HomeControllerTests : IDisposable
     // ---------- DeleteResource ----------
 
     [Fact]
-    public async Task DeleteResource_Owner_RemovesTheResource()
+    public async Task DeleteResource_Owner_WithdrawsTheResourceInsteadOfRemovingIt()
     {
         AddResource(1, providerId: 2);
         AddResource(2, providerId: 2);
@@ -183,8 +183,9 @@ public class HomeControllerTests : IDisposable
 
         var redirect = Assert.IsType<RedirectToActionResult>(result);
         Assert.Equal("Index", redirect.ActionName);
-        Assert.Null(ReadResource(1));
-        Assert.NotNull(ReadResource(2));
+        // The row stays in the database so the match history is kept
+        Assert.Equal("withdrawn", ReadResource(1)!.Status);
+        Assert.Equal("available", ReadResource(2)!.Status);
     }
 
     [Fact]
@@ -206,6 +207,9 @@ public class HomeControllerTests : IDisposable
     {
         _db.Seed(c =>
         {
+            // Deleting a need is allowed for actors in the same organization as the owner
+            c.Organizations.Add(new Organization { OrganizationId = 1, OrganizationName = "Kommunen" });
+            c.PublicActors.Add(new PublicActor { PublicActorId = 1, OrganizationId = 1 });
             c.Resources.Add(TestData.NewResource(1, status: "unavailable"));
             c.Needs.Add(TestData.NewNeed(1, publicActorId: 1, status: "assigned"));
             c.MatchRecords.Add(TestData.NewMatch(1, 1, "accepted"));
@@ -219,7 +223,7 @@ public class HomeControllerTests : IDisposable
     }
 
     [Fact]
-    public async Task DeleteNeed_RemovesTheMatchesAndFreesTheAssignedResource()
+    public async Task DeleteNeed_CancelsTheNeedKeepsTheHistoryAndFreesTheAssignedResource()
     {
         AddNeedWithAssignedResource();
         var controller = NewController(1, "PublicActor");
@@ -227,7 +231,8 @@ public class HomeControllerTests : IDisposable
         await controller.DeleteNeed(1);
 
         using var context = _db.CreateContext();
-        Assert.Empty(context.MatchRecords);
+        Assert.Equal("cancelled", context.Needs.Single(n => n.Id == 1).Status);
+        Assert.Equal("completed", context.MatchRecords.Single().Status);
         Assert.Equal("available", context.Resources.Single(r => r.Id == 1).Status);
     }
 

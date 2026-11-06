@@ -11,6 +11,19 @@ public class IncidentsControllerTests : IDisposable
 {
     private readonly TestDb _db = new TestDb();
 
+    public IncidentsControllerTests()
+    {
+        // Access is decided by organization: actors 1 and 5 work for organization 1, actor 6 for organization 2
+        _db.Seed(c =>
+        {
+            c.Organizations.Add(new Organization { OrganizationId = 1, OrganizationName = "Kommunen" });
+            c.Organizations.Add(new Organization { OrganizationId = 2, OrganizationName = "Fylket" });
+            c.PublicActors.Add(new PublicActor { PublicActorId = 1, OrganizationId = 1 });
+            c.PublicActors.Add(new PublicActor { PublicActorId = 5, OrganizationId = 1 });
+            c.PublicActors.Add(new PublicActor { PublicActorId = 6, OrganizationId = 2 });
+        });
+    }
+
     public void Dispose()
     {
         _db.Dispose();
@@ -215,7 +228,8 @@ public class IncidentsControllerTests : IDisposable
     public void Edit_Administrator_IsForbidden()
     {
         _db.Seed(c => c.Incidents.Add(TestData.NewIncident(1, title: "Gammelt navn")));
-        var controller = NewController(1, "Administrator");
+        // An administrator is not a public actor, so there is no organization to match
+        var controller = NewController(99, "Administrator");
 
         var result = controller.Edit(NewEditModel());
 
@@ -239,7 +253,7 @@ public class IncidentsControllerTests : IDisposable
     }
 
     [Fact]
-    public void MarkAsResolved_AnotherPublicActor_IsForbidden()
+    public void MarkAsResolved_ActorFromAnotherOrganization_IsForbidden()
     {
         _db.Seed(c => c.Incidents.Add(TestData.NewIncident(1, publicActorId: 5)));
         var controller = NewController(6, "PublicActor");
