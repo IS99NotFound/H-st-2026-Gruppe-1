@@ -4,6 +4,11 @@
     var needs = (IReadOnlyList<OperationalFeedItem>)(ViewBag.FeedNeeds ?? new List<OperationalFeedItem>());
     var incidents = (IReadOnlyList<OperationalFeedItem>)(ViewBag.FeedIncidents ?? new List<OperationalFeedItem>());
     var feedItems = resources.Concat(needs).Concat(incidents).OrderByDescending(item => item.CreatedAt).ToList();
+    var currentUserId = int.TryParse(
+        User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value,
+        out var parsedUserId)
+        ? parsedUserId
+        : (int?)null;
     string StatusLabel(string? statusValue) => statusValue switch { "active" => "Aktiv", "new" => "Ny", "under_review" => "Vurderes", "assigned" => "Tildelt", "resolved" => "Løst", "cancelled" => "Kansellert", "rejected" => "Avvist", "available" => "Tilgjengelig", "unavailable" => "Utilgjengelig", "withdrawn" => "Trukket tilbake", _ => statusValue ?? "" };
 }
 
@@ -107,7 +112,15 @@
                     <div><dt>Sted</dt><dd>@item.Latitude.ToString("F4"), @item.Longitude.ToString("F4")</dd></div>
                 </dl>
                 <div class="feed-card-actions">
-                    @if (item.Type == "need")
+                    @if (item.Type == "resource" &&
+                        (User.IsInRole("Administrator") ||
+                         User.IsInRole("CivilianProvider") && item.ProviderId == currentUserId))
+                    {
+                        <a asp-controller="Home" asp-action="Index" asp-route-id="@item.Id"
+                           class="btn btn-primary btn-sm">Rediger</a>
+                    }
+                    @if (item.Type == "need" &&
+                        (User.IsInRole("PublicActor") || User.IsInRole("Administrator")))
                     {
                         <a asp-controller="PublicActor" asp-action="Matches" asp-route-needId="@item.Id" class="btn btn-primary btn-sm">Match ressurs</a>
                     }

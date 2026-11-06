@@ -40,6 +40,7 @@
         _ => "bi-info-circle"
     };
     var categories = ViewBag.Categories as List<H_st_2026_Gruppe_1.Models.Category> ?? new();
+    var canEditResources = User.IsInRole("Administrator") || User.IsInRole("CivilianProvider");
     var statuses = Model.Resources
         .Select(resource => resource.Status)
         .Where(status => !string.IsNullOrWhiteSpace(status))
@@ -210,23 +211,26 @@
 
                     <div class="dashboard-card-footer">
                         <div class="dashboard-card-actions">
-                            <a asp-controller="Resources" asp-action="Index" asp-route-id="@resource.Id"
-                               class="btn btn-sm btn-primary">Rediger</a>
-                            @if (!isWithdrawn)
+                            @if (canEditResources)
                             {
-                                <form asp-controller="Home" asp-action="DeleteResource"
-                                      asp-route-id="@resource.Id" method="post"
-                                      data-confirm="Ressursen trekkes tilbake og blir ikke lenger tilgjengelig. Matchhistorikken beholdes.">
-                                    @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">Trekk tilbake</button>
-                                </form>
-                            }
-                            else
-                            {
-                                <span class="resource-withdrawn-note">
-                                    <i class="bi bi-archive" aria-hidden="true"></i>
-                                    Trukket tilbake
-                                </span>
+                                <a asp-controller="Resources" asp-action="Index" asp-route-id="@resource.Id"
+                                   class="btn btn-sm btn-primary">Rediger</a>
+                                @if (!isWithdrawn)
+                                {
+                                    <form asp-controller="Home" asp-action="DeleteResource"
+                                          asp-route-id="@resource.Id" method="post"
+                                          data-confirm="Ressursen trekkes tilbake og blir ikke lenger tilgjengelig. Matchhistorikken beholdes.">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Trekk tilbake</button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <span class="resource-withdrawn-note">
+                                        <i class="bi bi-archive" aria-hidden="true"></i>
+                                        Trukket tilbake
+                                    </span>
+                                }
                             }
                         </div>
                     </div>
