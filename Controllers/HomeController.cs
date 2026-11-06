@@ -284,6 +284,19 @@ public class PublicActorController : Controller
             .OrderBy(need => GetPriorityOrder(need.Priority))
             .ToList();
 
+        var needIds = sortedResults.Select(need => need.Id).ToList();
+        ViewBag.NeedMatchStatuses = (from match in _db.MatchRecords
+            join resource in _db.Resources on match.ResourceId equals resource.Id
+            where needIds.Contains(match.NeedId)
+                && (match.Status == "proposed" || match.Status == "accepted")
+            select new NeedMatchStatusViewModel
+            {
+                NeedId = match.NeedId,
+                ResourceName = resource.Name,
+                LocationName = resource.LocationName,
+                Status = match.Status
+            }).ToList();
+
         ViewBag.Categories = _db.Categories.OrderBy(c => c.CategoryId).ToList();
         ViewBag.Incidents = _db.Incidents.OrderBy(i => i.IncidentId).ToList();
         if (id.HasValue)
@@ -546,7 +559,6 @@ public class PublicActorController : Controller
             || need.Deadline.HasValue && need.Deadline.Value < DateTime.Now)
         {
             TempData["MatchError"] = "Dette behovet er lukket eller fristen har gått ut. Statusen kan ikke lenger endres.";
-            TempData["MatchFeedbackResourceId"] = resourceId;
             return RedirectToAction("Matches", new { needId });
         }
 
@@ -562,7 +574,6 @@ public class PublicActorController : Controller
                 if (!_lifecycle.TryReserveResource(resourceId))
                 {
                     TempData["MatchError"] = "Denne ressursen er midlertidig utilgjengelig. Den er allerede tildelt et annet behov.";
-                    TempData["MatchFeedbackResourceId"] = resourceId;
                     return RedirectToAction("Matches", new { needId });
                 }
             }
@@ -570,7 +581,6 @@ public class PublicActorController : Controller
             {
                 //The resource is unavailable and no already assigned to this need
                 TempData["MatchError"] = "Denne ressursen er allerede tildelt et annet behov.";
-                TempData["MatchFeedbackResourceId"] = resourceId;
 
                 return RedirectToAction("Matches", new {needId});
             }
@@ -605,8 +615,6 @@ public class PublicActorController : Controller
             "declined" when wasAssigned => "Ressursen er avslått og er tilgjengelig igjen.",
             _ => "Status er lagret."
         };
-        TempData["MatchFeedbackResourceId"] = resourceId;
-        TempData["MatchFeedbackType"] = newStatus;
 
         return RedirectToAction("Matches", new { needId });
     }
