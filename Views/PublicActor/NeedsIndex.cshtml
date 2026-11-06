@@ -4,6 +4,11 @@
     ViewData["Title"] = "Behov";
     var categories = ViewBag.Categories as List<H_st_2026_Gruppe_1.Models.Category> ?? new();
     var incidents = ViewBag.Incidents as List<H_st_2026_Gruppe_1.Models.Incident> ?? new();
+    var currentUserId = int.TryParse(
+        User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value,
+        out var parsedUserId)
+        ? parsedUserId
+        : (int?)null;
 }
 
 <section class="subpage">
@@ -160,14 +165,17 @@
                     </dl>
 
                     <div class="dashboard-card-footer">
-                        <form class="dashboard-card-actions" asp-controller="Home" asp-action="DeleteNeed"
-                              asp-route-id="@need.Id" method="post"
-                              data-confirm="Er du sikker på at du vil slette dette behovet?">
-                            @Html.AntiForgeryToken()
-                            <a asp-controller="PublicActor" asp-action="NeedsIndex" asp-route-id="@need.Id"
-                               class="btn btn-sm btn-primary">Rediger</a>
-                            <button type="submit" class="btn btn-sm btn-danger">Slett</button>
-                        </form>
+                        @if (need.PublicActorId == currentUserId)
+                        {
+                            <form class="dashboard-card-actions" asp-controller="Home" asp-action="DeleteNeed"
+                                  asp-route-id="@need.Id" method="post"
+                                  data-confirm="Er du sikker på at du vil slette dette behovet?">
+                                @Html.AntiForgeryToken()
+                                <a asp-controller="PublicActor" asp-action="NeedsIndex" asp-route-id="@need.Id"
+                                   class="btn btn-sm btn-primary">Rediger</a>
+                                <button type="submit" class="btn btn-sm btn-danger">Slett</button>
+                            </form>
+                        }
                     </div>
                 </article>
             }

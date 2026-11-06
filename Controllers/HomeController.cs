@@ -180,6 +180,7 @@ public class PublicActorController : Controller
             {
                 Type = "resource",
                 Id = resource.Id,
+                ProviderId = resource.ProviderId,
                 Title = resource.Name,
                 Description = resource.Description,
                 Status = resource.Status,
@@ -293,6 +294,11 @@ public class PublicActorController : Controller
                 return NotFound();
             }
 
+            if (editNeed.PublicActorId != GetCurrentUserId())
+            {
+                return Forbid();
+            }
+
             ViewBag.EditNeed = editNeed;
         }
         return View(sortedResults);
@@ -340,7 +346,7 @@ public class PublicActorController : Controller
                 return NotFound();
             }
 
-            if (!BelongsToCurrentOrganization(existingNeed.PublicActorId))
+            if (existingNeed.PublicActorId != GetCurrentUserId())
             {
                 return Forbid();
             }
@@ -390,14 +396,14 @@ public class PublicActorController : Controller
         return RedirectToAction("NeedsIndex");
     }
 
-    [Authorize(Roles = "PublicActor")]
+    [Authorize(Roles = "PublicActor,Administrator")]
     public IActionResult MatchesIndex(int? needId, double radiusKm = 0)
     {
         return View("MatchesIndex", BuildMatchViewModel(needId, radiusKm));
     }
     
     // Shows the resources within radiusKm of a need, nearest first.
-    [Authorize(Roles = "PublicActor")]
+    [Authorize(Roles = "PublicActor,Administrator")]
     public IActionResult Matches(int? needId, double radiusKm = 0)
     {
         var model = BuildMatchViewModel(needId, radiusKm);
@@ -409,7 +415,7 @@ public class PublicActorController : Controller
         return View("MatchesIndex", model);
     }
     
-    [Authorize(Roles = "PublicActor")]
+    [Authorize(Roles = "PublicActor,Administrator")]
     public IActionResult ShowAllResourcesInMatches(int needId, double radiusKm = 0)
     {
         var model = BuildMatchViewModel(needId, radiusKm, allCategories: true);
@@ -429,18 +435,21 @@ public class PublicActorController : Controller
 
         var needsQuery = _db.Needs.Include(need => need.CategoryInfo).AsQueryable();
 
-        var organizationId = GetCurrentOrganizationId();
-
-        if (organizationId is null)
+        if (!User.IsInRole("Administrator"))
         {
-            throw new InvalidOperationException(
-                "The authenticated PublicActor is missing an organization.");
-        }
+            var organizationId = GetCurrentOrganizationId();
 
-        needsQuery = needsQuery
-            .Where(need => _db.PublicActors.Any(actor =>
-                actor.PublicActorId == need.PublicActorId &&
-                actor.OrganizationId == organizationId.Value));
+            if (organizationId is null)
+            {
+                throw new InvalidOperationException(
+                    "The authenticated PublicActor is missing an organization.");
+            }
+
+            needsQuery = needsQuery
+                .Where(need => _db.PublicActors.Any(actor =>
+                    actor.PublicActorId == need.PublicActorId &&
+                    actor.OrganizationId == organizationId.Value));
+        }
 
         var needs = needsQuery.ToList();
         var selectedNeed = needId.HasValue
@@ -503,7 +512,7 @@ public class PublicActorController : Controller
     // Saves the decision about a resource for a need in the ResourceMatch table.
     // newStatus: accepted = assigned, proposed = under review, declined = rejected
     [HttpPost]
-    [Authorize(Roles = "PublicActor")]
+    [Authorize(Roles = "PublicActor,Administrator")]
     [ValidateAntiForgeryToken]
     public IActionResult UpdateResourceStatus(int resourceId, int needId, string newStatus, string? statusComment)
     {
@@ -518,7 +527,8 @@ public class PublicActorController : Controller
             return NotFound();
         }
 
-        if (!BelongsToCurrentOrganization(need.PublicActorId))
+        if (!User.IsInRole("Administrator") &&
+            !BelongsToCurrentOrganization(need.PublicActorId))
         {
             return Forbid();
         }
@@ -718,6 +728,7 @@ public class HomeController : Controller
             {
                 Type = "resource",                             
                 Id = resource.Id,                              
+                ProviderId = resource.ProviderId,
                 Title = resource.Name,                         
                 Description = resource.Description,            
                 Status = resource.Status,                      
@@ -894,7 +905,7 @@ public class HomeController : Controller
             return NotFound();
         }
         
-        if (!BelongsToCurrentOrganization(Need.PublicActorId))
+        if (Need.PublicActorId != GetCurrentUserId())
         {
             return Forbid();
         }

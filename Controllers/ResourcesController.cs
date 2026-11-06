@@ -120,6 +120,11 @@ public class ResourcesController : Controller
         // If an id is in the address, open that resource for editing.
         if (id.HasValue)
         {
+            if (!User.IsInRole("Administrator") && !User.IsInRole("CivilianProvider"))
+            {
+                return Forbid();
+            }
+
             var resource = allResources.FirstOrDefault(item => item.Id == id.Value);
             if (resource == null)
             {
