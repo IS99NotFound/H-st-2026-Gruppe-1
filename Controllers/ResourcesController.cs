@@ -82,15 +82,21 @@ public class ResourcesController : Controller
 
         var resourceIds = allResources.Select(resource => resource.Id).ToList();
 
-        var matchStatus = (from match in _db.MatchRecords
-            join need in _db.Needs on match.NeedId equals need.Id
-            where resourceIds.Contains(match.ResourceId)
-            select new ResourceMatchStatusViewModel()
-            { ResourceId = match.ResourceId,
-                NeedTitle = need.Title,
-                Status = match.Status,
-                Comment = match.Comment
-            }).ToList();
+        var matchStatus = new List<ResourceMatchStatusViewModel>();
+        if (User.IsInRole("CivilianProvider") || User.IsInRole("Administrator"))
+        {
+            matchStatus = (from match in _db.MatchRecords
+                join need in _db.Needs on match.NeedId equals need.Id
+                where resourceIds.Contains(match.ResourceId)
+                    && (match.Status == "accepted" || match.Status == "assigned")
+                select new ResourceMatchStatusViewModel()
+                {
+                    ResourceId = match.ResourceId,
+                    NeedTitle = need.Title,
+                    Status = match.Status,
+                    Comment = match.Comment
+                }).ToList();
+        }
         
         var dashboardModel = new ResourceDashboard
         {
