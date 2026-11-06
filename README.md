@@ -140,7 +140,57 @@ dotnet test
 
 ### Brukervennlighetstest
 
-[Oppsett, testere og resultater legges inn her.]
+#### Test 1
+
+Testere:
+- Tester 1: IT-bakgrunn, 22
+- Tester 2: Musikkstudent, 16
+- Tester 3: Vaskehjelp, 43
+
+**Oppgave 1 (ressursleverandør):** Du har en generator du kan låne ut hvis noen trenger den. Logg inn og registrer den i systemet. Sett den på kartet der du bor.
+
+| Tester | Tid | Alene? | Stopp/feil | Høyt tenkt |
+|---|---|---|---|---|
+| 1 | 02.22 | Ja | Ingen | Ingenting bemerkelsesverdig |
+| 2 | 03.22 | Ja | Knotet med å finne ressursregistrering | "Skjønner ikke helt hvor man registrerer" |
+| 3 | 08.03 | Ja | Slet med å finne ressursregistrering og hva som skulle fylles ut | "Det er jo ingen registrerings-side?" og "Hva skal jeg fylle inn her?" |
+
+**Oppgave 2 (offentlig aktør):** Du jobber i kommunen, og dere trenger strøm til et sted der det er strømbrudd. Logg inn og registrer at dere trenger det. Det haster veldig.
+
+| Tester | Tid | Alene? | Stopp/feil | Høyt tenkt |
+|---|---|---|---|---|
+| 1 | 02.56 | Ja | Å registrere behov via kartet og ikke behov siden | "Er det under Behov? Nei, der er det bare en liste." |
+| 2 | 03.45 | Ja | Å registrere behov via kartet og ikke behov siden og tok planlagt istedenfor akkutt. | Ingenting bemerkelsesverdig |
+| 3 | 04.23 | Ja | Å registrere behov via kartet og ikke behov siden | "Nå ble jeg veldig forvirret" |
+
+**Oppgave 3 (offentlig aktør):** Finn en ressurs som passer til behovet du la inn, og gi den til behovet. Når strømmen er på igjen, marker behovet som løst.
+
+| Tester | Tid | Alene? | Stopp/feil | Høyt tenkt |
+|---|---|---|---|---|
+| 1 | 00.45 | Ja | Ingen | Ingenting bemerkelsesverdig |
+| 2 | 01.37 | Ja | Usikker på hva «Vurder» betyr | Ingenting bemerkelsesverdig |
+| 3 | 02.30 | Ja | Usikker på hva «Matching» betyr | Ingenting bemerkelsesverdig |
+
+**Spørsmål:**
+
+| Spørsmål | Tester 1 | Tester 2 | Tester 3 |
+|---|---|---|---|
+| Hva var vanskeligst? | Å skjønne at man må klikke på kartet for å registrere | Å finne hvor man registrerer ressursen | Å finne ressursregistreringen og vite hva som skulle fylles ut |
+| Hva var lettest å forstå? | Kartet og menyen | Å fylle ut skjemaene | Matching og «Tildel» |
+| Hvor lett var det å bruke, fra 1 (veldig vanskelig) til 5 (veldig lett)? | 4 | 4 | 3 |
+
+**Funn i Test 1**
+
+Alle tre greide oppgavene alene. Snitt-tid ble 4:36(registrere ressurs), 3:41(registrere behov) og 1:37(matching). Snittet på letthetsgraden ble: 3,7 av 5.
+
+Vanskeligst var å finne hvor man registrerer. Ved ressurs ble to av tre forvirret, og én brukte over åtte minutter. Ved behov gikk alle tre først til Behov-siden, som bare viser en liste, i stedet for kartet. Under matching var to usikre på «Vurder» og «Matching». Skjemaene var enkle å fylle ut.
+
+Det brukerne hadde til felles var at alle slet med å finne ut hvor man registrerte ressurser og behov, men skjemaene var enkle å fylle ut når de først fant dem.
+
+**Hva vi vil endre**
+
+- Tydelig knapp for å registrere ressurs og behov på listesidene.
+- Enklere navn på de forskjellige knappene, selv om case-beskrivelsen bruker dem. 
 
 
 # Bruk av kunstig intelligens (KI/AI) under prosjektet
