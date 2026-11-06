@@ -5,6 +5,7 @@ namespace H_st_2026_Gruppe_1.Models;
 // The resources that are registered through the form.
 public class ResourceEntry : IValidatableObject
 {
+	
 	public int Id { get; set; }
 
 	[Required(ErrorMessage = "Fullt navn er påkrevd.")]
@@ -59,6 +60,7 @@ public class ResourceEntry : IValidatableObject
 //Attributes to save resources and show them in MyResources
 public class ResourceDashboard
 {
+	public List<ResourceMatchStatusViewModel> MatchStatuses { get; set; } = new();
 	public int TotalResources { get; set; }
 	public int ExpiringSoonCount { get; set; }
 	public int ExpiredCount { get; set; }

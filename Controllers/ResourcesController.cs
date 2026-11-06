@@ -6,6 +6,7 @@ using H_st_2026_Gruppe_1.Models;
 
 namespace H_st_2026_Gruppe_1.Controllers;
 
+
 public class ResourcesController : Controller
 {
     private readonly AppDbContext _db;
@@ -22,6 +23,7 @@ public class ResourcesController : Controller
         int? resourceType,
         DateTime? startDate,
         DateTime? endDate)
+    
     {
         // Today and the date 5 days ahead. They are used to find resources that expire soon.
         var now = DateTime.Today;
@@ -76,6 +78,19 @@ public class ResourcesController : Controller
             .OrderBy(resource => resource.Id)
             .ToList();
         ViewBag.Categories = _db.Categories.OrderBy(category => category.CategoryId).ToList();
+
+        var resourceIds = allResources.Select(resource => resource.Id).ToList();
+
+        var matchStatus = (from match in _db.MatchRecords
+            join need in _db.Needs on match.NeedId equals need.Id
+            where resourceIds.Contains(match.ResourceId)
+            select new ResourceMatchStatusViewModel()
+            { ResourceId = match.ResourceId,
+                NeedTitle = need.Title,
+                Status = match.Status,
+                Comment = match.Comment
+            }).ToList();
+        
         var dashboardModel = new ResourceDashboard
         {
             TotalResources = allResources.Count,
@@ -96,8 +111,11 @@ public class ResourcesController : Controller
             Status = status,
             ResourceType = resourceType,
             StartDate = startDate,
+            MatchStatuses = matchStatus,
             EndDate = endDate
+            
         };
+        
 
         // If an id is in the address, open that resource for editing.
         if (id.HasValue)
@@ -112,5 +130,8 @@ public class ResourcesController : Controller
         }
 
         return View(dashboardModel);
+
     }
+    
+    
 }

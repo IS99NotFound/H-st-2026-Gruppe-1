@@ -1347,19 +1347,39 @@ html[data-theme="light"] .registration-modal .btn-close {
 
 .resource-list {
     display: grid;
-    gap: 16px;
+    gap: 18px;
 }
 
 .dashboard-card {
-    padding: 20px;
+    padding: 22px;
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: 14px;
     background: var(--bg-panel);
+    box-shadow: 0 2px 8px rgb(0 0 0 / 5%);
+    transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.dashboard-card:hover {
+    border-color: color-mix(in srgb, var(--border), var(--accent) 24%);
+    box-shadow: 0 8px 22px rgb(0 0 0 / 8%);
+    transform: translateY(-2px);
+}
+
+.resource-card--withdrawn {
+    border-left: 4px solid var(--text-muted);
+    background: color-mix(in srgb, var(--bg-panel), var(--bg-hover) 42%);
+    box-shadow: none;
+}
+
+.resource-card--withdrawn:hover {
+    border-color: var(--text-muted);
+    box-shadow: 0 3px 12px rgb(0 0 0 / 5%);
+    transform: none;
 }
 
 .dashboard-card-header {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
     gap: 16px;
 }
@@ -1409,7 +1429,7 @@ html[data-theme="light"] .registration-modal .btn-close {
     }
 
     .dashboard-card-header {
-        flex-direction: column;
+        flex-wrap: wrap;
         gap: 10px;
     }
 
@@ -1422,7 +1442,7 @@ html[data-theme="light"] .registration-modal .btn-close {
 
 .need-list {
     display: grid;
-    gap: 16px;
+    gap: 18px;
 }
 
 .need-card-badges {
@@ -1510,7 +1530,7 @@ html[data-theme="light"] .registration-modal .btn-close {
 
 .match-list {
     display: grid;
-    gap: 16px;
+    gap: 18px;
     margin-top: 20px;
 }
 
@@ -1552,6 +1572,45 @@ html[data-theme="light"] .registration-modal .btn-close {
 
 .match-status-form {
     margin-top: 18px;
+}
+
+.match-feedback {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 11px 13px;
+    border: 1px solid var(--status-assigned-border);
+    border-radius: 10px;
+    background: var(--status-assigned-background);
+    color: var(--status-assigned-text);
+    font-size: 0.9rem;
+    line-height: 1.45;
+}
+
+.match-feedback > i {
+    flex: 0 0 auto;
+    margin-top: 2px;
+}
+
+.match-card .match-feedback {
+    margin-top: 16px;
+}
+
+.match-toolbar > .match-feedback {
+    margin-top: 14px;
+}
+
+.match-feedback--proposed {
+    border-color: var(--status-review-border);
+    background: var(--status-review-background);
+    color: var(--status-review-text);
+}
+
+.match-feedback--declined,
+.match-feedback--error {
+    border-color: var(--status-rejected-border);
+    background: var(--status-rejected-background);
+    color: var(--status-rejected-text);
 }
 
 .match-status-form label {
@@ -1654,6 +1713,13 @@ html[data-theme="light"] .registration-modal .btn-close {
     }
 }
 
+@media (max-width: 575px) {
+    .match-feedback {
+        padding: 10px 12px;
+        font-size: 0.85rem;
+    }
+}
+
 .match-controls form {
     margin: 0;
 }
@@ -1733,14 +1799,29 @@ html[data-theme="light"] .registration-modal .btn-close {
 }
 
 .status-label {
-    display: inline-block;
-    padding: 4px 9px;
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 10px;
     border: 1px solid var(--border);
     border-radius: 999px;
     background-color: var(--bg-hover);
     color: var(--text);
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     white-space: nowrap;
+}
+
+.resource-card .status-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.resource-card .status-label i {
+    font-size: 0.78rem;
 }
 
 .status-label.status-new {
@@ -1778,6 +1859,81 @@ html[data-theme="light"] .registration-modal .btn-close {
     border-color: var(--border);
     background-color: var(--bg-hover);
     color: var(--text-muted);
+}
+
+.status-label.status-completed {
+    border-color: var(--status-assigned-border);
+    background-color: var(--status-assigned-background);
+    color: var(--status-assigned-text);
+}
+
+.resource-match-detail {
+    padding-left: 10px;
+    border-left: 2px solid var(--border);
+}
+
+.resource-match-detail dt {
+    overflow-wrap: anywhere;
+}
+
+.resource-match-detail dd {
+    display: grid;
+    justify-items: start;
+    gap: 6px;
+}
+
+.resource-match-comment {
+    display: block;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.resource-feedback {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 0 0 20px;
+    padding: 14px 16px;
+    border: 1px solid var(--status-assigned-border);
+    border-radius: 10px;
+    background: var(--status-assigned-background);
+    color: var(--status-assigned-text);
+    line-height: 1.5;
+}
+
+.resource-feedback i {
+    flex: 0 0 auto;
+    margin-top: 2px;
+}
+
+.resource-card .dashboard-card-actions {
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.resource-card .dashboard-card-actions form {
+    margin: 0;
+}
+
+.resource-withdrawn-note {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dashboard-card {
+        transition: none;
+    }
+
+    .dashboard-card:hover {
+        transform: none;
+    }
 }
 
 @media (min-width: 1200px) {
@@ -2128,24 +2284,20 @@ html[data-theme="light"] .registration-modal .btn-close {
 
 .incident-list {
     display: grid;
-    gap: 16px;
-}
-
-.incident-card {
-    padding: 20px;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    background: var(--bg-panel);
+    gap: 18px;
 }
 
 .incident-status {
     flex: 0 0 auto;
-    padding: 4px 10px;
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 10px;
     border: 1px solid var(--border);
     border-radius: 999px;
     color: var(--text-muted);
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     text-transform: capitalize;
+    white-space: nowrap;
 }
 
 .incident-status-active {
