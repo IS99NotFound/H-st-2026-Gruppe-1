@@ -747,26 +747,28 @@ public class HomeController : Controller
                 CreatedAt = resource.RegisteredAt              
             })
             .ToList();            
-        ViewBag.FeedNeeds = _db.Needs
-            .Include(need => need.CategoryInfo)
-            .AsEnumerable()
-            .Select(need => new OperationalFeedItem
-            {
-                Type = "need",
-                Id = need.Id,
-                Title = need.Title,
-                Description = need.Description,
-                Status = need.Status,
-                Category = need.CategoryInfo?.CategoryName,
-                Priority = need.Priority.ToString(),
-                ColorKey = need.Priority == NeedPriorityEnum.Critical
-                    ? "critical-need"
-                    : "planned-need",
-                Latitude = need.Latitude,
-                Longitude = need.Longitude,
-                CreatedAt = need.RegisteredAt
-            })
-            .ToList();
+        ViewBag.FeedNeeds = includeAllResources
+            ? _db.Needs
+                .Include(need => need.CategoryInfo)
+                .AsEnumerable()
+                .Select(need => new OperationalFeedItem
+                {
+                    Type = "need",
+                    Id = need.Id,
+                    Title = need.Title,
+                    Description = need.Description,
+                    Status = need.Status,
+                    Category = need.CategoryInfo?.CategoryName,
+                    Priority = need.Priority.ToString(),
+                    ColorKey = need.Priority == NeedPriorityEnum.Critical
+                        ? "critical-need"
+                        : "planned-need",
+                    Latitude = need.Latitude,
+                    Longitude = need.Longitude,
+                    CreatedAt = need.RegisteredAt
+                })
+                .ToList()
+            : new List<OperationalFeedItem>();
         ViewBag.FeedIncidents = _db.Incidents
             .AsEnumerable()
             .Select(incident => new OperationalFeedItem

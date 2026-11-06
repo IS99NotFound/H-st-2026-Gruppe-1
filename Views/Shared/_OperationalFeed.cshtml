@@ -3,7 +3,9 @@
     var resources = (IReadOnlyList<OperationalFeedItem>)(ViewBag.FeedResources ?? new List<OperationalFeedItem>());
     var needs = (IReadOnlyList<OperationalFeedItem>)(ViewBag.FeedNeeds ?? new List<OperationalFeedItem>());
     var incidents = (IReadOnlyList<OperationalFeedItem>)(ViewBag.FeedIncidents ?? new List<OperationalFeedItem>());
-    var feedItems = resources.Concat(needs).Concat(incidents).OrderByDescending(item => item.CreatedAt).ToList();
+    var canViewNeeds = User.IsInRole("PublicActor") || User.IsInRole("Administrator");
+    var visibleNeeds = canViewNeeds ? needs : Array.Empty<OperationalFeedItem>();
+    var feedItems = resources.Concat(visibleNeeds).Concat(incidents).OrderByDescending(item => item.CreatedAt).ToList();
     var currentUserId = int.TryParse(
         User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value,
         out var parsedUserId)
@@ -33,9 +35,12 @@
                     <button type="button" class="btn btn-primary active" data-feed-type="all">
                         Alle (<span>@feedItems.Count</span>)
                     </button>
-                    <button type="button" class="btn btn-outline-secondary" data-feed-type="need">
-                        Behov (<span>@needs.Count</span>)
-                    </button>
+                    @if (canViewNeeds)
+                    {
+                        <button type="button" class="btn btn-outline-secondary" data-feed-type="need">
+                            Behov (<span>@visibleNeeds.Count</span>)
+                        </button>
+                    }
                     <button type="button" class="btn btn-outline-secondary" data-feed-type="resource">
                         Ressurser (<span>@resources.Count</span>)
                     </button>

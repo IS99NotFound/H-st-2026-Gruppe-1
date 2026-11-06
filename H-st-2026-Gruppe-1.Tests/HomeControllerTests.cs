@@ -113,6 +113,8 @@ public class HomeControllerTests : IDisposable
 
         var feed = Assert.IsType<List<OperationalFeedItem>>(controller.ViewData["FeedResources"]);
         Assert.Equal(new[] { 1, 2 }, feed.Select(item => item.Id).OrderBy(id => id).ToArray());
+        var needs = Assert.IsType<List<OperationalFeedItem>>(controller.ViewData["FeedNeeds"]);
+        Assert.Empty(needs);
     }
 
     // ---------- RegisterResource: new resource ----------
