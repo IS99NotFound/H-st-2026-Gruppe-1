@@ -19,6 +19,13 @@ public class PublicActorControllerTests : IDisposable
         {
             c.Categories.Add(TestData.NewCategory(1, "Transport"));
             c.Categories.Add(TestData.NewCategory(2, "Aggregat"));
+
+            // Access is decided by organization: actors 1 and 2 work for organization 1, actor 5 for organization 2
+            c.Organizations.Add(new Organization { OrganizationId = 1, OrganizationName = "Kommunen" });
+            c.Organizations.Add(new Organization { OrganizationId = 2, OrganizationName = "Fylket" });
+            c.PublicActors.Add(new PublicActor { PublicActorId = 1, OrganizationId = 1 });
+            c.PublicActors.Add(new PublicActor { PublicActorId = 2, OrganizationId = 1 });
+            c.PublicActors.Add(new PublicActor { PublicActorId = 5, OrganizationId = 2 });
         });
     }
 
@@ -121,7 +128,7 @@ public class PublicActorControllerTests : IDisposable
     }
 
     [Fact]
-    public void DashboardIndex_AnotherPublicActorsNeed_IsForbidden()
+    public void DashboardIndex_NeedFromAnotherOrganization_IsForbidden()
     {
         AddNeed(1, publicActorId: 5);
         var controller = NewController(1, "PublicActor");
@@ -148,15 +155,16 @@ public class PublicActorControllerTests : IDisposable
     // ---------- NeedsIndex ----------
 
     [Fact]
-    public void NeedsIndex_PublicActor_OnlySeesOwnNeeds()
+    public void NeedsIndex_PublicActor_OnlySeesNeedsFromTheirOwnOrganization()
     {
         AddNeed(1, publicActorId: 1);
-        AddNeed(2, publicActorId: 1);
+        AddNeed(2, publicActorId: 2);
         AddNeed(3, publicActorId: 5);
         var controller = NewController(1, "PublicActor");
 
         var result = controller.NeedsIndex(null, null, null, null, null);
 
+        // Need 2 belongs to a colleague in the same organization, need 3 to another organization
         var needs = Assert.IsAssignableFrom<IEnumerable<ResourceNeed>>(Assert.IsType<ViewResult>(result).Model);
         Assert.Equal(new[] { 1, 2 }, needs.Select(n => n.Id).OrderBy(id => id).ToArray());
     }
@@ -203,13 +211,14 @@ public class PublicActorControllerTests : IDisposable
     }
 
     [Fact]
-    public void RegisterNeed_NewNeedByAdministrator_IsForbidden()
+    public void RegisterNeed_Administrator_IsSentToHomeAndNothingIsSaved()
     {
         var controller = NewController(99, "Administrator");
 
         var result = controller.RegisterNeed(FormNeed());
 
-        Assert.IsType<ForbidResult>(result);
+        var redirect = Assert.IsType<RedirectToActionResult>(result);
+        Assert.Equal("Home", redirect.ControllerName);
         Assert.Equal(0, NeedCount());
     }
 
@@ -230,7 +239,7 @@ public class PublicActorControllerTests : IDisposable
     }
 
     [Fact]
-    public void RegisterNeed_EditAnotherPublicActorsNeed_IsForbiddenAndNothingChanges()
+    public void RegisterNeed_EditNeedFromAnotherOrganization_IsForbiddenAndNothingChanges()
     {
         AddNeed(1, publicActorId: 5);
         var controller = NewController(1, "PublicActor");
@@ -257,7 +266,7 @@ public class PublicActorControllerTests : IDisposable
     }
 
     [Fact]
-    public void UpdateResourceStatus_AnotherPublicActorsNeed_IsForbidden()
+    public void UpdateResourceStatus_NeedFromAnotherOrganization_IsForbidden()
     {
         AddNeed(1, publicActorId: 5);
         AddResource(1);
@@ -355,7 +364,7 @@ public class PublicActorControllerTests : IDisposable
     }
 
     [Fact]
-    public void ResolveNeed_AnotherPublicActor_IsForbidden()
+    public void ResolveNeed_NeedFromAnotherOrganization_IsForbidden()
     {
         AddNeed(1, publicActorId: 5);
         var controller = NewController(1, "PublicActor");

@@ -877,7 +877,7 @@ public class HomeController : Controller
             return Forbid();
         }
         
-        _db.Resources.Remove(resource);
+        resource.Status = "withdrawn";
         await _db.SaveChangesAsync();
         TempData["SuccessMessage"] = "Ressursen er trukket tilbake. Den er ikke lenger tilgjengelig, og matchhistorikken er bevart.";
         return RedirectToAction("Index", "Resources");
@@ -899,10 +899,10 @@ public class HomeController : Controller
             return Forbid();
         }
 
-        // Fjern match-radene først (fremmednøkkel) og frigi assigned ressurser
-        _lifecycle.RemoveMatchesFromNeed(Need.Id);
+        // beholder historikken
+        _lifecycle.CloseNeed(Need.Id);
 
-        _db.Needs.Remove(Need);
+        Need.Status = "cancelled";
         await _db.SaveChangesAsync();
         return RedirectToAction("NeedsIndex", "PublicActor");    }
     
