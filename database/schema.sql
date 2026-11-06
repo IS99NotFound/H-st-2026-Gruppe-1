@@ -57,7 +57,7 @@ CREATE TABLE `User` (
     NormalizedEmail       VARCHAR(255)  NOT NULL,
     EmailConfirmed        BOOLEAN       NOT NULL DEFAULT FALSE,
     PasswordHash          VARCHAR(255)  NOT NULL,
-    SecurityStamp         VARCHAR(64)   NULL,
+    SecurityStamp         VARCHAR(64)   NOT NULL,
     ConcurrencyStamp      VARCHAR(64)   NULL,
     PhoneNumber           VARCHAR(20)   NULL,
     PhoneNumberConfirmed  BOOLEAN       NOT NULL DEFAULT FALSE,
