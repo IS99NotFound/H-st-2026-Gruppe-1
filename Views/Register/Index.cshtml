@@ -13,6 +13,7 @@
             <p class="auth-description">Fyll inn opplysningene dine for å komme i gang. Alle felt må fylles ut.</p>
 
             <form asp-controller="Register" asp-action="Index" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger registration-validation"></div>
                 <div class="auth-form-grid">
                 <div class="auth-field">
                     <label asp-for="Name">Fullt navn</label>

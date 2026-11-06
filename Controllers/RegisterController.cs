@@ -74,13 +74,19 @@ public class RegisterController : Controller
             // Turn the Identity error codes into Norwegian messages the user can read.
             foreach (var error in result.Errors)
             {
-                ModelState.AddModelError(string.Empty, error.Code switch
+                var errorKey = error.Code.StartsWith("Password", StringComparison.Ordinal)
+                    ? nameof(model.Password)
+                    : string.Empty;
+
+                ModelState.AddModelError(errorKey, error.Code switch
                 {
                     "PasswordRequiresDigit" => "Passordet må inneholde minst ett tall.",
                     "PasswordRequiresLower" => "Passordet må inneholde minst én liten bokstav.",
                     "PasswordRequiresUpper" => "Passordet må inneholde minst én stor bokstav.",
                     "PasswordRequiresNonAlphanumeric" => "Passordet må inneholde minst ett spesialtegn.",
+                    "PasswordRequiresUniqueChars" => "Passordet må inneholde flere ulike tegn.",
                     "PasswordTooShort" => "Passordet må være minst 8 tegn.",
+                    "PasswordTooLong" => "Passordet er for langt.",
                     "DuplicateUserName" => "Brukernavnet er allerede i bruk.",
                     "DuplicateEmail" => "E-postadressen er allerede i bruk.",
                     "InvalidEmail" => "Oppgi en gyldig e-postadresse.",
