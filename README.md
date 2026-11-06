@@ -14,18 +14,18 @@ Webapplikasjonen er en ASP.NET Core MVC-applikasjon som kjøres i en Docker-cont
 - Nettleseren må ha internettilgang for å laste kartdata fra Leaflet/OpenStreetMap.
 
 ### Starte applikasjonen
-Siden prosjektet fortsatt er i testfasen, så kjører vi disse to kodene, dette er hver gnag vi gjør endringer og ønsker å starte med red database. Dette sletter tidligere testdata.
+Siden prosjektet fortsatt er i testfasen, så kjører vi disse to kodene, dette er hver gang vi gjør endringer og ønsker å starte med ren database. Dette sletter tidligere testdata.
 Ved nye endringer, i vårt tilfelle:
 ```bash
 docker compose down -v
 ```
 
-Til vanlig bruker man bare :
+Til vanlig bruker man bare:
 ```bash
 docker compose down
 ```
 
-Deretter starte den opp igjen:
+Deretter starter du den opp igjen:
 
 ```bash
 docker compose up --build
@@ -35,7 +35,7 @@ Når containerne er startet, er webapplikasjonen tilgjengelig på:
 
 `http://localhost:8081`
 
-Ressurser, behov, brukere og tilhørende informasjon lagres nå permanent i MariaDB-databasen. Webapplikasjonen kommuniserer med databasen for å hente og lagre data. Dataene blir bevart selv om webcontaineren starter på nytt, så lenge databasen og dataen ikke slettes
+Ressurser, behov, brukere og tilhørende informasjon lagres nå permanent i MariaDB-databasen. Webapplikasjonen kommuniserer med databasen for å hente og lagre data. Dataene blir bevart selv om webcontaineren starter på nytt, så lenge databasen og dataen ikke slettes.
 
 
 ### Feilsøking
@@ -61,14 +61,14 @@ ResourceEntry representerer en ressurs som registreres i systemet. Når informas
 Sammen gjør disse komponentene at webapplikasjonen får en tydelig struktur, hvor presentasjon, håndtering av forespørsler og data er delt opp i separate deler (Walther, 2022).
 
 ## Hvordan data flyter gjennom systemet (eksempel fra koden)
-Data flyter gjennom systemet ved at brukeren sender en forespørsel fra nettleseren til webapplikasjonen. Forespørselen mottas av en Controller, som behandler informasjon og vil da eventuelt kommuniserer med databasen gjennom AppDbContect om dette er relevant. Controlleren retunerer deretter en View som presenterer resultatet for brukeren.
+Data flyter gjennom systemet ved at brukeren sender en forespørsel fra nettleseren til webapplikasjonen. Forespørselen mottas av en Controller, som behandler informasjon og vil da eventuelt kommunisere med databasen gjennom AppDbContext om dette er relevant. Controlleren returnerer deretter en View som presenterer resultatet for brukeren.
 
-Et eksempel på dette er når en bruker registrerer en ny ressurs. Brukeren fyller ut registreringsskjemaet på nettsiden og trykker på "Register resource". Skjemaet sender informasjonen til HomeController gjennom en POST-forespørsel til metoden RegisterResource.
+Et eksempel på dette er når en bruker registrerer en ny ressurs. Brukeren fyller ut registreringsskjemaet på nettsiden og trykker på "Registrer ressurs". Skjemaet sender informasjonen til HomeController gjennom en POST-forespørsel til metoden RegisterResource.
 Dataene sendes til controlleren som et ResourceEntry-objekt. Dette objektet inneholder informasjon brukeren har fylt inn om ressursen. 
 
-Før ressursen lagres, kontrollerer systemet om informasjonen er gyldig ved hjelp av ModelState.IsValid. Dersom informasjonen ikke består valideringen, sendes brukeren tilbake til registreringsskjemaet med en eller flere feilmeldinger som forklarer hva som "feilet". Hvis informajsonen er gyldig, kontrollerer systemet hvilken rolle brukeren har, og knytter deretter ressursen til riktig bruk ved å sette blant annet ProviderId, RegionId og registeringspunktet.
+Før ressursen lagres, kontrollerer systemet om informasjonen er gyldig ved hjelp av ModelState.IsValid. Dersom informasjonen ikke består valideringen, sendes brukeren tilbake til registreringsskjemaet med en eller flere feilmeldinger som forklarer hva som "feilet". Hvis informasjonen er gyldig, kontrollerer systemet hvilken rolle brukeren har, og knytter deretter ressursen til riktig bruker ved å sette blant annet ProviderId, RegionId og registreringspunktet.
 
-Til slutt legges ressursen inn i databasen gjennom AppDbContext ved hjelp av _db.Resource.Add(resource). Og endringer lagres med _db.SaveChanges(), da vil Entity Framework Core håndtere kommunikasjonen med MariaDb-databasen. 
+Til slutt legges ressursen inn i databasen gjennom AppDbContext ved hjelp av _db.Resources.Add(resource). Og endringer lagres med _db.SaveChanges(), da vil Entity Framework Core håndtere kommunikasjonen med MariaDB-databasen. 
 
 ## Hvordan bruker, webapplikasjon og eventuelle andre komponenter henger sammen
 Systemet består av en bruker som kommuniserer med webapplikasjonen gjennom en nettleser. Webapplikasjonen er utviklet med ASP.NET Core og MVC og håndterer forespørsler, data og visning. Webapplikasjonen har også mulighet til å kommunisere med andre komponenter, som karttjenesten, for å hente og lagre nødvendig informasjon. 
@@ -120,15 +120,39 @@ Det responsive oppsettet er laget med CSS media queries og fleksible høyder og 
 
 Navigasjonen bruker Bootstrap Icons for å gjøre knappene og sidene lettere å kjenne igjen.
 
-# Bruk av kunstelig intelligens (KI/AI) under prosjektet
-Vi har brukt KI som et støtteverktøy gjennom prosjektet. Vi har ikke brukt KI for å genere ferdig tekst eller kode, men heller som læringsverktøy, til å skjønner hva oppgaven spør om, feilsøking og forklaring av feilmeldinger, men også om vi mangler noe i teksten, eller dokumentasjon.
+## Testbrukere
+| Brukernavn | Rolle | Organisasjon | Passord |
+|---|---|---|---|
+| `hv07` | Offentlig aktør | 1 | `hv07` |
+| `hv072` | Offentlig aktør | 1 (samme som hv07) | `hv072` |
+| `hv08` | Offentlig aktør | 2 | `hv08` |
+| `person1` | Ressursleverandør | | `person1` |
+| `person2` | Ressursleverandør | | `person2` |
+
+### Enhetstester
+
+Enhetstestene ligger i prosjektet `H-st-2026-Gruppe-1.Tests` (xUnit, Moq og SQLite i minnet). De krever ikke at Docker kjører. Kjør dem slik:
+
+```bash
+cd H-st-2026-Gruppe-1.Tests
+dotnet test
+```
+
+### Brukervennlighetstest
+
+[Oppsett, testere og resultater legges inn her.]
+
+
+# Bruk av kunstig intelligens (KI/AI) under prosjektet
+Vi har brukt KI som et støtteverktøy gjennom prosjektet. Vi har ikke brukt KI for å generere ferdig tekst eller kode (unntatt enhetstestene og oversetting av frontend, se under), men heller som læringsverktøy, til å skjønne hva oppgaven spør om, feilsøking og forklaring av feilmeldinger, men også om vi mangler noe i teksten, eller dokumentasjon.
 
 ## KI-Verktøy ##
 Disse har hovedsakelig blitt brukt til å forklare tekniske konsepter innenfor programmering, forstå feilmeldinger, videreutvikle ideer til systemets funksjonalitet.
 •	Claude, Sonnet 5/5.5
 •	GitHub Copilot
+Claude ble i tillegg brukt til å skrive enhetstestene og oversetting av frontend. Vi leste gjennom, kjørte og rettet testene og ordvalg før de ble tatt i bruk.
 
-Disse ble brukt for å vise til skrivefeil i tekst og omstrukturering, slik at alt blir gramatisk riktig.
+Disse ble brukt for å vise til skrivefeil i tekst og omstrukturering, slik at alt blir grammatisk riktig.
 •	ChatGPT
 •	Microsoft Copilot
 
@@ -146,6 +170,12 @@ Vi har selv vurdert, tilpasset og testet forslagene fra KI før implementasjon. 
 •	Hvorfor vil ikke webapplikasjonen kjøre?
 
 •   Gi meg tilbakemelding på besvarelse ifht. oppgavetekst
+
+•	Legg til enhetstesting
+
+•	Reduser antall tester til et antall vi kan lese og forstå
+
+•   Kan du oversette frontenden fra Engelsk til Norsk?
 
 ## Refleksjon ##
 Alle forslag fra KI ble vurdert og testet før det ble tatt i bruk. KI ble brukt som støtte for læring og problemløsning, ikke som erstatning for eget arbeid. Gruppen hadde selv ansvaret for implementasjon og endelige beslutninger.
