@@ -2,7 +2,43 @@
 
 @{
     ViewData["Title"] = "Ressurser";
-    string StatusLabel(string? statusValue) => statusValue switch { "active" => "Aktiv", "new" => "Ny", "under_review" => "Vurderes", "assigned" => "Tildelt", "resolved" => "Løst", "cancelled" => "Kansellert", "rejected" => "Avvist", "available" => "Tilgjengelig", "unavailable" => "Utilgjengelig", "withdrawn" => "Trukket tilbake", _ => statusValue ?? "" };
+    string StatusLabel(string? statusValue) => statusValue switch
+    {
+        "active" => "Aktiv",
+        "new" => "Ny",
+        "under_review" or "proposed" => "Vurderes",
+        "assigned" or "accepted" => "Tildelt",
+        "resolved" => "Løst",
+        "cancelled" => "Kansellert",
+        "rejected" or "declined" => "Avslått",
+        "completed" => "Fullført",
+        "available" => "Tilgjengelig",
+        "unavailable" => "Utilgjengelig",
+        "withdrawn" => "Trukket tilbake",
+        _ => statusValue ?? ""
+    };
+    string StatusClass(string? statusValue) => statusValue switch
+    {
+        "accepted" or "assigned" => "status-assigned",
+        "proposed" or "under_review" => "status-under-review",
+        "declined" or "rejected" => "status-rejected",
+        "completed" or "resolved" => "status-completed",
+        "available" => "status-available",
+        "unavailable" or "withdrawn" => "status-unavailable",
+        "new" => "status-new",
+        _ => ""
+    };
+    string StatusIcon(string? statusValue) => statusValue switch
+    {
+        "accepted" or "assigned" => "bi-check-circle-fill",
+        "proposed" or "under_review" => "bi-hourglass-split",
+        "declined" or "rejected" => "bi-x-circle-fill",
+        "completed" or "resolved" => "bi-check2-all",
+        "available" => "bi-box-seam",
+        "unavailable" or "withdrawn" => "bi-box-seam",
+        "new" => "bi-circle",
+        _ => "bi-info-circle"
+    };
     var categories = ViewBag.Categories as List<H_st_2026_Gruppe_1.Models.Category> ?? new();
     var statuses = Model.Resources
         .Select(resource => resource.Status)
@@ -19,6 +55,14 @@
             <p class="page-intro">Oversikt over ressurser.</p>
         </div>
     </div>
+
+    @if (TempData["SuccessMessage"] is string successMessage)
+    {
+        <div class="resource-feedback" role="status">
+            <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+            <span>@successMessage</span>
+        </div>
+    }
 
     <form id="resourceFilterForm" method="get" asp-controller="Resources" asp-action="Index" class="dashboard-filter-bar">
         <div class="dashboard-filter-field">
@@ -94,36 +138,41 @@
         <div class="resource-list">
             @foreach (var resource in Model.Resources)
             {
-                var normalizedStatus = (resource.Status ?? "").Trim().ToLowerInvariant();
-                var statusClass = normalizedStatus switch
-                {
-                    "ny" or "new" => "status-new",
-                    "available" => "status-available",
-                    "assigned" => "status-assigned",
-                    "under_review" => "status-under-review",
-                    "rejected" => "status-rejected",
-                    "unavailable" => "status-unavailable",
-                    "withdrawn" => "status-withdrawn",
-                    _ => ""
-                };
-                var statusText = normalizedStatus switch
-                {
-                    "ny" or "new" => "Ny",
-                    "under_review" => "Vurderes",
-                    _ => StatusLabel(resource.Status)
-                };
+                var resourceMatches = Model.MatchStatuses
+                    .Where(match => match.ResourceId == resource.Id)
+                    .ToList();
+                var isWithdrawn = resource.Status == "withdrawn";
 
-                <article class="dashboard-card resource-card"
+                <article class="dashboard-card resource-card @(isWithdrawn ? "resource-card--withdrawn" : "")"
                          data-latitude="@resource.Latitude"
                          data-longitude="@resource.Longitude">
                     <div class="dashboard-card-header">
                         <h2>@resource.Name</h2>
-                        <span class="status-label @statusClass">@statusText</span>
+                        <span class="status-label @StatusClass(resource.Status)">
+                            <i class="bi @(isWithdrawn ? "bi-archive-fill" : StatusIcon(resource.Status))" aria-hidden="true"></i>
+                            @StatusLabel(resource.Status)
+                        </span>
                     </div>
 
                     <p class="dashboard-card-description">@resource.Description</p>
 
                     <dl class="dashboard-details resource-details">
+                        @foreach (var match in resourceMatches)
+                        {
+                            <div class="resource-match-detail">
+                                <dt>Behov: @match.NeedTitle</dt>
+                                <dd>
+                                    <span class="status-label @StatusClass(match.Status)">
+                                        <i class="bi @StatusIcon(match.Status)" aria-hidden="true"></i>
+                                        @StatusLabel(match.Status)
+                                    </span>
+                                    @if (!string.IsNullOrWhiteSpace(match.Comment))
+                                    {
+                                        <span class="resource-match-comment">@match.Comment</span>
+                                    }
+                                </dd>
+                            </div>
+                        }
                         <div>
                             <dt><i class="bi bi-tag" aria-hidden="true"></i> Type</dt>
                             <dd>@resource.Category?.CategoryName</dd>
@@ -160,14 +209,26 @@
                     </dl>
 
                     <div class="dashboard-card-footer">
-                        <form class="dashboard-card-actions" asp-controller="Home" asp-action="DeleteResource"
-                              asp-route-id="@resource.Id" method="post"
-                              data-confirm="Er du sikker på at du vil slette denne ressursen?">
-                            @Html.AntiForgeryToken()
+                        <div class="dashboard-card-actions">
                             <a asp-controller="Resources" asp-action="Index" asp-route-id="@resource.Id"
                                class="btn btn-sm btn-primary">Rediger</a>
-                            <button type="submit" class="btn btn-sm btn-danger">Slett</button>
-                        </form>
+                            @if (!isWithdrawn)
+                            {
+                                <form asp-controller="Home" asp-action="DeleteResource"
+                                      asp-route-id="@resource.Id" method="post"
+                                      data-confirm="Ressursen trekkes tilbake og blir ikke lenger tilgjengelig. Matchhistorikken beholdes.">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Trekk tilbake</button>
+                                </form>
+                            }
+                            else
+                            {
+                                <span class="resource-withdrawn-note">
+                                    <i class="bi bi-archive" aria-hidden="true"></i>
+                                    Trukket tilbake
+                                </span>
+                            }
+                        </div>
                     </div>
                 </article>
             }

@@ -3,6 +3,27 @@
 @{
     ViewData["Title"] = "Matching";
     var hasSelectedNeed = Model.UserNeeds.Any() && Model.Need.Id > 0;
+    var selectedNeedIsClosed = Model.Need.Status is "resolved" or "cancelled";
+    var matchFeedbackMessage = TempData["MatchError"] as string ?? TempData["MatchMessage"] as string;
+    var matchFeedbackType = TempData["MatchError"] is string
+        ? "error"
+        : TempData["MatchFeedbackType"] as string ?? "accepted";
+    var matchFeedbackIcon = matchFeedbackType switch
+    {
+        "proposed" => "bi-hourglass-split",
+        "declined" => "bi-x-circle-fill",
+        "error" => "bi-exclamation-circle-fill",
+        _ => "bi-check-circle-fill"
+    };
+    var matchFeedbackResourceId = int.TryParse(
+        TempData["MatchFeedbackResourceId"]?.ToString(),
+        out var parsedFeedbackResourceId)
+        ? parsedFeedbackResourceId
+        : (int?)null;
+    var matchFeedbackShownInCard = hasSelectedNeed
+        && !selectedNeedIsClosed
+        && matchFeedbackResourceId.HasValue
+        && Model.Matches.Any(match => match.Resource.Id == matchFeedbackResourceId.Value);
 }
 
 <section class="subpage">
@@ -12,16 +33,6 @@
             <p class="page-intro">Finn og vurder ressurser som kan dekke et registrert behov.</p>
         </div>
     </div>
-
-    @if (TempData["MatchMessage"] is string matchMessage)
-    {
-        <div class="alert-success" role="status">@matchMessage</div>
-    }
-    
-    @if (TempData["MatchError"] is string matchError)
-    {
-        <div class="alert-failed" role="alert">@matchError</div>
-    }
 
     @if (!Model.UserNeeds.Any())
     {
@@ -43,7 +54,7 @@
                         @foreach (var need in Model.UserNeeds)
                         {
                             <option value="@need.Id" selected="@(need.Id == Model.Need.Id)">
-                                @need.Title (hendelses-ID: @need.CrisisEventId)
+                                @need.Title (hendelses-ID: @need.CrisisEventId)@(need.Status is "resolved" or "cancelled" ? " – Lukket" : "")
                             </option>
                         }
                     </select>
@@ -94,11 +105,55 @@
                     </div>
                 }
             </div>
+
+            @if (hasSelectedNeed && !selectedNeedIsClosed)
+            {
+                <form asp-controller="PublicActor" asp-action="Matches" method="get" class="match-controls">
+                    <input type="hidden" name="needId" value="@Model.Need.Id" />
+                    <div class="match-radius-field">
+                        <label for="radiusKm" class="form-label">Avstand</label>
+                        <input type="range" name="radiusKm" id="radiusKm" value="@Model.RadiusKm"
+                               min="0" max="100" step="5" class="form-range" data-auto-submit />
+                        <span id="radiusKmValue" class="match-radius-value">
+                            @(Model.RadiusKm <= 0 ? "Alle avstander" : $"{Model.RadiusKm} km")
+                        </span>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-primary">Finn matcher</button>
+                    <button type="submit"
+                            formaction="@Url.Action("ShowAllResourcesInMatches", "PublicActor")"
+                            class="btn btn-sm btn-outline-secondary">
+                        Vis alle ressurser
+                    </button>
+                </form>
+            }
+            else if (hasSelectedNeed)
+            {
+                <p class="alert alert-warning mb-0" role="status">
+                    Dette behovet er lukket. Ressurser kan ikke lenger tildeles eller endres.
+                </p>
+            }
+
+            @if (matchFeedbackMessage != null && !matchFeedbackShownInCard)
+            {
+                <div class="match-feedback match-feedback--@matchFeedbackType"
+                     role="@(matchFeedbackType == "error" ? "alert" : "status")">
+                    <i class="bi @matchFeedbackIcon" aria-hidden="true"></i>
+                    <span>@matchFeedbackMessage</span>
+                </div>
+            }
         </div>
 
         @if (hasSelectedNeed)
         {
-            @if (!Model.Matches.Any())
+            @if (selectedNeedIsClosed)
+            {
+                <div class="empty-state-panel empty-state-panel--compact">
+                    <i class="bi bi-lock-fill" aria-hidden="true"></i>
+                    <h2>Behovet er lukket</h2>
+                    <p>Velg et åpent behov for å tildele eller endre ressursstatus.</p>
+                </div>
+            }
+            else if (!Model.Matches.Any())
             {
                 <div class="empty-state-panel empty-state-panel--compact">
                     <i class="bi bi-box-seam" aria-hidden="true"></i>
@@ -187,10 +242,23 @@
                                 </div>
                             </dl>
 
-                            <form asp-controller="PublicActor"
-                                  asp-action="UpdateResourceStatus"
-                                  method="post"
-                                  class="match-status-form">
+                            @if (matchFeedbackResourceId == match.Resource.Id && matchFeedbackMessage != null)
+                            {
+                                <div class="match-feedback match-feedback--@matchFeedbackType"
+                                     role="@(matchFeedbackType == "error" ? "alert" : "status")">
+                                    <i class="bi @matchFeedbackIcon" aria-hidden="true"></i>
+                                    <span>@matchFeedbackMessage</span>
+                                </div>
+                            }
+
+                            @*ASP.NET automatically saves anti-forgery fields for POST
+                            We are therefore not requred to put in  *@
+                            <form asp-controller="PublicActor" 
+                                asp-action="UpdateResourceStatus"
+                                method="post" 
+                                class="match-status-form">
+
+                            @* @Html.AntiForgeryToken() *@
 
                                 <input type="hidden" name="resourceId" value="@match.Resource.Id" />
                                 <input type="hidden" name="needId" value="@Model.Need.Id" />
