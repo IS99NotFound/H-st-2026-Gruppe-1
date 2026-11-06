@@ -158,22 +158,6 @@
                     <p class="dashboard-card-description">@resource.Description</p>
 
                     <dl class="dashboard-details resource-details">
-                        @foreach (var match in resourceMatches)
-                        {
-                            <div class="resource-match-detail">
-                                <dt>Behov: @match.NeedTitle</dt>
-                                <dd>
-                                    <span class="status-label @StatusClass(match.Status)">
-                                        <i class="bi @StatusIcon(match.Status)" aria-hidden="true"></i>
-                                        @StatusLabel(match.Status)
-                                    </span>
-                                    @if (!string.IsNullOrWhiteSpace(match.Comment))
-                                    {
-                                        <span class="resource-match-comment">@match.Comment</span>
-                                    }
-                                </dd>
-                            </div>
-                        }
                         <div>
                             <dt><i class="bi bi-tag" aria-hidden="true"></i> Type</dt>
                             <dd>@resource.Category?.CategoryName</dd>
@@ -196,6 +180,10 @@
                             </dd>
                         </div>
                         <div>
+                            <dt><i class="bi bi-clock-history" aria-hidden="true"></i> Registrert</dt>
+                            <dd>@resource.RegisteredAt.ToString("dd.MM.yyyy HH:mm")</dd>
+                        </div>
+                        <div>
                             <dt><i class="bi bi-calendar-event" aria-hidden="true"></i> Gyldig fra</dt>
                             <dd>@resource.AvailableFrom.ToString("dd.MM.yyyy")</dd>
                         </div>
@@ -203,11 +191,26 @@
                             <dt><i class="bi bi-calendar-x" aria-hidden="true"></i> Utløpsdato</dt>
                             <dd>@(resource.ExpirationDate?.ToString("dd.MM.yyyy") ?? "—")</dd>
                         </div>
-                        <div>
-                            <dt><i class="bi bi-clock-history" aria-hidden="true"></i> Registrert</dt>
-                            <dd>@resource.RegisteredAt.ToString("dd.MM.yyyy HH:mm")</dd>
-                        </div>
                     </dl>
+
+                    @if (resourceMatches.Any())
+                    {
+                        <div class="resource-assigned-matches">
+                            @foreach (var match in resourceMatches)
+                            {
+                                <div class="resource-assigned-match">
+                                    <span>
+                                        <i class="bi bi-link-45deg" aria-hidden="true"></i>
+                                        Tildelt til behov: <strong>@match.NeedTitle</strong>
+                                    </span>
+                                    @if (!string.IsNullOrWhiteSpace(match.Comment))
+                                    {
+                                        <span class="resource-match-comment">@match.Comment</span>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
 
                     <div class="dashboard-card-footer">
                         <div class="dashboard-card-actions">

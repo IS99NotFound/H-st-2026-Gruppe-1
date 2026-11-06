@@ -4,6 +4,9 @@
     ViewData["Title"] = "Behov";
     var categories = ViewBag.Categories as List<H_st_2026_Gruppe_1.Models.Category> ?? new();
     var incidents = ViewBag.Incidents as List<H_st_2026_Gruppe_1.Models.Incident> ?? new();
+    var matchStatuses = ViewBag.NeedMatchStatuses
+        as List<H_st_2026_Gruppe_1.Models.NeedMatchStatusViewModel>
+        ?? new();
     var currentUserId = int.TryParse(
         User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value,
         out var parsedUserId)
@@ -106,22 +109,6 @@
                                     <span>Akutt behov</span>
                                 </span>
                             }
-                            @{
-                                //Coverterts the status value stored in the database (example: "under_review")
-                                //into a readable text for the user. Unknown values are shown as they are.
-                                var needStatusText = need.Status switch
-                                {
-                                    "new" => "Ny",
-                                    "under_review" => "Vurderes",
-                                    "assigned" => "Tildelt",
-                                    "resolved" => "Løst",
-                                    "cancelled" => "Kansellert",
-                                    "rejected" => "Avvist",
-                                    _ => need.Status
-                                };
-                            }
-                        @*Shows the current status of the need*@
-                            <span class ="status-label">@needStatusText</span>
                         </div>
                     </div>
 
@@ -163,6 +150,45 @@
                             <dd>@need.RegisteredAt.ToString("dd.MM.yyyy HH:mm")</dd>
                         </div>
                     </dl>
+
+                    @{
+                        var needMatches = matchStatuses
+                            .Where(match => match.NeedId == need.Id)
+                            .ToList();
+                    }
+                    @if (needMatches.Any())
+                    {
+                        <div class="resource-assigned-matches">
+                            <div class="summary-label">RESSURSER TILKNYTTET BEHOVET</div>
+                            @foreach (var match in needMatches)
+                            {
+                                var matchStatusText = match.Status == "accepted"
+                                    ? "Tildelt"
+                                    : "Vurderes";
+                                var matchStatusClass = match.Status == "accepted"
+                                    ? "status-assigned"
+                                    : "status-under-review";
+                                var matchStatusIcon = match.Status == "accepted"
+                                    ? "bi-check-circle-fill"
+                                    : "bi-hourglass-split";
+
+                                <div class="resource-assigned-match">
+                                    <strong>
+                                        <i class="bi bi-box-seam" aria-hidden="true"></i>
+                                        @match.ResourceName
+                                    </strong>
+                                    <span class="status-label @matchStatusClass">
+                                        <i class="bi @matchStatusIcon" aria-hidden="true"></i>
+                                        @matchStatusText
+                                    </span>
+                                    <div class="resource-match-location">
+                                        <i class="bi bi-geo-alt" aria-hidden="true"></i>
+                                        @(string.IsNullOrWhiteSpace(match.LocationName) ? "Sted ikke oppgitt" : match.LocationName)
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
 
                     <div class="dashboard-card-footer">
                         @if (need.PublicActorId == currentUserId)
