@@ -142,6 +142,19 @@ dotnet test
 
 [Oppsett, testere og resultater legges inn her.]
 
+# Test scenarioer
+En essensiell del av utviklingsprosessen er å teste produktet både underveis og etterpå. Det er viktig at en både avgrenser hva en skal teste, samtidig som at det holdes relevant til hva brukerne skal gjøre i applikasjonen. Ved å lage test scenarier kan en sette spesifikke deler av applikasjonen i rampelyset og fokusere på det som fungerer eller ikke fungerer. Det er også mulig at en avslører flere problemstillinger enn en originalt hadde forestilt seg, noe som kan være enklere å fikse i de tidligere fasene enn ved slutten av produksjonen. Hvis en kun tester avsluttende kan konsekvensene bli mye større da det kan oppstå en domino-effekt der en feil leder til flere feil videre i systemet.
+
+##	Scenario - Forventninger - Resultat - Status
+| # |	Test type | Scenario | Forventet resultat | Faktisk resultat | Status |
+|---|------------|--------------------|------------------|--------|
+| 1	| Systemtest | Data eksisterer fortsatt etter omstart | Data er der etter omstart | Opprettet ressurs dukket opp etter å lukket og startet applikasjon på nytt | Ok |
+| 2	| Systemtest | Brukerkonto opprettes og lagres | Brukerkonto kan sees i bruker tabellen | Tabell tilhørende MariaDB viser ny bruker | Ok |
+| 3	| Systemtest | Bruker kan opprette ressurs | Ressurs kommer i oversikt etter skjema er fylt ut | Ressurs ble opprettet og er synlig i oversikt og på kart | Ok |
+| 4	| Systemtest | Hendelse kan opprettes | Hendelse er synlig for alle | Hendelse var synlig for alle brukergrupper | Ok |
+| 5	| Systemtest | Mobil versjon kan gjøre det samme som PC versjon | Alle knapper fungerer likt på mobilversjon | Mobilversjon gjør det samme som webløsning | Ok |
+| 6 | Sikkerhetstest | Brukersider er ikke tilgjengelig uten å logge på | Feilmelding når en prøver å navigere til bruker side | Ingen direkte feilmelding, men en blir returnert til pålogging | Ok, kan legge inn feilmelding etterhvert |
+| 7 | Sikkerhetstest | Offentlig aktør side er ikke tilgjengelig når du er logget inn som bruker | Feilmelding på offentlig aktør sider | Bruker blir logget ut når de prøver å gå til offentlig aktør side | Delvis ok, burde være feilmelding i stedet for utlogging |
 
 # Bruk av kunstig intelligens (KI/AI) under prosjektet
 Vi har brukt KI som et støtteverktøy gjennom prosjektet. Vi har ikke brukt KI for å generere ferdig tekst eller kode (unntatt enhetstestene og oversetting av frontend, se under), men heller som læringsverktøy, til å skjønne hva oppgaven spør om, feilsøking og forklaring av feilmeldinger, men også om vi mangler noe i teksten, eller dokumentasjon.
