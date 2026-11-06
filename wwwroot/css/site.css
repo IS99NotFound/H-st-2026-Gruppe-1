@@ -2593,6 +2593,14 @@ html[data-theme="light"] .registration-modal .btn-close {
     font-size: 0.78rem;
 }
 
+.registration-validation.validation-summary-valid {
+    display: none;
+}
+
+.registration-validation ul {
+    margin-bottom: 1rem;
+}
+
 .auth-password-requirements {
     grid-column: 1 / -1;
     margin: -4px 0 10px;

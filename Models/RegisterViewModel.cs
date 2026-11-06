@@ -31,9 +31,12 @@ public class RegisterViewModel
 
     [Required(ErrorMessage = "Passord er påkrevd.")]
     [DataType(DataType.Password)]
-    [StringLength(100, MinimumLength = 8, ErrorMessage = "Passord må være mellom 8 og 100 tegn.")]
+    [StringLength(100, MinimumLength = 8, ErrorMessage = "Passord må være minst 8 tegn.")]
+    [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).+$",
+        ErrorMessage = "Passordet må inneholde liten bokstav, stor bokstav, tall og spesialtegn.")]
     public string Password { get; set; } = "";
 
+    [Required(ErrorMessage = "Bekreft passordet.")]
     [DataType(DataType.Password)]
     [Compare(nameof(Password), ErrorMessage = "Passordene stemmer ikke overens.")]
     public string ConfirmPassword { get; set; } = "";
