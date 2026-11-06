@@ -10,22 +10,22 @@ VALUES
 -- Passwords are intentionally simple for the local demo environment.
 -- They are stored as ASP.NET Core Identity hashes, not as plain text.
 INSERT INTO `User`
-    (UserID, UserName, NormalizedUserName, Email, NormalizedEmail, PasswordHash,
+    (UserID, UserName, NormalizedUserName, Email, NormalizedEmail, PasswordHash, SecurityStamp,
      Name, Role, PhoneNumber) VALUES
     (1, 'hv07',    'HV07',    'hv07@demo.local',    'HV07@DEMO.LOCAL',
-     'AQAAAAIAAYagAAAAECMHLZZ9Bt6bTZcX9HfqKmmHN8b8+1fIVkgW8Q1QSNAOZ6L05J5jjsjD7xsUW65fDw==',
+     'AQAAAAIAAYagAAAAECMHLZZ9Bt6bTZcX9HfqKmmHN8b8+1fIVkgW8Q1QSNAOZ6L05J5jjsjD7xsUW65fDw==', UUID(),
      'Elias Pedersen', 'PublicActor', '+47 37 00 07 07'),
     (2, 'person1', 'PERSON1', 'person1@demo.local', 'PERSON1@DEMO.LOCAL',
-     'AQAAAAIAAYagAAAAEKA8eMs0laJ0qQrSzhxhLHPln4t26D5w+NJ5zcZQMgcqt3JCjnlXl97Asvapxlatzw==',
+     'AQAAAAIAAYagAAAAEKA8eMs0laJ0qQrSzhxhLHPln4t26D5w+NJ5zcZQMgcqt3JCjnlXl97Asvapxlatzw==', UUID(),
      'Anders Berg', 'CivilianProvider', '+47 900 10 101'),
     (4, 'person2', 'PERSON2', 'person2@demo.local', 'PERSON2@DEMO.LOCAL',
-     'AQAAAAIAAYagAAAAEPrOexVselbeJ7AmKqBrM3827Yl1kP83vvEOaS/0LVxmSPWIkYwCz+UyY+tgrwg8iA==',
+     'AQAAAAIAAYagAAAAEPrOexVselbeJ7AmKqBrM3827Yl1kP83vvEOaS/0LVxmSPWIkYwCz+UyY+tgrwg8iA==', UUID(),
      'Nora Solheim', 'CivilianProvider', '+47 900 10 102'),
     (6, 'hv08',    'HV08',    'hv08@demo.local',    'HV08@DEMO.LOCAL',
-     'AQAAAAIAAYagAAAAEGuYE8wZDQYvvgWAPSNOENfy6idFk5cuq/ZE7CpIawxe+/hiBMM0Y8Y4bvatL5mF3g==',
+     'AQAAAAIAAYagAAAAEGuYE8wZDQYvvgWAPSNOENfy6idFk5cuq/ZE7CpIawxe+/hiBMM0Y8Y4bvatL5mF3g==', UUID(),
      'Ingrid Haugland', 'PublicActor', '+47 51 00 08 08'),
     (7, 'hv072',   'HV072',   'hv072@demo.local',   'HV072@DEMO.LOCAL',
-     'AQAAAAIAAYagAAAAECeFp8v3nCI4Mn+VZQKZTv53pCfoclzcK6U2OA+Tcc/+/xNEuN8MFoLA0bb4pd27hw==',
+     'AQAAAAIAAYagAAAAECeFp8v3nCI4Mn+VZQKZTv53pCfoclzcK6U2OA+Tcc/+/xNEuN8MFoLA0bb4pd27hw==', UUID(),
      'Sindre Vassbotn', 'PublicActor', '+47 37 00 07 72');
 
 INSERT INTO PublicActor (PublicActorID, OrganizationID) VALUES
