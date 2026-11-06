@@ -192,12 +192,45 @@ Det brukerne hadde til felles var at alle slet med å finne ut hvor man registre
 - Tydelig knapp for å registrere ressurs og behov på listesidene.
 - Enklere navn på de forskjellige knappene, selv om case-beskrivelsen bruker dem. 
 
+#### Test 2
+
+Testere:
+- Tester 4: IT-løsningsarkitekt, 51 år
+- Tester 5: IT-systemutvikler, 49 år
+
+Testerne gjennomførte de samme oppgavene som i Test 1. Begge vurderte hvor lett systemet var å bruke til **4 av 5**. De syntes hjemmesiden var oversiktlig, responsivt, fargene behagelige og at løsningen ga en god brukeropplevelse. Begge opplevde at menyvalgene øverst og forklaringen av fargekodene nederst var lettest å forstå. De beskrev også opplevelsen som litt «Airbnb-aktig».
+
+**Funn i Test 2**
+
+Det vanskeligste var å registrere ressurser og behov, og å forstå hva selve testoppgaven var. Ved registrering, lette begge testerne først etter registrering på sidene for Ressurser og Behov, men måtte gå tilbake til kartet for å finne registreringsfunksjonen. IT-løsningsarktekt bruke ett par min på å finne frem til løsningen her i første omgang, men synes den fungerte fint. Likevel ble det tydeliggjort at det også burde finnes en knapp for registrering inne på siden i tillegg, gjerne med samme/liknende popup-registreing skjema. Ved registrering av behov opplevdes det også som unødvendig vanskelig at en hendelse måtte opprettes først.
+
+Tilbakemeldingene fra testerne var:
+
+- «Registrer ressurs» og tilsvarende registrering for behov bør også være tilgjengelig direkte fra de respektive menyvalgene.
+- Nye ressurser og behov bør vises øverst i listene, gjerne med tidspunkt for registrering (som for eksempel "just now").
+- Dropdown-listene bør ha norsk tekst og sorteres alfabetisk. Det bør også vurderes om alternativer som f.eks. «observasjon» hører hjemme blant ressursene.
+- Stedsnavn, e-postadresse og telefonnummer bør kunne fylles ut automatisk. Brukeren må fortsatt kunne endre kontaktinformasjonen ved behov med tanke på at brukeren selv ikke nødvendigvis alltid er kontaktpersonen.
+- Feilmeldinger bør være på norsk, slik at språket er konsistent i hele løsningen.
+- Søkeknappen på Ressurser-siden åpner redigeringsskjema for en eksisterende ressurs, dette må fikses.
+- Det bør være tydeligere hvor brukeren selv befinner seg på kartet, og tilfluktsted gjorde kartet litt rotete. IT-systemutvikler påpeker at vi kan bruke leafelet sin funksjon for å vise slike ting i layers knappen som allerede eksisterer slik at man selv "velger" når dette skal vises.
+- Tilgjengelige ressurser bør kunne vises med adresse, og ikke koordinater.
+- «Eksporter»-knappen tar mye plass i feeden og bør flyttes til Rapporter. Feeden er allerede "liten" som den er. Løsningsarkitekt, 51, påpeker i denne sammenheng at en filterknapp for å minske filtreringen under søkefeltet ville gjort det litt ryddigere.
+
+**Hva testerne mente fungerte godt**
+
+- Oversiktlig hjemmeside og behagelige farger.
+- Menyvalgene øverst var enkle å forstå.
+- Fargekodene nederst var godt forklart.
+- Likte layers-knapp, ønsker likevel at kartvalget skal huskes og ikke fjernes etter at man går inn og ut av en underside.
+- Registreringsskjemaene var i hovedsak enkle å fylle ut når testerne først fant dem.
+- Begge testerne opplevde løsningen som brukervennlig og vurderte den til kategori 4 av 5.
+
 # Test scenarioer
 En essensiell del av utviklingsprosessen er å teste produktet både underveis og etterpå. Det er viktig at en både avgrenser hva en skal teste, samtidig som at det holdes relevant til hva brukerne skal gjøre i applikasjonen. Ved å lage test scenarier kan en sette spesifikke deler av applikasjonen i rampelyset og fokusere på det som fungerer eller ikke fungerer. Det er også mulig at en avslører flere problemstillinger enn en originalt hadde forestilt seg, noe som kan være enklere å fikse i de tidligere fasene enn ved slutten av produksjonen. Hvis en kun tester avsluttende kan konsekvensene bli mye større da det kan oppstå en domino-effekt der en feil leder til flere feil videre i systemet.
 
 ##	Scenario - Forventninger - Resultat - Status
 | # |	Test type | Scenario | Forventet resultat | Faktisk resultat | Status |
-|---|------------|--------------------|------------------|--------|
+|---|------------|--------------------|------------------|------------------|--------|
 | 1	| Systemtest | Data eksisterer fortsatt etter omstart | Data er der etter omstart | Opprettet ressurs dukket opp etter å lukket og startet applikasjon på nytt | Ok |
 | 2	| Systemtest | Brukerkonto opprettes og lagres | Brukerkonto kan sees i bruker tabellen | Tabell tilhørende MariaDB viser ny bruker | Ok |
 | 3	| Systemtest | Bruker kan opprette ressurs | Ressurs kommer i oversikt etter skjema er fylt ut | Ressurs ble opprettet og er synlig i oversikt og på kart | Ok |
