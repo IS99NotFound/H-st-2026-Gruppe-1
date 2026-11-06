@@ -19,6 +19,10 @@
     const exportButtons = document.querySelectorAll("[data-feed-export]");
     const exportBackButton = document.querySelector("[data-feed-export-back]");
     const items = Array.from(document.querySelectorAll("[data-feed-item]"));
+    const feed = document.querySelector(".operational-feed");
+    const mapArea = document.querySelector(".map-area");
+    const mapLegendToggle = document.querySelector("[data-map-legend-toggle]");
+    const mapLegendContent = document.querySelector(".map-color-legend-content");
     // State: the chosen tab (all, resource, need or incident), the position of the user, and map markers.
     let activeType = "all";
     let currentLocation = null;
@@ -26,6 +30,27 @@
     let focusedFeedMarker = null;
 
     if (!list || !search || !radius) return;
+
+    const closeMapLegend = () => {
+        if (!mapLegendToggle || !mapLegendContent) return;
+
+        mapLegendContent.classList.add("is-collapsed");
+        mapLegendToggle.setAttribute("aria-expanded", "false");
+        mapLegendToggle.querySelector("i")?.classList.remove("bi-chevron-down");
+        mapLegendToggle.querySelector("i")?.classList.add("bi-chevron-up");
+    };
+
+    if (feed && mapArea && "ResizeObserver" in window) {
+        const updateMapOverlayPosition = () => {
+            mapArea.style.setProperty(
+                "--operational-feed-height",
+                `${feed.getBoundingClientRect().height}px`
+            );
+        };
+        const feedResizeObserver = new ResizeObserver(updateMapOverlayPosition);
+        feedResizeObserver.observe(feed);
+        updateMapOverlayPosition();
+    }
 
     function addFeedMarkers() {
         const map = window.resqMap;
@@ -281,6 +306,7 @@
         const isOpen = list.classList.toggle("is-open");
         resultsToggle.setAttribute("aria-expanded", String(isOpen));
         resultsToggle.classList.toggle("is-open", isOpen);
+        if (isOpen) closeMapLegend();
     });
     search.addEventListener("input", render);
     radius.addEventListener("change", render);

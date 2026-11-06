@@ -479,7 +479,7 @@ html[data-theme="light"] .layers-menu-control.leaflet-control-layers-expanded {
     .map-color-legend {
         top: auto;
         right: 12px;
-        bottom: 88px;
+        bottom: max(88px, calc(var(--operational-feed-height, 0px) + 12px));
         left: auto;
         z-index: 1200;
         max-width: calc(100% - 24px);
