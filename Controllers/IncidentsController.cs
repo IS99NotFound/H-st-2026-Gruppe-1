@@ -14,8 +14,32 @@ public class IncidentsController : Controller
     {
         _db = db;
     }
+
+    private int? GetCurrentOrganizationId()
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (!int.TryParse(userIdClaim, out var currentUserId))
+        {
+            return null;
+        }
+
+        return _db.PublicActors
+            .Where(actor => actor.PublicActorId == currentUserId)
+            .Select(actor => (int?)actor.OrganizationId)
+            .FirstOrDefault();
+    }
+
+    private bool BelongsToCurrentOrganization(int publicActorId)
+    {
+        var organizationId = GetCurrentOrganizationId();
+
+        return organizationId.HasValue &&
+            _db.PublicActors.Any(actor =>
+                actor.PublicActorId == publicActorId &&
+                actor.OrganizationId == organizationId.Value);
+    }
     
-    // If an id is given, that incident is opened for editing.
     public IActionResult Index(
         string? search,
         string? status,
@@ -29,8 +53,9 @@ public class IncidentsController : Controller
         if (id.HasValue)
         {
             var incident = incidents.FirstOrDefault(item => item.IncidentId == id.Value);
-            // The incident must exist, and only a public actor may edit it.
-            if (incident == null || !User.IsInRole("PublicActor"))
+            if (incident == null ||
+                !User.IsInRole("PublicActor") ||
+                !BelongsToCurrentOrganization(incident.PublicActorId))
             {
                 return NotFound();
             }
@@ -46,7 +71,7 @@ public class IncidentsController : Controller
     }
 
     [HttpPost]
-    [Authorize(Roles = "PublicActor, Administrator")]
+    [Authorize(Roles = "PublicActor")]
     [ValidateAntiForgeryToken]
     public IActionResult Create(IncidentIndexViewModel model)
     {
@@ -64,14 +89,9 @@ public class IncidentsController : Controller
             return Unauthorized();
         }
 
-        // An administrator has no public actor id of their own, so the demo id is used.
-        var publicActorId = User.IsInRole("Administrator")
-            ? DemoDefaults.PublicActorId
-            : currentUserId;
-
         var incident = new Incident
         {
-            PublicActorId = publicActorId,
+            PublicActorId = currentUserId,
             Title = createModel.Title.Trim(),
             NormalizedTitle = NormalizeTitle(createModel.Title),
             IncidentType = createModel.IncidentType,
@@ -87,7 +107,6 @@ public class IncidentsController : Controller
         _db.Incidents.Add(incident);
         _db.SaveChanges();
 
-        // TempData shows a short message on the next page.
         TempData["IncidentCreated"] = "Hendelsen ble registrert.";
         return RedirectToAction(nameof(Index));
     }
@@ -103,7 +122,7 @@ public class IncidentsController : Controller
             return NotFound();
         }
 
-        if (!User.IsInRole("PublicActor"))
+        if (!BelongsToCurrentOrganization(incident.PublicActorId))
         {
             return Forbid();
         }
@@ -133,9 +152,8 @@ public class IncidentsController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    // Marks an incident as resolved. Only the owner or an administrator can do this.
     [HttpPost]
-    [Authorize(Roles = "PublicActor, Administrator")]
+    [Authorize(Roles = "PublicActor")]
     [ValidateAntiForgeryToken]
     public IActionResult MarkAsResolved(int incidentId)
     {
@@ -144,15 +162,7 @@ public class IncidentsController : Controller
         {
             return NotFound();
         }
-        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (!int.TryParse(userIdClaim, out var currentUserId))
-        {
-            return Unauthorized();
-        }
-
-        if (!User.IsInRole("Administrator") &&
-            incident.PublicActorId != currentUserId)
+        if (!BelongsToCurrentOrganization(incident.PublicActorId))
         {
             return Forbid();
         }
@@ -165,7 +175,7 @@ public class IncidentsController : Controller
     }
 
     [HttpPost]
-    [Authorize(Roles = "PublicActor, Administrator")]
+    [Authorize(Roles = "PublicActor")]
     [ValidateAntiForgeryToken]
     public IActionResult Reactivate(int incidentId)
     {
@@ -175,15 +185,7 @@ public class IncidentsController : Controller
             return NotFound();
         }
         
-        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (!int.TryParse(userIdClaim, out var currentUserId))
-        {
-            return Unauthorized();
-        }
-
-        if (!User.IsInRole("Administrator") &&
-            incident.PublicActorId != currentUserId)
+        if (!BelongsToCurrentOrganization(incident.PublicActorId))
         {
             return Forbid();
         }
@@ -206,7 +208,6 @@ public class IncidentsController : Controller
 
         if (!string.IsNullOrWhiteSpace(search))
         {
-            // The search is not case sensitive because both sides are lower case.
             var normalizedSearch = NormalizeTitle(search);
             incidents = incidents.Where(incident => incident.NormalizedTitle.Contains(normalizedSearch));
         }
@@ -231,7 +232,6 @@ public class IncidentsController : Controller
             incidents = incidents.Where(incident => incident.CreatedAt < endDate.Value.Date.AddDays(1));
         }
 
-        // Active incidents first, resolved ones last. Newest first inside each group.
         return incidents
             .OrderBy(incident => incident.Status == "resolved" ? 1 : 0)
             .ThenByDescending(incident => incident.CreatedAt)

@@ -64,7 +64,6 @@ public class ResourceDashboard
 	public int TotalResources { get; set; }
 	public int ExpiringSoonCount { get; set; }
 	public int ExpiredCount { get; set; }
-
 	public List<ResourceEntry> Resources { get; set; } = new();
 	public string? Search { get; set; }
 	public string? Status { get; set; }

@@ -145,7 +145,7 @@
             fillOpacity: 0.9
         }).addTo(map);
         map.setView([lat, lng], 14);
-        focusedFeedMarker.bindPopup(item.dataset.feedTitle || "Selected location").openPopup();
+        focusedFeedMarker.bindPopup(item.dataset.feedTitle || "Valgt sted").openPopup();
     }
 
     // Puts a value in quotes for a CSV file. A quote inside the value becomes two quotes.

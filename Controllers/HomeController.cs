@@ -11,11 +11,8 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace H_st_2026_Gruppe_1.Controllers;
 
-// Pages for public actors: the dashboard, their needs, and matching resources to needs.
 public class PublicActorController : Controller
 {
-    // Reads the id of the logged in user from the login cookie.
-    // Gives null if it is missing or not a number.
     private int? GetCurrentUserId()
     {
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -23,6 +20,28 @@ public class PublicActorController : Controller
         return int.TryParse(userIdClaim, out var userId)
             ? userId
             : null;
+    }
+
+    private int? GetCurrentOrganizationId()
+    {
+        var currentUserId = GetCurrentUserId();
+
+        return currentUserId.HasValue
+            ? _db.PublicActors
+                .Where(actor => actor.PublicActorId == currentUserId.Value)
+                .Select(actor => (int?)actor.OrganizationId)
+                .FirstOrDefault()
+            : null;
+    }
+
+    private bool BelongsToCurrentOrganization(int publicActorId)
+    {
+        var organizationId = GetCurrentOrganizationId();
+
+        return organizationId.HasValue &&
+            _db.PublicActors.Any(actor =>
+                actor.PublicActorId == publicActorId &&
+                actor.OrganizationId == organizationId.Value);
     }
     
     private readonly AppDbContext _db;
@@ -85,7 +104,7 @@ public class PublicActorController : Controller
     // API-endpoint like JavaScript is used to fetch fresh data.
     //includeUnavailable is set to false as a standard
     [HttpGet]
-    [Authorize(Roles = "PublicActor,Administrator")]
+    [Authorize(Roles = "PublicActor")]
     [ResponseCache(
         Duration = 0,
         Location = ResponseCacheLocation.None,
@@ -119,6 +138,7 @@ public class PublicActorController : Controller
         ViewBag.Incidents = _db.Incidents.OrderBy(i => i.IncidentId).ToList();
     }
     
+    [Authorize(Roles = "PublicActor")]
     public IActionResult DashboardIndex(int? id)
     {
         if (!CanRegisterNeed())
@@ -138,14 +158,7 @@ public class PublicActorController : Controller
                 return RedirectToAction(nameof(MatchesIndex));
             }
 
-            var currentUserId = GetCurrentUserId();
-
-            if (currentUserId is null)
-            {
-                return Unauthorized();
-            }
-
-            if (!User.IsInRole("Administrator") && need.PublicActorId != currentUserId.Value)
+            if (!BelongsToCurrentOrganization(need.PublicActorId))
             {
                 return Forbid();
             }
@@ -215,7 +228,7 @@ public class PublicActorController : Controller
     }
     
     
-    [Authorize(Roles = "PublicActor,Administrator")]
+    [Authorize(Roles = "PublicActor")]
     public IActionResult NeedsIndex(
         NeedPriorityEnum? priority,
         int? category,
@@ -227,17 +240,18 @@ public class PublicActorController : Controller
         
         var results = _db.Needs.Include(need => need.CategoryInfo).AsQueryable();
 
-        if (!User.IsInRole("Administrator"))
+        var organizationId = GetCurrentOrganizationId();
+
+        if (organizationId is null)
         {
-            var currentUserId = GetCurrentUserId();
-
-            if (currentUserId is null)
-            {
-                return Unauthorized();
-            }
-
-            results = results.Where(need => need.PublicActorId == currentUserId.Value);
+            throw new InvalidOperationException(
+                "The authenticated PublicActor is missing an organization.");
         }
+
+        results = results.Where(need =>
+            _db.PublicActors.Any(actor =>
+                actor.PublicActorId == need.PublicActorId &&
+                actor.OrganizationId == organizationId.Value));
 
         if (priority.HasValue)
         {
@@ -284,7 +298,6 @@ public class PublicActorController : Controller
         return View(sortedResults);
     }
     
-    // A lower number is shown first. Critical needs come before planned needs.
     private int GetPriorityOrder(NeedPriorityEnum priority)
     {
         return priority switch
@@ -295,15 +308,11 @@ public class PublicActorController : Controller
         };
     }
 
-    private bool CanRegisterNeed()
-    {
-        return User.IsInRole("PublicActor") || User.IsInRole("Administrator");
-    }
+    private bool CanRegisterNeed() => User.IsInRole("PublicActor");
 
 
-    // Saves a new need, or updates an existing need if the form has an id.
-    [HttpPost] 
-    [Authorize(Roles = "PublicActor,Administrator")] 
+    [HttpPost]
+    [Authorize(Roles = "PublicActor")]
     [ValidateAntiForgeryToken]
     public IActionResult RegisterNeed(ResourceNeed need)
     {
@@ -331,15 +340,7 @@ public class PublicActorController : Controller
                 return NotFound();
             }
 
-            var currentUserId = GetCurrentUserId();
-
-            if (currentUserId is null)
-            {
-                return Unauthorized();
-            }
-
-            if (!User.IsInRole("Administrator") &&
-                existingNeed.PublicActorId != currentUserId.Value)
+            if (!BelongsToCurrentOrganization(existingNeed.PublicActorId))
             {
                 return Forbid();
             }
@@ -360,7 +361,7 @@ public class PublicActorController : Controller
                 existingNeed.Deadline =need.Deadline;
                 existingNeed.Priority = need.Priority;
                 existingNeed.RegisteredAt = DateTime.Now;
-               // existingNeed.Status = need.Status; 
+               // existingNeed.Status = need.Status;
                // <- Bug, no status-field. After changes, status will always be new
                 _db.SaveChanges();
             }
@@ -389,13 +390,14 @@ public class PublicActorController : Controller
         return RedirectToAction("NeedsIndex");
     }
 
-    // Shows the matching page for a need. If no need is chosen, the newest need is used.
+    [Authorize(Roles = "PublicActor")]
     public IActionResult MatchesIndex(int? needId, double radiusKm = 0)
     {
         return View("MatchesIndex", BuildMatchViewModel(needId, radiusKm));
     }
     
     // Shows the resources within radiusKm of a need, nearest first.
+    [Authorize(Roles = "PublicActor")]
     public IActionResult Matches(int? needId, double radiusKm = 0)
     {
         var model = BuildMatchViewModel(needId, radiusKm);
@@ -407,7 +409,7 @@ public class PublicActorController : Controller
         return View("MatchesIndex", model);
     }
     
-    // Same as Matches, but also shows resources from other categories.
+    [Authorize(Roles = "PublicActor")]
     public IActionResult ShowAllResourcesInMatches(int needId, double radiusKm = 0)
     {
         var model = BuildMatchViewModel(needId, radiusKm, allCategories: true);
@@ -425,12 +427,26 @@ public class PublicActorController : Controller
        //Will free room for resources if a need is set as resolved or deadline has passed
         _lifecycle.ReleaseFinishedAssignments();
 
-        var needs = _db.Needs.Include(need => need.CategoryInfo).ToList();
+        var needsQuery = _db.Needs.Include(need => need.CategoryInfo).AsQueryable();
+
+        var organizationId = GetCurrentOrganizationId();
+
+        if (organizationId is null)
+        {
+            throw new InvalidOperationException(
+                "The authenticated PublicActor is missing an organization.");
+        }
+
+        needsQuery = needsQuery
+            .Where(need => _db.PublicActors.Any(actor =>
+                actor.PublicActorId == need.PublicActorId &&
+                actor.OrganizationId == organizationId.Value));
+
+        var needs = needsQuery.ToList();
         var selectedNeed = needId.HasValue
             ? needs.FirstOrDefault(need => need.Id == needId.Value)
             : needs.OrderByDescending(need => need.Id).FirstOrDefault();
 
-        // A radius that makes no sense means "no limit" (0).
         if (!double.IsFinite(radiusKm) || radiusKm < 0)
         {
             radiusKm = 0;
@@ -481,13 +497,6 @@ public class PublicActorController : Controller
             match.Comment = record?.Comment;
         }
  
-        foreach (var match in model.Matches)
-        {
-            var record = records.FirstOrDefault(item => item.ResourceId == match.Resource.Id);
-            match.MatchStatus = record?.Status;
-            match.Comment = record?.Comment;
-        }
-
         return model;
     }
 
@@ -509,13 +518,7 @@ public class PublicActorController : Controller
             return NotFound();
         }
 
-        var currentUserId = GetCurrentUserId();
-        if (currentUserId is null)
-        {
-            return Unauthorized();
-        }
-
-        if (need.PublicActorId != currentUserId.Value)
+        if (!BelongsToCurrentOrganization(need.PublicActorId))
         {
             return Forbid();
         }
@@ -598,7 +601,6 @@ public class PublicActorController : Controller
         return RedirectToAction("Matches", new { needId });
     }
 
-    // Closes a need as resolved. Only the owner of the need can do this.
     [HttpPost]
     [Authorize(Roles = "PublicActor")]
     [ValidateAntiForgeryToken]
@@ -610,14 +612,7 @@ public class PublicActorController : Controller
             return NotFound();
         }
 
-        var currentUserId = GetCurrentUserId();
-        if (currentUserId is null)
-        {
-            return Unauthorized();
-        }
-
-        // Bare den som eier behovet kan lukke det
-        if (need.PublicActorId != currentUserId.Value)
+        if (!BelongsToCurrentOrganization(need.PublicActorId))
         {
             return Forbid();
         }
@@ -629,12 +624,9 @@ public class PublicActorController : Controller
 
 
 
-// Pages for civilian providers: register, edit and delete resources.
 public class HomeController : Controller
 
 {
-    // Reads the id of the logged in user from the login cookie.
-    // Gives null if it is missing or not a number.
     private int? GetCurrentUserId()
     {
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -642,7 +634,29 @@ public class HomeController : Controller
             ? userId
             : null;
     }
-    
+
+    private int? GetCurrentOrganizationId()
+    {
+        var currentUserId = GetCurrentUserId();
+
+        return currentUserId.HasValue
+            ? _db.PublicActors
+                .Where(actor => actor.PublicActorId == currentUserId.Value)
+                .Select(actor => (int?)actor.OrganizationId)
+                .FirstOrDefault()
+            : null;
+    }
+
+    private bool BelongsToCurrentOrganization(int publicActorId)
+    {
+        var organizationId = GetCurrentOrganizationId();
+
+        return organizationId.HasValue &&
+            _db.PublicActors.Any(actor =>
+                actor.PublicActorId == publicActorId &&
+                actor.OrganizationId == organizationId.Value);
+    }
+
     private readonly AppDbContext _db;
     private readonly MatchNeedLifecycle _lifecycle;
 
@@ -688,8 +702,6 @@ public class HomeController : Controller
         return View(new ResourceEntry());     
     }
 
-    // Loads the live feed into ViewBag. A provider only sees their own resources,
-    // an administrator sees all of them.
     private void LoadOperationalFeed(int CurrentUserId, bool includeAllResources)
     {
         var resources = _db.Resources.AsQueryable();
@@ -840,7 +852,6 @@ public class HomeController : Controller
         return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
     }
 
-    // Deletes a resource. A provider can only delete their own resources.
     [HttpPost]
     [Authorize(Roles = "CivilianProvider, Administrator")]
     [ValidateAntiForgeryToken]
@@ -866,15 +877,14 @@ public class HomeController : Controller
             return Forbid();
         }
         
-        resource.Status = "withdrawn";
+        _db.Resources.Remove(resource);
         await _db.SaveChangesAsync();
         TempData["SuccessMessage"] = "Ressursen er trukket tilbake. Den er ikke lenger tilgjengelig, og matchhistorikken er bevart.";
         return RedirectToAction("Index", "Resources");
     }
 
-    // Deletes a need. A public actor can only delete their own needs.
     [HttpPost]
-    [Authorize(Roles = "PublicActor, Administrator")]
+    [Authorize(Roles = "PublicActor")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteNeed(int id)
     {
@@ -884,24 +894,15 @@ public class HomeController : Controller
             return NotFound();
         }
         
-        var currentUserId = GetCurrentUserId();
-
-        if (currentUserId is null)
-        {
-            return Unauthorized();
-        }
-        
-        bool isAdmin = User.IsInRole("Administrator");
-
-        if (!isAdmin && Need.PublicActorId != (currentUserId))
+        if (!BelongsToCurrentOrganization(Need.PublicActorId))
         {
             return Forbid();
         }
 
-        // beholder historikken
-        _lifecycle.CloseNeed(Need.Id);
+        // Fjern match-radene først (fremmednøkkel) og frigi assigned ressurser
+        _lifecycle.RemoveMatchesFromNeed(Need.Id);
 
-        Need.Status = "cancelled";
+        _db.Needs.Remove(Need);
         await _db.SaveChangesAsync();
         return RedirectToAction("NeedsIndex", "PublicActor");    }
     

@@ -96,7 +96,7 @@
                 return;
             }
 
-            //Unavailable resource will never be shown 
+            //Unavailable resource will never be shown
             //Unless a user has activated it
             if (
                 resourceStatus === "unavailable" &&
@@ -184,7 +184,7 @@
         });
         
     if(statusElement) {
-        statusElement.textContent = 
+        statusElement.textContent =
         `${visibleCount} registrerte ressurser vist på kartet.`;
     }
 }
@@ -272,7 +272,7 @@
         );
 
         if (statusElement) {
-            statusElement.textContent = 
+            statusElement.textContent =
                 "Kunne ikke oppdatere ressursene. Viser sist hentede data.";
         }
     }

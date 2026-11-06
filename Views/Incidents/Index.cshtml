@@ -10,7 +10,10 @@
 
 <section class="subpage">
     <div class="subpage-header">
-        <h1>Hendelser</h1>
+        <div>
+            <h1>Hendelser</h1>
+            <p class="page-intro">Oversikt over hendelser.</p>
+        </div>
         @if (isPublicActor)
         {
             <button class="btn btn-primary" type="button" data-bs-toggle="collapse"
@@ -156,6 +159,15 @@
     }
     else
     {
+        @if (activeIncidents.Any())
+        {
+            <div class="match-results-heading">
+                <div>
+                    <p class="page-eyebrow">RESULTATER</p>
+                    <h2>Aktive hendelser</h2>
+                </div>
+            </div>
+        }
         <div class="incident-list">
             @foreach (var incident in activeIncidents)
             {
@@ -176,15 +188,15 @@
 
                     <dl class="dashboard-details incident-details">
                         <div>
-                            <dt>Type</dt>
+                            <dt><i class="bi bi-tag" aria-hidden="true"></i> Type</dt>
                             <dd>@TypeLabel(incident.IncidentType)</dd>
                         </div>
                         <div>
-                            <dt>Sted (breddegrad/lengdegrad)</dt>
+                            <dt><i class="bi bi-geo-alt" aria-hidden="true"></i> Sted (breddegrad/lengdegrad)</dt>
                             <dd>@incident.Latitude, @incident.Longitude</dd>
                         </div>
                         <div>
-                            <dt>Rapportert</dt>
+                            <dt><i class="bi bi-clock-history" aria-hidden="true"></i> Rapportert</dt>
                             <dd>@incident.CreatedAt.ToString("dd.MM.yyyy HH:mm")</dd>
                         </div>
                     </dl>
@@ -201,7 +213,7 @@
                             <form asp-controller="Incidents" asp-action="MarkAsResolved" method="post">
                                 <input type="hidden" name="incidentId" value="@incident.IncidentId" />
                                 @Html.AntiForgeryToken()
-                                <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                <button type="submit" class="btn btn-sm btn-outline-success incident-action-resolve">
                                     Marker som løst
                                 </button>
                             </form>
@@ -244,15 +256,15 @@
 
                                 <dl class="dashboard-details incident-details">
                                     <div>
-                                        <dt>Type</dt>
+                                        <dt><i class="bi bi-tag" aria-hidden="true"></i> Type</dt>
                                         <dd>@TypeLabel(incident.IncidentType)</dd>
                                     </div>
                                     <div>
-                                        <dt>Sted (breddegrad/lengdegrad)</dt>
+                                        <dt><i class="bi bi-geo-alt" aria-hidden="true"></i> Sted (breddegrad/lengdegrad)</dt>
                                         <dd>@incident.Latitude, @incident.Longitude</dd>
                                     </div>
                                     <div>
-                                        <dt>Rapportert</dt>
+                                        <dt><i class="bi bi-clock-history" aria-hidden="true"></i> Rapportert</dt>
                                         <dd>@incident.CreatedAt.ToString("dd.MM.yyyy HH:mm")</dd>
                                     </div>
                                 </dl>
@@ -269,7 +281,7 @@
                                         <form asp-controller="Incidents" asp-action="Reactivate" method="post">
                                             <input type="hidden" name="incidentId" value="@incident.IncidentId" />
                                             @Html.AntiForgeryToken()
-                                            <button type="submit" class="btn btn-sm btn-outline-success">
+                                            <button type="submit" class="btn btn-sm btn-outline-success incident-action-reactivate">
                                                 Aktiver på nytt
                                             </button>
                                         </form>

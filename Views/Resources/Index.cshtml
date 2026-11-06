@@ -50,7 +50,10 @@
 
 <section class="subpage">
     <div class="subpage-header">
-        <h1>Ressurser</h1>
+        <div>
+            <h1>Ressurser</h1>
+            <p class="page-intro">Oversikt over ressurser.</p>
+        </div>
     </div>
 
     @if (TempData["SuccessMessage"] is string successMessage)
@@ -126,6 +129,12 @@
     }
     else
     {
+        <div class="match-results-heading">
+            <div>
+                <p class="page-eyebrow">RESULTATER</p>
+                <h2>Registrerte ressurser</h2>
+            </div>
+        </div>
         <div class="resource-list">
             @foreach (var resource in Model.Resources)
             {
@@ -165,15 +174,15 @@
                             </div>
                         }
                         <div>
-                            <dt>Type</dt>
+                            <dt><i class="bi bi-tag" aria-hidden="true"></i> Type</dt>
                             <dd>@resource.Category?.CategoryName</dd>
                         </div>
                         <div>
-                            <dt>Kontakt</dt>
+                            <dt><i class="bi bi-person" aria-hidden="true"></i> Kontakt</dt>
                             <dd>@resource.Email<br />@resource.PhoneNumber</dd>
                         </div>
                         <div>
-                            <dt>Sted (breddegrad/lengdegrad)</dt>
+                            <dt><i class="bi bi-geo-alt" aria-hidden="true"></i> Sted (breddegrad/lengdegrad)</dt>
                             <dd>
                                 @if (resource.Latitude.HasValue && resource.Longitude.HasValue)
                                 {
@@ -186,15 +195,15 @@
                             </dd>
                         </div>
                         <div>
-                            <dt>Gyldig fra</dt>
+                            <dt><i class="bi bi-calendar-event" aria-hidden="true"></i> Gyldig fra</dt>
                             <dd>@resource.AvailableFrom.ToString("dd.MM.yyyy")</dd>
                         </div>
                         <div>
-                            <dt>Utløpsdato</dt>
+                            <dt><i class="bi bi-calendar-x" aria-hidden="true"></i> Utløpsdato</dt>
                             <dd>@(resource.ExpirationDate?.ToString("dd.MM.yyyy") ?? "—")</dd>
                         </div>
                         <div>
-                            <dt>Registrert</dt>
+                            <dt><i class="bi bi-clock-history" aria-hidden="true"></i> Registrert</dt>
                             <dd>@resource.RegisteredAt.ToString("dd.MM.yyyy HH:mm")</dd>
                         </div>
                     </dl>

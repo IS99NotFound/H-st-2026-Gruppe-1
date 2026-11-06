@@ -77,6 +77,7 @@ public class ResourcesController : Controller
         var allResources = resourcesQuery
             .OrderBy(resource => resource.Id)
             .ToList();
+
         ViewBag.Categories = _db.Categories.OrderBy(category => category.CategoryId).ToList();
 
         var resourceIds = allResources.Select(resource => resource.Id).ToList();
@@ -105,7 +106,6 @@ public class ResourcesController : Controller
             ExpiredCount = allResources.Count(r =>
                 r.ExpirationDate.HasValue &&
                 r.ExpirationDate.Value.Date < now),
-
             Resources = allResources,
             Search = search,
             Status = status,

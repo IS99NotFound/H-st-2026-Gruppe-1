@@ -1150,6 +1150,12 @@ html[data-theme="light"] .registration-modal .btn-close {
     margin-bottom: 32px;
 }
 
+.subpage-header .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
 .btn-primary {
     border: 0;
     background-color: var(--accent);
@@ -1215,6 +1221,12 @@ html[data-theme="light"] .registration-modal .btn-close {
     gap: 8px;
 }
 
+.dashboard-filter-bar .dashboard-filter-actions .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
 @media (min-width: 1100px) {
     .dashboard-filter-bar {
         grid-template-columns: minmax(180px, 1.4fr) repeat(4, minmax(120px, 1fr)) auto;
@@ -1230,9 +1242,6 @@ html[data-theme="light"] .registration-modal .btn-close {
         align-items: stretch;
     }
 
-    .dashboard-filter-bar .dashboard-filter-actions .btn {
-        flex: 1;
-    }
 }
 
 .dashboard-location-error {
@@ -1409,8 +1418,15 @@ html[data-theme="light"] .registration-modal .btn-close {
 }
 
 .dashboard-details dt {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     color: var(--text-muted);
     font-size: 0.8rem;
+}
+
+.dashboard-details dt i {
+    color: var(--accent);
 }
 
 .dashboard-details dd {
@@ -1488,14 +1504,11 @@ html[data-theme="light"] .registration-modal .btn-close {
     padding: 0;
 }
 
-.match-controls > div {
-    width: 120px;
-}
-
 .match-radius-field {
     display: grid;
     gap: 2px;
-    width: 220px !important;
+    flex: 1 1 220px;
+    width: auto;
 }
 
 .match-radius-field .form-label {
@@ -1530,13 +1543,31 @@ html[data-theme="light"] .registration-modal .btn-close {
 
 .match-list {
     display: grid;
-    gap: 18px;
-    margin-top: 20px;
+    gap: 14px;
+    margin-top: 0;
+}
+
+.match-card {
+    padding: 22px;
+    border-radius: 14px;
+}
+
+.match-card-title-row {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+}
+
+.match-card-title-row h2 {
+    margin: 0;
 }
 
 .match-card-type {
-    margin: 4px 0 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 6px 0 0;
     color: var(--text-muted);
+    font-size: 0.88rem;
 }
 
 .match-distance {
@@ -1547,6 +1578,7 @@ html[data-theme="light"] .registration-modal .btn-close {
     background: var(--bg-hover);
     color: var(--text);
     font-size: 0.85rem;
+    font-weight: 600;
     white-space: nowrap;
 }
 
@@ -1562,6 +1594,9 @@ html[data-theme="light"] .registration-modal .btn-close {
 }
 
 .match-details dt {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     color: var(--text-muted);
     font-size: 0.8rem;
 }
@@ -1571,7 +1606,9 @@ html[data-theme="light"] .registration-modal .btn-close {
 }
 
 .match-status-form {
-    margin-top: 18px;
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
 }
 
 .match-feedback {
@@ -1620,6 +1657,11 @@ html[data-theme="light"] .registration-modal .btn-close {
     font-size: 0.85rem;
 }
 
+.match-status-form label span {
+    color: var(--text-muted);
+    font-weight: 400;
+}
+
 .match-status-form textarea {
     min-height: 72px;
     margin-bottom: 10px;
@@ -1634,7 +1676,7 @@ html[data-theme="light"] .registration-modal .btn-close {
 }
 
 .match-status-buttons .match-action {
-    min-width: 104px;
+    min-width: 96px;
     white-space: nowrap;
 }
 
@@ -1707,6 +1749,31 @@ html[data-theme="light"] .registration-modal .btn-close {
     font-weight: 600;
 }
 
+.page-eyebrow {
+    margin: 0 0 6px;
+    color: var(--accent);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+}
+
+.page-intro {
+    margin: 8px 0 0;
+    color: var(--text-muted);
+}
+
+.status-label.status-critical {
+    border-color: #ef4444;
+    background-color: rgb(239 68 68 / 14%);
+    color: #f87171;
+}
+
+.status-label.status-planned {
+    border-color: var(--border);
+    background-color: var(--bg-hover);
+    color: var(--text-muted);
+}
+
 @media (max-width: 991px) and (min-width: 576px) {
     .match-details {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1726,17 +1793,17 @@ html[data-theme="light"] .registration-modal .btn-close {
 
 .match-toolbar {
     margin-bottom: 20px;
-    padding: 14px 16px;
+    padding: 20px;
     border: 1px solid var(--border);
-    border-radius: 12px;
+    border-radius: 14px;
     background: var(--bg-panel);
 }
 
 .match-selection {
     display: grid;
-    grid-template-columns: minmax(260px, 0.8fr) minmax(320px, 1.2fr);
-    gap: 16px;
-    align-items: start;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 1fr);
+    gap: 16px 24px;
+    align-items: stretch;
 }
 
 .match-need-selector {
@@ -1752,9 +1819,14 @@ html[data-theme="light"] .registration-modal .btn-close {
 }
 
 .match-need-summary {
+    grid-column: 1 / -1;
     display: grid;
     gap: 2px;
+    padding: 12px 14px;
     min-width: 0;
+    border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    background: var(--bg-hover);
     color: var(--text-muted);
     font-size: 0.88rem;
     line-height: 1.35;
@@ -1762,6 +1834,79 @@ html[data-theme="light"] .registration-modal .btn-close {
 
 .match-need-summary strong {
     color: var(--text);
+    font-size: 1rem;
+}
+
+.match-summary-heading,
+.match-summary-meta,
+.match-control-heading,
+.match-card-title-row,
+.match-results-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.summary-label {
+    color: var(--accent);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+}
+
+.match-summary-meta {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    margin-top: 6px;
+    font-size: 0.8rem;
+}
+
+.match-summary-meta i,
+.match-card-type i,
+.match-details dt i,
+.match-distance i {
+    color: var(--accent);
+}
+
+.match-control-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.match-control-heading {
+    margin-bottom: 4px;
+}
+
+.match-control-heading .form-label {
+    margin: 0;
+}
+
+.match-radius-field {
+    width: 250px !important;
+}
+
+.match-results-heading {
+    margin: 28px 0 12px;
+}
+
+.match-results-heading h2 {
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+.match-results-heading .page-eyebrow {
+    margin-bottom: 4px;
+}
+
+.match-result-count {
+    padding: 5px 10px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    color: var(--text-muted);
+    font-size: 0.82rem;
 }
 
 .empty-state-panel {
@@ -1967,7 +2112,7 @@ html[data-theme="light"] .registration-modal .btn-close {
     }
 }
 
-@media (max-width: 575px) {
+@media (max-width: 900px) {
     .dashboard-filter-bar {
         grid-template-columns: 1fr;
         padding: 16px;
@@ -1981,22 +2126,43 @@ html[data-theme="light"] .registration-modal .btn-close {
         align-items: stretch;
     }
 
+    .match-toolbar {
+        padding: 16px;
+    }
+
     .match-controls > * {
         width: 100%;
     }
 
+    .match-control-actions {
+        width: 100%;
+    }
+
+    .match-control-actions .btn {
+        flex: 1 1 auto;
+    }
+
     .match-selection {
         grid-template-columns: 1fr;
+        align-items: stretch;
     }
 
-    .match-need-summary {
-        grid-template-columns: 1fr;
+    .match-radius-field {
+        width: 100% !important;
     }
 
-    .match-need-summary > span,
-    .match-need-summary strong {
-        grid-column: 1;
-        grid-row: auto;
+    .match-card {
+        padding: 18px;
+    }
+
+    .match-card .dashboard-card-header {
+        gap: 12px;
+    }
+
+    .match-results-heading {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 8px;
     }
 
     .match-details {
@@ -2301,15 +2467,15 @@ html[data-theme="light"] .registration-modal .btn-close {
 }
 
 .incident-status-active {
-    border-color: #198754;
-    background-color: #198754;
-    color: #fff;
+    border-color: var(--map-available-resource);
+    background-color: rgb(34 197 94 / 14%);
+    color: var(--map-available-resource);
 }
 
 .incident-status-resolved {
-    border-color: #6c757d;
-    background-color: #6c757d;
-    color: #fff;
+    border-color: var(--border);
+    background-color: var(--bg-hover);
+    color: var(--text-muted);
 }
 
 .incident-details {
@@ -2324,7 +2490,55 @@ html[data-theme="light"] .registration-modal .btn-close {
 }
 
 .incident-card-footer .btn {
-    min-width: 140px;
+    min-width: 0;
+}
+
+.incident-card-footer {
+    align-items: center;
+    gap: 10px;
+}
+
+.incident-card-footer form {
+    margin: 0;
+}
+
+.incident-card-footer .btn-outline-primary {
+    border-color: var(--accent);
+    background-color: var(--accent);
+    color: var(--button-text);
+}
+
+.incident-card-footer .btn-outline-primary:hover,
+.incident-card-footer .btn-outline-primary:focus {
+    border-color: var(--primary-hover);
+    background-color: var(--primary-hover);
+    color: var(--button-text);
+}
+
+.incident-card-footer .incident-action-resolve {
+    border-color: var(--accent);
+    background-color: transparent;
+    color: var(--accent);
+}
+
+.incident-card-footer .incident-action-resolve:hover,
+.incident-card-footer .incident-action-resolve:focus {
+    border-color: var(--primary-hover);
+    background-color: var(--bg-hover);
+    color: var(--primary-hover);
+}
+
+.incident-card-footer .incident-action-reactivate {
+    border-color: var(--border);
+    background-color: transparent;
+    color: var(--text-muted);
+}
+
+.incident-card-footer .incident-action-reactivate:hover,
+.incident-card-footer .incident-action-reactivate:focus {
+    border-color: var(--accent);
+    background-color: var(--bg-hover);
+    color: var(--text);
 }
 
 @media (max-width: 576px) {
