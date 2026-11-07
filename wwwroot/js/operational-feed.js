@@ -99,6 +99,67 @@
         });
     }
 
+    // Distance between to points
+    function kmBetween(a, b) {
+        const R = 6371;
+        const dLat = (b.lat - a.lat) * Math.PI / 180;
+        const dLng = (b.lng - a.lng) * Math.PI / 180;
+        const h = Math.sin(dLat / 2) ** 2 +
+            Math.cos(a.lat * Math.PI / 180) * Math.cos(b.lat * Math.PI / 180) *
+            Math.sin(dLng / 2) ** 2;
+        return R * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+    }
+
+    // Recognize if multiple crisis events are located closely together, and draw a circle around them
+    function addCrisisClusters({ maxDistanceKm = 2, minCount = 3 } = {}) {
+        const map = window.resqMap;
+        const incidents = (window.operationalFeedItems?.incidents || [])
+            .map(i => ({ lat: Number(i.latitude), lng: Number(i.longitude), title: i.title }))
+            .filter(p => Number.isFinite(p.lat) && Number.isFinite(p.lng));
+        if (!map || incidents.length < minCount) return;
+
+        const parent = incidents.map((_, i) => i);
+        const find = i => (parent[i] === i ? i : (parent[i] = find(parent[i])));
+        for (let i = 0; i < incidents.length; i++) {
+            for (let j = i + 1; j < incidents.length; j++) {
+                if (kmBetween(incidents[i], incidents[j]) <= maxDistanceKm) {
+                    parent[find(i)] = find(j);
+                }
+            }
+        }
+
+        const groups = {};
+        incidents.forEach((p, i) => (groups[find(i)] ??= []).push(p));
+
+        const clusterLayer = L.layerGroup().addTo(map);
+        Object.values(groups)
+            .filter(g => g.length >= minCount)
+            .forEach(group => {
+                const center = {
+                    lat: group.reduce((s, p) => s + p.lat, 0) / group.length,
+                    lng: group.reduce((s, p) => s + p.lng, 0) / group.length
+                };
+                const radiusM = Math.max(300,
+                    Math.max(...group.map(p => kmBetween(center, p))) * 1000 + 250);
+
+                const severe = group.length >= 5;
+                L.circle([center.lat, center.lng], {
+                    radius: radiusM,
+                    color: severe ? "#c1121f" : "#f77f00",
+                    weight: 2,
+                    fillColor: severe ? "#e63946" : "#fcbf49",
+                    fillOpacity: 0.25,
+                    className: "crisis-cluster" + (severe ? " crisis-cluster--severe" : ""),
+                    interactive: true
+                })
+                    .bindTooltip(`${group.length} kriser i området`, { sticky: true })
+                    .on("click", () => map.fitBounds(group.map(p => [p.lat, p.lng]), { padding: [40, 40] }))
+                    .addTo(clusterLayer);
+
+            });
+        clusterLayer.eachLayer(layer => layer.bringToBack());
+    }
+
     // Distance in km from the user's position to a point (haversine formula).
     // Gives infinity if we do not know where the user is.
     function distanceInKm(latitude, longitude) {
@@ -404,5 +465,6 @@
 
     requestCurrentLocation();
     addFeedMarkers();
+    addCrisisClusters();
     render();
 })();
