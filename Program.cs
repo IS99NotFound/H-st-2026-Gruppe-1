@@ -72,6 +72,7 @@ builder.Services.AddIdentityCore<User>(options =>
 
 //Action-buttons written in program now use the MatchNeedLifecycle method
 builder.Services.AddScoped<MatchNeedLifecycle>();
+builder.Services.AddScoped<LocationRegionResolver>();
 builder.Services.AddHostedService<MatchLifecycleWorker>();
 
 var app = builder.Build();

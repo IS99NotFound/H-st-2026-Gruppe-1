@@ -1,5 +1,6 @@
 using H_st_2026_Gruppe_1.Data;
 using H_st_2026_Gruppe_1.Models;
+using H_st_2026_Gruppe_1.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -9,10 +10,14 @@ namespace H_st_2026_Gruppe_1.Controllers;
 public class IncidentsController : Controller
 {
     private readonly AppDbContext _db;
+    private readonly LocationRegionResolver? _locationRegionResolver;
 
-    public IncidentsController(AppDbContext db)
+    public IncidentsController(
+        AppDbContext db,
+        LocationRegionResolver? locationRegionResolver = null)
     {
         _db = db;
+        _locationRegionResolver = locationRegionResolver;
     }
 
     private int? GetCurrentOrganizationId()
@@ -89,9 +94,22 @@ public class IncidentsController : Controller
             return Unauthorized();
         }
 
+        var location = _locationRegionResolver is null
+            ? LocationRegionResult.Valid(DemoDefaults.RegionId)
+            : _locationRegionResolver.Resolve(
+                (double)createModel.Latitude!.Value,
+                (double)createModel.Longitude!.Value);
+        if (!location.IsValid)
+        {
+            ModelState.AddModelError(nameof(IncidentCreateViewModel.Latitude), location.ErrorMessage!);
+            model.Incidents = GetIncidents();
+            return View("Index", model);
+        }
+
         var incident = new Incident
         {
             PublicActorId = currentUserId,
+            RegionId = location.RegionId!.Value,
             Title = createModel.Title.Trim(),
             NormalizedTitle = NormalizeTitle(createModel.Title),
             IncidentType = createModel.IncidentType,
@@ -137,6 +155,22 @@ public class IncidentsController : Controller
             });
         }
 
+        var location = _locationRegionResolver is null
+            ? LocationRegionResult.Valid(DemoDefaults.RegionId)
+            : _locationRegionResolver.Resolve(
+                (double)model.Latitude!.Value,
+                (double)model.Longitude!.Value);
+        if (!location.IsValid)
+        {
+            ModelState.AddModelError(nameof(IncidentCreateViewModel.Latitude), location.ErrorMessage!);
+            ViewBag.EditIncident = model;
+            return View("Index", new IncidentIndexViewModel
+            {
+                Incidents = GetIncidents(),
+                Search = model.Title
+            });
+        }
+
         incident.Title = model.Title.Trim();
         incident.NormalizedTitle = NormalizeTitle(model.Title);
         incident.IncidentType = model.IncidentType;
@@ -145,6 +179,7 @@ public class IncidentsController : Controller
             : model.Description.Trim();
         incident.Latitude = model.Latitude!.Value;
         incident.Longitude = model.Longitude!.Value;
+        incident.RegionId = location.RegionId!.Value;
 
         _db.SaveChanges();
 

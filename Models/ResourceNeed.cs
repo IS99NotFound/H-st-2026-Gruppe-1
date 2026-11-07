@@ -31,6 +31,7 @@ namespace H_st_2026_Gruppe_1.Models
 
         // Required by the database. Set in the controller, not in the form.
         public int PublicActorId { get; set; }
+        public int RegionId { get; set; }
         
         [Required(ErrorMessage = "Beskrivelse er påkrevd.")]
         [StringLength(1000, ErrorMessage = "Beskrivelsen kan ikke være lengre enn 1000 tegn.")]
