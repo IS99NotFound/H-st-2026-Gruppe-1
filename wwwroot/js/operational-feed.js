@@ -12,12 +12,11 @@
     const resetLocationButton = document.querySelector("[data-feed-reset-location]");
     const filterToggle = document.querySelector("[data-feed-filter-toggle]");
     const filterControls = document.getElementById("feed-filter-controls");
-    const resultsToggle = document.querySelector("[data-feed-results-toggle]");
-    const resultsLabel = document.querySelector("[data-feed-results-label]");
     const exportToggle = document.querySelector("[data-feed-export-toggle]");
     const exportOptions = document.getElementById("feed-export-options");
     const exportButtons = document.querySelectorAll("[data-feed-export]");
     const exportBackButton = document.querySelector("[data-feed-export-back]");
+    const resultsToggle = document.querySelector("[data-feed-results-toggle]");
     const items = Array.from(document.querySelectorAll("[data-feed-item]"));
     const feed = document.querySelector(".operational-feed");
     const mapArea = document.querySelector(".map-area");
@@ -30,6 +29,15 @@
     let focusedFeedMarker = null;
 
     if (!list || !search || !radius) return;
+
+    function setCardHeight(item, faceSelector) {
+        const inner = item.querySelector(".feed-card-inner");
+        const face = item.querySelector(faceSelector);
+        if (!inner || !face) return;
+        inner.style.height = `${face.scrollHeight}px`;
+    }
+
+    items.forEach(item => setCardHeight(item, ".feed-card-front"));
 
     const closeMapLegend = () => {
         if (!mapLegendToggle || !mapLegendContent) return;
@@ -155,6 +163,22 @@
     }
 
     function focusFeedItem(item) {
+        items.forEach(otherItem => {
+            if (otherItem === item) return;
+            otherItem.classList.remove("is-flipped");
+            setCardHeight(otherItem, ".feed-card-front");
+            otherItem.querySelector(".feed-card-back")?.setAttribute("aria-hidden", "true");
+            otherItem.querySelector(".feed-card-front")?.setAttribute("aria-hidden", "false");
+            otherItem.setAttribute("aria-label", `Vis ${otherItem.dataset.feedTitle || "element"} på kartet`);
+        });
+        const isFlipped = item.classList.toggle("is-flipped");
+        setCardHeight(item, isFlipped ? ".feed-card-back" : ".feed-card-front");
+        item.querySelector(".feed-card-back")?.setAttribute("aria-hidden", String(!isFlipped));
+        item.querySelector(".feed-card-front")?.setAttribute("aria-hidden", String(isFlipped));
+        item.setAttribute("aria-label", isFlipped
+            ? `Skjul detaljer for ${item.dataset.feedTitle || "element"}`
+            : `Vis ${item.dataset.feedTitle || "element"} på kartet`);
+
         const map = window.resqMap;
         if (!map) return;
         const lat = Number(item.dataset.latitude);
@@ -271,12 +295,6 @@
             if (isVisible) visible++;
         });
         empty.hidden = visible !== 0;
-        if (resultsLabel) {
-            const resultText = `${visible} ${visible === 1 ? "resultat" : "resultater"}`;
-            resultsLabel.textContent = currentLocation
-                ? `Vis ${resultText}, sortert etter avstand fra din posisjon`
-                : `Vis ${resultText}`;
-        }
         if (currentLocation) {
             locationStatus.textContent = `${visible} elementer vist, sortert etter avstand fra din posisjon.`;
         } else {
@@ -303,11 +321,11 @@
     });
 
     resultsToggle?.addEventListener("click", () => {
-        const isOpen = list.classList.toggle("is-open");
-        resultsToggle.setAttribute("aria-expanded", String(isOpen));
+        const isOpen = !list.classList.toggle("is-collapsed");
         resultsToggle.classList.toggle("is-open", isOpen);
-        if (isOpen) closeMapLegend();
+        resultsToggle.setAttribute("aria-expanded", String(isOpen));
     });
+
     search.addEventListener("input", render);
     radius.addEventListener("change", render);
     radius.addEventListener("input", render);
@@ -348,6 +366,10 @@
             search.value = "";
             radius.value = "0";
             activeType = "all";
+            if (filterControls) {
+                filterControls.classList.remove("is-open");
+                filterToggle?.setAttribute("aria-expanded", "false");
+            }
             document.querySelectorAll(".operational-feed-tabs [data-feed-type]").forEach(tab => {
                 const active = tab.dataset.feedType === "all";
                 tab.classList.toggle("active", active);
@@ -359,12 +381,8 @@
                 focusedFeedMarker = null;
                 window.resqMap.closePopup();
             }
-            if (currentLocation) {
-                showCurrentLocation();
-                render();
-            } else {
-                requestCurrentLocation();
-            }
+            showCurrentLocation();
+            render();
         });
     }
 
