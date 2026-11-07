@@ -140,8 +140,11 @@ public class PublicActorController : Controller
     // Categories for the dropdown
     private void LoadDropdowns()
     {
-        ViewBag.Categories = _db.Categories.OrderBy(c => c.CategoryId).ToList();
-        ViewBag.ResourceCategories = _db.Categories
+        var categories = _db.Categories
+            .OrderBy(category => category.CategoryId)
+            .ToList();
+        ViewBag.Categories = categories;
+        ViewBag.ResourceCategories = categories
             .Where(category => ResourceCategoryPolicy.IsAllowed(category.CategoryName))
             .OrderBy(c => c.CategoryId)
             .ToList();
@@ -149,10 +152,14 @@ public class PublicActorController : Controller
             .Where(category => _db.Needs.Any(need => need.Category == category.CategoryId))
             .OrderBy(category => category.CategoryName)
             .ToList();
-        ViewBag.ResourceCategories = _db.Categories
+        var resourceCategoryIds = _db.Resources
+            .Select(resource => resource.CategoryId)
+            .Distinct()
+            .ToHashSet();
+        ViewBag.ResourceCategories = categories
             .Where(category =>
                 ResourceCategoryPolicy.IsAllowed(category.CategoryName) &&
-                _db.Resources.Any(resource => resource.CategoryId == category.CategoryId))
+                resourceCategoryIds.Contains(category.CategoryId))
             .OrderBy(category => category.CategoryName)
             .ToList();
         ViewBag.Incidents = _db.Incidents.OrderBy(i => i.IncidentId).ToList();
@@ -326,6 +333,7 @@ public class PublicActorController : Controller
 
         ViewBag.Categories = _db.Categories.OrderBy(c => c.CategoryId).ToList();
         ViewBag.ResourceCategories = _db.Categories
+            .AsEnumerable()
             .Where(category => ResourceCategoryPolicy.IsAllowed(category.CategoryName))
             .OrderBy(c => c.CategoryId)
             .ToList();
@@ -756,6 +764,7 @@ public class HomeController : Controller
         
         ViewBag.Categories = _db.Categories.OrderBy(c => c.CategoryId).ToList();
         ViewBag.ResourceCategories = _db.Categories
+            .AsEnumerable()
             .Where(category => ResourceCategoryPolicy.IsAllowed(category.CategoryName))
             .OrderBy(c => c.CategoryId)
             .ToList();
@@ -882,6 +891,7 @@ public class HomeController : Controller
             // sends the user to form with attributes and error messages filled out
             ViewBag.Categories = _db.Categories.OrderBy(c => c.CategoryId).ToList();
             ViewBag.ResourceCategories = _db.Categories
+                .AsEnumerable()
                 .Where(category => ResourceCategoryPolicy.IsAllowed(category.CategoryName))
                 .OrderBy(c => c.CategoryId)
                 .ToList();
@@ -900,6 +910,7 @@ public class HomeController : Controller
                 "Velg en gyldig ressurskategori.");
             ViewBag.Categories = _db.Categories.OrderBy(c => c.CategoryId).ToList();
             ViewBag.ResourceCategories = _db.Categories
+                .AsEnumerable()
                 .Where(category => ResourceCategoryPolicy.IsAllowed(category.CategoryName))
                 .OrderBy(c => c.CategoryId)
                 .ToList();
@@ -916,6 +927,7 @@ public class HomeController : Controller
             ModelState.AddModelError(nameof(ResourceEntry.Latitude), location.ErrorMessage!);
             ViewBag.Categories = _db.Categories.OrderBy(c => c.CategoryId).ToList();
             ViewBag.ResourceCategories = _db.Categories
+                .AsEnumerable()
                 .Where(category => ResourceCategoryPolicy.IsAllowed(category.CategoryName))
                 .OrderBy(c => c.CategoryId)
                 .ToList();

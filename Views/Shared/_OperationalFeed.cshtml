@@ -13,6 +13,51 @@
         : (int?)null;
 }
 
+@if (ViewContext.RouteData.Values["controller"]?.ToString() == "Guest")
+{
+<aside class="operational-feed" aria-label="Sikkerhetsoversikt">
+    <div class="operational-feed-header">
+        <p class="section-label">Hendelser</p>
+        <p class="feed-status">Overordnet informasjon om pågående hendelser.</p>
+        <button type="button" class="feed-results-toggle" data-feed-results-toggle
+                aria-expanded="false" aria-controls="operational-feed-list">
+            <span data-feed-results-label>Vis hendelser</span>
+            <i class="bi bi-chevron-down ms-1" aria-hidden="true"></i>
+        </button>
+    </div>
+    <div id="operational-feed-list" class="operational-feed-list is-collapsed">
+        @foreach (var item in incidents)
+        {
+            <article class="feed-card feed-card--@item.ColorKey guest-feed-card"
+                     data-feed-item data-feed-type="incident"
+                     data-latitude="@item.Latitude" data-longitude="@item.Longitude"
+                     data-feed-zoom="8"
+                     data-feed-title="@item.Title">
+                <div class="feed-card-inner">
+                    <div class="feed-card-face feed-card-front">
+                        <div class="feed-card-heading">
+                            <span class="feed-color-badge feed-color-badge--@item.ColorKey">Hendelse</span>
+                        </div>
+                        <h2>@item.Title</h2>
+                        <dl>
+                            <div>
+                                <dt><i class="bi bi-geo-alt" aria-hidden="true"></i> Område</dt>
+                                <dd>@item.LocationName</dd>
+                            </div>
+                        </dl>
+                    </div>
+                </div>
+            </article>
+        }
+        @if (incidents.Count == 0)
+        {
+            <p class="feed-empty-state">Ingen pågående hendelser er publisert.</p>
+        }
+    </div>
+</aside>
+}
+else
+{
 <aside class="operational-feed" aria-label="Operativ oversikt">
     <div class="operational-feed-header">
         <p class="section-label">Operativ oversikt</p>
@@ -161,3 +206,4 @@
         <p class="placeholder-copy feed-empty" hidden>Ingen elementer samsvarer med filtrene.</p>
     </div>
 </aside>
+}

@@ -1,0 +1,68 @@
+@{
+    ViewData["Title"] = "Hendelser";
+    ViewData["FullWidth"] = true;
+}
+
+<div class="main-layout guest-map-page">
+    <partial name="_OperationalFeed" />
+    <div class="feed-resizer" role="separator" aria-orientation="vertical"
+         aria-label="Endre størrelse på sikkerhetsoversikten" tabindex="0"></div>
+    <section class="map-area">
+        <div id="map" role="application" aria-label="Offentlig sikkerhetskart"></div>
+        <div class="map-filtering is-collapsed" id="survival-filter-panel">
+            <div class="map-filter-header">
+                <strong class="map-filter-title">Filtrer steder</strong>
+                <button type="button" id="survival-filter-button" class="map-filter-button"
+                        aria-expanded="false" aria-controls="survival-filter-content"
+                        aria-label="Utvid filter for beredskapssteder">
+                    <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div id="survival-filter-content">
+                <div class="map-filter-options">
+                    <label><input type="checkbox" class="survival-filter" value="hospital" checked /> Sykehus</label>
+                    <label><input type="checkbox" class="survival-filter" value="drinking_water" checked /> Drikkevann</label>
+                    <label><input type="checkbox" class="survival-filter" value="shelter" checked /> Tilfluktsrom/bunkere</label>
+                </div>
+                <p id="survival-filter-status" role="status">Laster eksisterende steder...</p>
+            </div>
+        </div>
+        <p id="map-status" class="map-status" role="status" aria-live="polite">
+            Kartet viser kun grove regioner for pågående hendelser.
+        </p>
+    </section>
+</div>
+
+@section Scripts {
+    <script src="~/js/map-base.js" asp-append-version="true"></script>
+    <script src="~/js/map-ab.js" asp-append-version="true"></script>
+    <script nonce="@Context.Items["CspNonce"]">
+        window.operationalFeedItems = {
+            incidents: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                ViewBag.FeedIncidents ?? new List<object>(),
+                new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }))
+        };
+        const mapSetup = window.resqMapBase.initialize({
+            center: [64.3, 11.0],
+            zoom: 5
+        });
+        window.resqMap = mapSetup.map;
+        window.resqAbMap.initialize(window.resqMap, {
+            onMapClick: () => {}
+        });
+        mapSetup.addLayersControl();
+        mapSetup.addLocateControl();
+        window.resqMap.on('locationfound', () => {
+            document.getElementById('map-status').textContent =
+                'Kartet viser hendelser og beredskapssteder i området.';
+        });
+        window.resqMap.on('locationerror', () => {
+            document.getElementById('map-status').textContent =
+                'Fikk ikke tilgang til gjeldende posisjon.';
+        });
+        mapSetup.locateCurrentPosition();
+    </script>
+    <script src="~/js/survival-location-filters.js" asp-append-version="true" defer></script>
+    <script src="~/js/map-filter-button.js" asp-append-version="true" defer></script>
+    <script src="~/js/operational-feed.js" asp-append-version="true" defer></script>
+}

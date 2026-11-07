@@ -1079,7 +1079,8 @@ html[data-theme="light"] .registration-modal .btn-close {
         overflow: hidden;
     }
 
-    .registration-modal-page .operational-feed {
+    .registration-modal-page .operational-feed,
+    .guest-map-page .operational-feed {
         position: relative;
         z-index: 1;
         width: 100%;
@@ -1093,7 +1094,8 @@ html[data-theme="light"] .registration-modal .btn-close {
         position: relative;
     }
 
-    .registration-modal-page .operational-feed {
+    .registration-modal-page .operational-feed,
+    .guest-map-page .operational-feed {
         position: absolute;
         right: 0;
         bottom: 0;
@@ -3019,6 +3021,18 @@ html[data-theme="light"] .registration-modal .btn-close {
     margin-top: 14px;
     color: var(--text-muted);
     text-align: center;
+}
+
+.auth-link-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.auth-link-separator {
+    font-size: 1.35em;
+    font-weight: 700;
+    line-height: 1;
 }
 
 .auth-back-link a {

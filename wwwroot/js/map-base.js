@@ -16,6 +16,32 @@ window.resqMapBase = {
             zoom,
             layers: [openStreetMap]
         });
+        let currentLocationMarker = null;
+
+        const locateCurrentPosition = () => {
+            map.locate({
+                setView: true,
+                maxZoom: 13,
+                enableHighAccuracy: false,
+                timeout: 10000,
+                maximumAge: 30000
+            });
+        };
+        map.resqLocateCurrentPosition = locateCurrentPosition;
+
+        map.on('locationfound', event => {
+            if (currentLocationMarker) {
+                currentLocationMarker.setLatLng(event.latlng);
+            } else {
+                currentLocationMarker = L.circleMarker(event.latlng, {
+                    radius: 8,
+                    color: '#ffffff',
+                    weight: 2,
+                    fillColor: '#258cfb',
+                    fillOpacity: 1
+                }).bindTooltip('Nåværende posisjon').addTo(map);
+            }
+        });
 
         // Bruker samme stil som de andre kartoverleggene på zoomkontrollen.
         map.zoomControl.getContainer().classList.add('map-overlay-control');
@@ -35,6 +61,34 @@ window.resqMapBase = {
                     'layers-menu-control',
                     'map-overlay-control'
                 );
+            },
+            addLocateControl() {
+                const LocateControl = L.Control.extend({
+                    options: { position: 'topleft' },
+                    onAdd() {
+                        const container = L.DomUtil.create(
+                            'div',
+                            'leaflet-bar leaflet-control map-overlay-control'
+                        );
+                        const button = L.DomUtil.create('a', 'locate-button', container);
+                        button.href = '#';
+                        button.title = 'Vis min posisjon';
+                        button.setAttribute('role', 'button');
+                        button.setAttribute('aria-label', 'Vis min posisjon');
+                        button.innerHTML = '<i class="bi bi-crosshair" aria-hidden="true"></i>';
+                        L.DomEvent.disableClickPropagation(container);
+                        L.DomEvent.on(button, 'click', event => {
+                            L.DomEvent.preventDefault(event);
+                            locateCurrentPosition();
+                        });
+                        return container;
+                    }
+                });
+
+                new LocateControl().addTo(map);
+            },
+            locateCurrentPosition() {
+                locateCurrentPosition();
             }
         };
     }

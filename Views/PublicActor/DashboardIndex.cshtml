@@ -160,9 +160,6 @@
             (requestedLocation || selectedLat !== 0 || selectedLng !== 0)) {
             setPosition(selectedLat, selectedLng);
             map.setView([selectedLat, selectedLng], 13);
-        } else if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(position =>
-                map.setView([position.coords.latitude, position.coords.longitude], 13));
         }
         window.resqAbMap.initialize(map, {
             onMapClick: event => {
@@ -172,6 +169,8 @@
         });
         // A-B legges til før Layers for å få ønsket rekkefølge på kartkontrollene.
         mapSetup.addLayersControl();
+        mapSetup.addLocateControl();
+        mapSetup.locateCurrentPosition();
 
         document.getElementById('needForm')?.addEventListener('submit', event => {
             if (!latInput.value || latInput.value === '0') {
