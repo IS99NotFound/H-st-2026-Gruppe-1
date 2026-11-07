@@ -5,7 +5,8 @@
     var incidentTypes = new[] { "Forest fire", "Landslide", "Flood", "Storm", "Power outage", "Other" };
     string StatusLabel(string? statusValue) => statusValue switch { "active" => "Aktiv", "new" => "Ny", "under_review" => "Vurderes", "assigned" => "Tildelt", "resolved" => "Løst", "cancelled" => "Kansellert", "rejected" => "Avvist", "available" => "Tilgjengelig", "unavailable" => "Utilgjengelig", "withdrawn" => "Trukket tilbake", _ => statusValue ?? "" };
     string TypeLabel(string? typeValue) => typeValue switch { "Forest fire" => "Skogbrann", "Landslide" => "Jordskred", "Flood" => "Flom", "Storm" => "Storm", "Power outage" => "Strømbrudd", "Other" => "Annet", _ => typeValue ?? "" };
-    var showCreatePanel = !ViewData.ModelState.IsValid && ViewBag.EditIncident is null;
+    var showCreatePanel = !ViewData.ModelState.IsValid && ViewBag.EditIncident is null ||
+                          Context.Request.Query["register"] == "incident";
 }
 
 <section class="subpage">
@@ -14,15 +15,6 @@
             <h1>Hendelser</h1>
             <p class="page-intro">Oversikt over hendelser.</p>
         </div>
-        @if (isPublicActor)
-        {
-            <button class="btn btn-primary" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#incident-create-panel" aria-expanded="@(showCreatePanel.ToString().ToLowerInvariant())"
-                    aria-controls="incident-create-panel" aria-label="Registrer hendelse">
-                <i class="bi bi-plus-lg" aria-hidden="true"></i>
-                Registrer
-            </button>
-        }
     </div>
 
     <form id="incidentFilterForm" method="get" asp-controller="Incidents" asp-action="Index" class="dashboard-filter-bar">
@@ -73,7 +65,7 @@
         </div>
 
         <div class="dashboard-filter-actions">
-            <button type="submit" class="btn btn-primary">Søk</button>
+            <button type="submit" class="btn btn-primary">Filtrer</button>
             <a asp-controller="Incidents" asp-action="Index" class="btn btn-outline-secondary">Nullstill</a>
         </div>
     </form>

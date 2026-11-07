@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using H_st_2026_Gruppe_1.Data;
+using H_st_2026_Gruppe_1.Helpers;
 using H_st_2026_Gruppe_1.Models;
 using H_st_2026_Gruppe_1.Services;
 using Microsoft.EntityFrameworkCore;
@@ -46,11 +47,16 @@ public class PublicActorController : Controller
     
     private readonly AppDbContext _db;
     private readonly MatchNeedLifecycle _lifecycle;
+    private readonly LocationRegionResolver? _locationRegionResolver;
 
-    public PublicActorController (AppDbContext db, MatchNeedLifecycle lifecycle)
+    public PublicActorController(
+        AppDbContext db,
+        MatchNeedLifecycle lifecycle,
+        LocationRegionResolver? locationRegionResolver = null)
     {
         _db = db;
         _lifecycle = lifecycle;
+        _locationRegionResolver = locationRegionResolver;
     }
     
 
@@ -135,6 +141,20 @@ public class PublicActorController : Controller
     private void LoadDropdowns()
     {
         ViewBag.Categories = _db.Categories.OrderBy(c => c.CategoryId).ToList();
+        ViewBag.ResourceCategories = _db.Categories
+            .Where(category => ResourceCategoryPolicy.IsAllowed(category.CategoryName))
+            .OrderBy(c => c.CategoryId)
+            .ToList();
+        ViewBag.NeedCategories = _db.Categories
+            .Where(category => _db.Needs.Any(need => need.Category == category.CategoryId))
+            .OrderBy(category => category.CategoryName)
+            .ToList();
+        ViewBag.ResourceCategories = _db.Categories
+            .Where(category =>
+                ResourceCategoryPolicy.IsAllowed(category.CategoryName) &&
+                _db.Resources.Any(resource => resource.CategoryId == category.CategoryId))
+            .OrderBy(category => category.CategoryName)
+            .ToList();
         ViewBag.Incidents = _db.Incidents.OrderBy(i => i.IncidentId).ToList();
     }
     
@@ -167,7 +187,12 @@ public class PublicActorController : Controller
             
         }
 
-        return View(new ResourceNeed());
+        var currentUser = _db.Users.Find(GetCurrentUserId());
+        return View(new ResourceNeed
+        {
+            Email = currentUser?.Email ?? "",
+            PhoneNumber = currentUser?.PhoneNumber ?? ""
+        });
     }
 
     private void LoadOperationalFeed()
@@ -185,6 +210,7 @@ public class PublicActorController : Controller
                 Description = resource.Description,
                 Status = resource.Status,
                 Category = resource.Category?.CategoryName,
+                LocationName = resource.LocationName,
                 ColorKey = "available-resource",
                 Latitude = resource.Latitude ?? 0,
                 Longitude = resource.Longitude ?? 0,
@@ -202,6 +228,7 @@ public class PublicActorController : Controller
                 Description = need.Description,
                 Status = need.Status,
                 Category = need.CategoryInfo?.CategoryName,
+                LocationName = need.LocationName,
                 Priority = need.Priority.ToString(),
                 ColorKey = need.Priority == NeedPriorityEnum.Critical
                     ? "critical-need"
@@ -298,6 +325,14 @@ public class PublicActorController : Controller
             }).ToList();
 
         ViewBag.Categories = _db.Categories.OrderBy(c => c.CategoryId).ToList();
+        ViewBag.ResourceCategories = _db.Categories
+            .Where(category => ResourceCategoryPolicy.IsAllowed(category.CategoryName))
+            .OrderBy(c => c.CategoryId)
+            .ToList();
+        ViewBag.NeedCategories = _db.Categories
+            .Where(category => _db.Needs.Any(need => need.Category == category.CategoryId))
+            .OrderBy(category => category.CategoryName)
+            .ToList();
         ViewBag.Incidents = _db.Incidents.OrderBy(i => i.IncidentId).ToList();
         if (id.HasValue)
         {
@@ -340,6 +375,19 @@ public class PublicActorController : Controller
             return RedirectToAction("Index", "Home");
         }
 
+        var currentUserId = GetCurrentUserId();
+        if (currentUserId is null)
+        {
+            return Unauthorized();
+        }
+
+        var currentUser = _db.Users.Find(currentUserId.Value);
+        if (currentUser is not null)
+        {
+            need.Email = currentUser.Email ?? need.Email;
+            need.PhoneNumber = currentUser.PhoneNumber ?? need.PhoneNumber;
+        }
+
         if (!ModelState.IsValid)
         {
             LoadDropdowns();
@@ -348,6 +396,20 @@ public class PublicActorController : Controller
             ViewBag.OpenRegistrationModal = true;
             return View("DashboardIndex", need);
         }
+
+        var location = _locationRegionResolver is null
+            ? LocationRegionResult.Valid(DemoDefaults.RegionId)
+            : _locationRegionResolver.Resolve(need.Latitude, need.Longitude);
+        if (!location.IsValid)
+        {
+            ModelState.AddModelError(nameof(ResourceNeed.Latitude), location.ErrorMessage!);
+            LoadDropdowns();
+            LoadResourceMarkers();
+            LoadOperationalFeed();
+            ViewBag.OpenRegistrationModal = true;
+            return View("DashboardIndex", need);
+        }
+
         // Save to database
         need.RegisteredAt = DateTime.Now;
         if (need.Id > 0)
@@ -373,6 +435,7 @@ public class PublicActorController : Controller
                 existingNeed.CrisisEventId = need.CrisisEventId;
                 existingNeed.Latitude = need.Latitude;
                 existingNeed.Longitude = need.Longitude;
+                existingNeed.RegionId = location.RegionId!.Value;
                 existingNeed.Category = need.Category;
                 existingNeed.Description = need.Description;
                 existingNeed.Quantity = need.Quantity;
@@ -392,14 +455,8 @@ public class PublicActorController : Controller
                 return Forbid();
             }
 
-            var currentUserId = GetCurrentUserId();
-
-            if (currentUserId is null)
-            {
-                return Unauthorized();
-            }
-
             need.PublicActorId = currentUserId.Value;
+            need.RegionId = location.RegionId!.Value;
             need.RegisteredAt = DateTime.Now;
             _db.Needs.Add(need);
             _db.SaveChanges();
@@ -677,11 +734,16 @@ public class HomeController : Controller
 
     private readonly AppDbContext _db;
     private readonly MatchNeedLifecycle _lifecycle;
+    private readonly LocationRegionResolver? _locationRegionResolver;
 
-    public HomeController(AppDbContext db, MatchNeedLifecycle lifecycle)
+    public HomeController(
+        AppDbContext db,
+        MatchNeedLifecycle lifecycle,
+        LocationRegionResolver? locationRegionResolver = null)
     {
         _db = db;
         _lifecycle = lifecycle;
+        _locationRegionResolver = locationRegionResolver;
     }
 
     [Authorize(Roles = "CivilianProvider,Administrator")]
@@ -693,6 +755,10 @@ public class HomeController : Controller
         }
         
         ViewBag.Categories = _db.Categories.OrderBy(c => c.CategoryId).ToList();
+        ViewBag.ResourceCategories = _db.Categories
+            .Where(category => ResourceCategoryPolicy.IsAllowed(category.CategoryName))
+            .OrderBy(c => c.CategoryId)
+            .ToList();
         var currentUserId = GetCurrentUserId();
         if (currentUserId is null)
         {
@@ -804,10 +870,55 @@ public class HomeController : Controller
             return Forbid();                                    
         }                                                       
 
+        var currentUser = _db.Users.Find(currentUserId.Value);
+        if (currentUser is not null)
+        {
+            resource.Email = currentUser.Email ?? resource.Email;
+            resource.PhoneNumber = currentUser.PhoneNumber ?? resource.PhoneNumber;
+        }
+
         if (!ModelState.IsValid)
         {
             // sends the user to form with attributes and error messages filled out
             ViewBag.Categories = _db.Categories.OrderBy(c => c.CategoryId).ToList();
+            ViewBag.ResourceCategories = _db.Categories
+                .Where(category => ResourceCategoryPolicy.IsAllowed(category.CategoryName))
+                .OrderBy(c => c.CategoryId)
+                .ToList();
+            LoadOperationalFeed(currentUserId.Value, User.IsInRole("Administrator"));
+            ViewBag.OpenRegistrationModal = true;
+            return View("Index", resource);
+        }
+
+        var resourceCategory = _db.Categories
+            .Where(category => category.CategoryId == resource.CategoryId)
+            .Select(category => category.CategoryName)
+            .SingleOrDefault();
+        if (resourceCategory is null || !ResourceCategoryPolicy.IsAllowed(resourceCategory))
+        {
+            ModelState.AddModelError(nameof(ResourceEntry.CategoryId),
+                "Velg en gyldig ressurskategori.");
+            ViewBag.Categories = _db.Categories.OrderBy(c => c.CategoryId).ToList();
+            ViewBag.ResourceCategories = _db.Categories
+                .Where(category => ResourceCategoryPolicy.IsAllowed(category.CategoryName))
+                .OrderBy(c => c.CategoryId)
+                .ToList();
+            LoadOperationalFeed(currentUserId.Value, User.IsInRole("Administrator"));
+            ViewBag.OpenRegistrationModal = true;
+            return View("Index", resource);
+        }
+
+        var location = _locationRegionResolver is null
+            ? LocationRegionResult.Valid(DemoDefaults.RegionId)
+            : _locationRegionResolver.Resolve(resource.Latitude!.Value, resource.Longitude!.Value);
+        if (!location.IsValid)
+        {
+            ModelState.AddModelError(nameof(ResourceEntry.Latitude), location.ErrorMessage!);
+            ViewBag.Categories = _db.Categories.OrderBy(c => c.CategoryId).ToList();
+            ViewBag.ResourceCategories = _db.Categories
+                .Where(category => ResourceCategoryPolicy.IsAllowed(category.CategoryName))
+                .OrderBy(c => c.CategoryId)
+                .ToList();
             LoadOperationalFeed(currentUserId.Value, User.IsInRole("Administrator"));
             ViewBag.OpenRegistrationModal = true;
             return View("Index", resource);
@@ -835,6 +946,7 @@ public class HomeController : Controller
                 existingResource.CategoryId = resource.CategoryId;
                 existingResource.Latitude = resource.Latitude;
                 existingResource.Longitude = resource.Longitude;
+                existingResource.RegionId = location.RegionId!.Value;
                 existingResource.Email = resource.Email;
                 existingResource.PhoneNumber = resource.PhoneNumber;
                 existingResource.LocationName = resource.LocationName;
@@ -852,7 +964,7 @@ public class HomeController : Controller
             
             
             resource.ProviderId = currentUserId.Value;
-            resource.RegionId = DemoDefaults.RegionId;
+            resource.RegionId = location.RegionId!.Value;
             resource.RegisteredAt = DateTime.Now;
             _db.Resources.Add(resource);
         }

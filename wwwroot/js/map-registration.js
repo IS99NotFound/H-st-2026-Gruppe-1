@@ -26,15 +26,6 @@ window.resqMapRegistration = {
                 url.searchParams.set('lat', latlng.lat.toString());
                 url.searchParams.set('lng', latlng.lng.toString());
                 link.href = url.toString();
-                // If the form is on this page already, open it as a popup instead of loading a new page.
-                if (action.type === registrationUrls.currentType) {
-                    link.addEventListener('click', event => {
-                        event.preventDefault();
-                        document.dispatchEvent(new CustomEvent('resq:open-registration-modal', {
-                            detail: { type: action.type, trigger: link }
-                        }));
-                    });
-                }
                 const icon = L.DomUtil.create('i', `bi ${action.icon}`, link);
                 icon.setAttribute('aria-hidden', 'true');
                 const label = L.DomUtil.create('span', '', link);
@@ -74,10 +65,10 @@ window.resqMapRegistration = {
 
     // Returns a function that puts a marker on the map
     // and saves the position in the form fields.
-    bindSelectedPosition(map, { latInput, lngInput, positionText, positionError, popupText }) {
+    bindSelectedPosition(map, { latInput, lngInput, positionText, positionError, popupText, locationInput }) {
         let selectedMarker = null;
 
-        return function setSelectedPosition(lat, lng) {
+        return function setSelectedPosition(lat, lng, options = {}) {
             if (selectedMarker) {
                 map.removeLayer(selectedMarker);
             }
@@ -99,9 +90,12 @@ window.resqMapRegistration = {
 
             window.resqReverseGeocode.lookup(lat, lng).then(placeName => {
                 if (!placeName || marker !== selectedMarker) return;
-                popupContent.textContent = popupText + ': ' + placeName;
+                popupContent.textContent = placeName;
                 marker.getPopup()?.update();
                 positionText.textContent = 'Valgt posisjon: ' + placeName + ' (' + coordinates + ')';
+                if (locationInput && !options.preserveLocationName) {
+                    locationInput.value = placeName.replace(/^Nær\s+/, '');
+                }
             });
         };
     }

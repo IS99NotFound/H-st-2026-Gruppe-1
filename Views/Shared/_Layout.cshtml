@@ -123,6 +123,32 @@
 
         <!-- Top, right corner, User account  -->
         <div class="topbar-user-controls dropdown">
+            <div class="topbar-register dropdown">
+                <button type="button" class="btn btn-primary btn-sm dropdown-toggle"
+                        data-bs-toggle="dropdown" aria-expanded="false" aria-label="Registrer">
+                    <i class="bi bi-plus-lg topbar-register-icon" aria-hidden="true"></i>
+                    <span class="topbar-register-label">Registrer</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    @if (User.IsInRole("CivilianProvider") || User.IsInRole("Administrator"))
+                    {
+                        <li><a class="dropdown-item" asp-controller="Home" asp-action="Index"
+                               asp-route-register="resource">
+                            <i class="bi bi-box-seam me-2" aria-hidden="true"></i>Ressurs
+                        </a></li>
+                    }
+                    @if (User.IsInRole("PublicActor"))
+                    {
+                        <li><a class="dropdown-item" asp-controller="PublicActor" asp-action="DashboardIndex"
+                               asp-route-register="need">
+                            <i class="bi bi-clipboard-check me-2" aria-hidden="true"></i>Behov
+                        </a></li>
+                        <li><a class="dropdown-item" href="@Url.Action("Index", "Incidents", new { register = "incident" })#incident-create-panel">
+                            <i class="bi bi-exclamation-triangle me-2" aria-hidden="true"></i>Hendelse
+                        </a></li>
+                    }
+                </ul>
+            </div>
             <button type="button" class="user-menu-button" data-bs-toggle="dropdown"
                     aria-expanded="false" aria-label="Åpne brukermeny">
                 <span class="user-avatar" aria-hidden="true">

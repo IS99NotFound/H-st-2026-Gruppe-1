@@ -10,7 +10,7 @@
             <label asp-for="CategoryId" class="form-label">Ressurstype</label>
             <select asp-for="CategoryId" id="resourceType" class="form-select" required>
                 <option value="">Velg et alternativ</option>
-                @foreach (var category in (List<Category>)ViewBag.Categories)
+                @foreach (var category in (List<Category>)ViewBag.ResourceCategories)
                 {
                     <option value="@category.CategoryId">@category.CategoryName</option>
                 }
@@ -86,6 +86,10 @@
             <div class="registration-location-input">
                 <input asp-for="LocationName" id="locationNameInput" class="form-control"
                        placeholder="Søk etter adresse eller anlegg (f.eks. Hellemyr Skole)" />
+                <button type="button" class="registration-icon-button" id="searchLocationButton"
+                        title="Søk etter adresse" aria-label="Søk etter adresse">
+                    <i class="bi bi-search" aria-hidden="true"></i>
+                </button>
                 <button type="button" class="registration-icon-button" id="useCurrentLocation"
                         title="Nåværende posisjon" aria-label="Bruk nåværende posisjon">
                     <i class="bi bi-crosshair" aria-hidden="true"></i>
