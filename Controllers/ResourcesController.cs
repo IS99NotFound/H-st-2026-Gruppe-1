@@ -78,7 +78,10 @@ public class ResourcesController : Controller
             .OrderBy(resource => resource.Id)
             .ToList();
 
-        ViewBag.Categories = _db.Categories.OrderBy(category => category.CategoryId).ToList();
+        ViewBag.Categories = _db.Categories
+            .Where(category => _db.Resources.Any(resource => resource.CategoryId == category.CategoryId))
+            .OrderBy(category => category.CategoryName)
+            .ToList();
 
         var resourceIds = allResources.Select(resource => resource.Id).ToList();
 
