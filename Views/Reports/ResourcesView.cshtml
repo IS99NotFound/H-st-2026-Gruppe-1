@@ -1,0 +1,59 @@
+@model IReadOnlyList<H_st_2026_Gruppe_1.Models.ResourceReportRow>
+
+@{
+    ViewData["Title"] = "Ressursrapport";
+}
+
+<section class="subpage report-page">
+    <div class="subpage-header">
+        <div>
+            <h1>Ressursrapport</h1>
+            <p class="page-intro">Oversikt over alle registrerte ressurser.</p>
+        </div>
+        <div class="d-flex gap-2 report-actions">
+            <a asp-controller="Reports" asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Tilbake
+            </a>
+            <button type="button" class="btn btn-primary" id="printReportButton">
+                <i class="bi bi-printer me-1" aria-hidden="true"></i>Skriv ut / Lagre som PDF
+            </button>
+        </div>
+    </div>
+
+    <div class="dashboard-card">
+        <div class="table-wrapper">
+            <table class="table table-striped align-middle mb-0">
+                <caption class="visually-hidden">Registrerte ressurser</caption>
+                <thead>
+                    <tr>
+                        <th scope="col" class="report-column-name">Navn</th>
+                        <th scope="col" class="report-column-category">Kategori</th>
+                        <th scope="col" class="report-column-description">Beskrivelse</th>
+                        <th scope="col" class="report-column-location">Sted</th>
+                        <th scope="col" class="report-column-contact">Kontakt</th>
+                        <th scope="col" class="report-column-status">Status</th>
+                        <th scope="col" class="report-column-registered">Registrert</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var resource in Model)
+                {
+                    <tr>
+                        <td class="report-column-name">@resource.Name</td>
+                        <td class="report-column-category">@CategoryLabelHelper.DisplayName(resource.Category)</td>
+                        <td class="report-column-description">@resource.Description</td>
+                        <td class="report-column-location">@resource.LocationName</td>
+                        <td class="report-column-contact">@resource.Email<br />@resource.PhoneNumber</td>
+                        <td class="report-column-status">@StatusLabelHelper.DisplayName(resource.Status)</td>
+                        <td class="report-column-registered">@resource.RegisteredAt.ToString("yyyy-MM-dd HH:mm")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<script nonce="@Context.Items["CspNonce"]">
+    document.getElementById("printReportButton")?.addEventListener("click", () => window.print());
+</script>

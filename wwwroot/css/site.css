@@ -315,12 +315,137 @@ body {
     margin-top: 8px;
 }
 
-.report-card {
+.dashboard-card.report-card {
     max-width: none;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 24px;
+    padding: 10px 20px;
+}
+
+.report-card-content {
+    color: inherit;
+    text-decoration: none;
+}
+
+.report-card-content .dashboard-card-header {
+    margin-bottom: 8px;
+}
+
+.report-card-content .dashboard-card-description {
+    margin-bottom: 0;
+}
+
+.report-card-content:hover .dashboard-card-description,
+.report-card-content:focus-visible .dashboard-card-description {
+    color: var(--accent);
 }
 
 .report-card-footer {
+    grid-column: 2;
+    grid-row: 1;
+    flex-direction: column;
+    align-items: flex-end;
     justify-content: flex-end;
+    gap: 16px;
+    margin-top: 0;
+}
+
+@media print {
+    @page {
+        size: portrait;
+        margin: 12mm;
+    }
+
+    html,
+    body,
+    .report-page,
+    .report-page .dashboard-card {
+        background: #fff !important;
+        color: #000 !important;
+    }
+
+    .topbar,
+    .footer,
+    .report-actions {
+        display: none !important;
+    }
+
+    .report-page {
+        max-width: none;
+        padding: 0;
+    }
+
+    .report-page .dashboard-card {
+        border: 0;
+        box-shadow: none;
+    }
+
+    .report-page .table-wrapper {
+        overflow: visible;
+    }
+
+    .report-page .table {
+        width: 100%;
+        table-layout: fixed;
+        font-size: 8pt;
+        --bs-table-bg: #fff;
+        --bs-table-striped-bg: #f2f2f2;
+        --bs-table-color: #000;
+        --bs-table-border-color: #000;
+    }
+
+    .report-page .table th,
+    .report-page .table td {
+        overflow-wrap: anywhere;
+        padding: 4px 5px;
+        vertical-align: top;
+    }
+
+    .report-page .report-column-name {
+        width: 14%;
+    }
+
+    .report-page .report-column-category {
+        width: 12%;
+    }
+
+    .report-page .report-column-description {
+        width: 24%;
+    }
+
+    .report-page .report-column-location {
+        width: 12%;
+    }
+
+    .report-page .report-column-contact {
+        width: 18%;
+    }
+
+    .report-page .report-column-status {
+        width: 10%;
+    }
+
+    .report-page .report-column-registered {
+        width: 10%;
+    }
+}
+
+@media (max-width: 576px) {
+    .dashboard-card.report-card {
+        grid-template-columns: 1fr;
+    }
+
+    .report-card-footer {
+        grid-column: 1;
+        grid-row: auto;
+        align-items: stretch;
+    }
+
+    .report-card-footer .btn {
+        width: 100%;
+    }
 }
 
 .operational-feed-search {

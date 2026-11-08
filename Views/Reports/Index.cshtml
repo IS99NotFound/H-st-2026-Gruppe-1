@@ -5,13 +5,18 @@
 <section class="placeholder-page">
     <h1>Rapporter</h1>
     <article class="dashboard-card report-card">
-        <div class="dashboard-card-header">
-            <h2>Ressurser</h2>
-        </div>
-        <p class="dashboard-card-description">Få en oversikt over alle registrerte ressurser</p>
+        <a asp-controller="Reports" asp-action="ResourcesView" class="report-card-content">
+            <div class="dashboard-card-header">
+                <h2>Ressurser</h2>
+            </div>
+            <p class="dashboard-card-description">Få en oversikt over alle registrerte ressurser</p>
+        </a>
         <div class="dashboard-card-footer report-card-footer">
             <a asp-controller="Reports" asp-action="Resources" class="btn btn-sm btn-outline-primary">
-                <i class="bi bi-download me-1" aria-hidden="true"></i>Last ned CSV
+                <i class="bi bi-filetype-csv me-1" aria-hidden="true"></i>Last ned CSV
+            </a>
+            <a asp-controller="Reports" asp-action="ResourcesJson" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-filetype-json me-1" aria-hidden="true"></i>Last ned JSON
             </a>
         </div>
     </article>

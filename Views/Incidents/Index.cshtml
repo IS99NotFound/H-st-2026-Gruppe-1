@@ -3,7 +3,6 @@
     ViewData["Title"] = "Hendelser";
     var isPublicActor = User.IsInRole("PublicActor");
     var incidentTypes = new[] { "Forest fire", "Landslide", "Flood", "Storm", "Power outage", "Other" };
-    string StatusLabel(string? statusValue) => statusValue switch { "active" => "Aktiv", "new" => "Ny", "under_review" => "Vurderes", "assigned" => "Tildelt", "resolved" => "Løst", "cancelled" => "Kansellert", "rejected" => "Avvist", "available" => "Tilgjengelig", "unavailable" => "Utilgjengelig", "withdrawn" => "Trukket tilbake", _ => statusValue ?? "" };
     string TypeLabel(string? typeValue) => typeValue switch { "Forest fire" => "Skogbrann", "Landslide" => "Jordskred", "Flood" => "Flom", "Storm" => "Storm", "Power outage" => "Strømbrudd", "Other" => "Annet", _ => typeValue ?? "" };
     var showCreatePanel = !ViewData.ModelState.IsValid && ViewBag.EditIncident is null ||
                           Context.Request.Query["register"] == "incident";
@@ -169,7 +168,7 @@
                     <div class="dashboard-card-header">
                         <h2>@incident.Title</h2>
                         <span class="incident-status @(incident.Status == "active" ? "incident-status-active" : "incident-status-resolved")">
-                            @StatusLabel(incident.Status)
+                            @StatusLabelHelper.DisplayName(incident.Status)
                         </span>
                     </div>
 

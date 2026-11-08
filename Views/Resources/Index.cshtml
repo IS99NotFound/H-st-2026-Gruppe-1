@@ -2,21 +2,6 @@
 
 @{
     ViewData["Title"] = "Ressurser";
-    string StatusLabel(string? statusValue) => statusValue switch
-    {
-        "active" => "Aktiv",
-        "new" => "Ny",
-        "under_review" or "proposed" => "Vurderes",
-        "assigned" or "accepted" => "Tildelt",
-        "resolved" => "Løst",
-        "cancelled" => "Kansellert",
-        "rejected" or "declined" => "Avslått",
-        "completed" => "Fullført",
-        "available" => "Tilgjengelig",
-        "unavailable" => "Utilgjengelig",
-        "withdrawn" => "Trukket tilbake",
-        _ => statusValue ?? ""
-    };
     string StatusClass(string? statusValue) => statusValue switch
     {
         "accepted" or "assigned" => "status-assigned",
@@ -78,7 +63,7 @@
                 <option value="">Alle</option>
                 @foreach (var status in statuses)
                 {
-                    <option value="@status" selected="@(Model.Status == status)">@StatusLabel(status)</option>
+                    <option value="@status" selected="@(Model.Status == status)">@StatusLabelHelper.DisplayName(status)</option>
                 }
             </select>
         </div>
@@ -151,7 +136,7 @@
                         <h2>@resource.Name</h2>
                         <span class="status-label @StatusClass(resource.Status)">
                             <i class="bi @(isWithdrawn ? "bi-archive-fill" : StatusIcon(resource.Status))" aria-hidden="true"></i>
-                            @StatusLabel(resource.Status)
+                            @StatusLabelHelper.DisplayName(resource.Status)
                         </span>
                     </div>
 
