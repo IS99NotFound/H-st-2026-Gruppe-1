@@ -2539,6 +2539,13 @@ html[data-theme="light"] .registration-modal .btn-close {
     display: none;
 }
 
+.topbar-register .dropdown-item > i {
+    width: 1.1rem;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    opacity: 0.85;
+}
+
 @media (max-width: 576px) {
     .topbar-register .dropdown-toggle {
         width: 34px;
