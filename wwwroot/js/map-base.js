@@ -17,6 +17,7 @@ window.resqMapBase = {
             layers: [openStreetMap]
         });
         let currentLocationMarker = null;
+        let currentLocationAccuracyCircle = null;
 
         const locateCurrentPosition = () => {
             map.locate({
@@ -30,16 +31,38 @@ window.resqMapBase = {
         map.resqLocateCurrentPosition = locateCurrentPosition;
 
         map.on('locationfound', event => {
+            const positionIcon = L.divIcon({
+                className: 'resq-current-location-icon',
+                html: '<i class="bi bi-geo-alt-fill" aria-hidden="true"></i>',
+                iconSize: [30, 30],
+                iconAnchor: [15, 30]
+            });
+
             if (currentLocationMarker) {
-                currentLocationMarker.setLatLng(event.latlng);
+                currentLocationMarker
+                    .setLatLng(event.latlng)
+                    .setIcon(positionIcon);
             } else {
-                currentLocationMarker = L.circleMarker(event.latlng, {
-                    radius: 8,
-                    color: '#ffffff',
-                    weight: 2,
-                    fillColor: '#258cfb',
-                    fillOpacity: 1
+                currentLocationMarker = L.marker(event.latlng, {
+                    icon: positionIcon,
+                    zIndexOffset: 1000
                 }).bindTooltip('Nåværende posisjon').addTo(map);
+            }
+
+            if (currentLocationAccuracyCircle) {
+                currentLocationAccuracyCircle
+                    .setLatLng(event.latlng)
+                    .setRadius(event.accuracy);
+            } else {
+                currentLocationAccuracyCircle = L.circle(event.latlng, {
+                    radius: event.accuracy,
+                    color: '#258cfb',
+                    weight: 1,
+                    fillColor: '#258cfb',
+                    fillOpacity: 0.12,
+                    interactive: false
+                }).addTo(map);
+                currentLocationAccuracyCircle.bringToBack();
             }
         });
 
