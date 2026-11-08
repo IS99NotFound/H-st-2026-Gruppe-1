@@ -202,6 +202,21 @@ public class PublicActorController : Controller
         });
     }
 
+    [HttpGet]
+    [Authorize(Roles = "PublicActor")]
+    public IActionResult RegistrationForm()
+    {
+        LoadDropdowns();
+        var currentUser = _db.Users.Find(GetCurrentUserId());
+        return PartialView(
+            "~/Views/PublicActor/_NeedRegistrationForm.cshtml",
+            new ResourceNeed
+            {
+                Email = currentUser?.Email ?? "",
+                PhoneNumber = currentUser?.PhoneNumber ?? ""
+            });
+    }
+
     private void LoadOperationalFeed()
     {
         ViewBag.FeedResources = _db.Resources
@@ -802,6 +817,20 @@ public class HomeController : Controller
         
         // Sends an empty model to the form the first time the page is opened.
         return View(new ResourceEntry());     
+    }
+
+    [HttpGet]
+    [Authorize(Roles = "CivilianProvider,Administrator")]
+    public IActionResult RegistrationForm()
+    {
+        ViewBag.Categories = _db.Categories.OrderBy(c => c.CategoryId).ToList();
+        ViewBag.ResourceCategories = _db.Categories
+            .AsEnumerable()
+            .Where(category => ResourceCategoryPolicy.IsAllowed(category.CategoryName))
+            .OrderBy(c => c.CategoryId)
+            .ToList();
+
+        return PartialView("~/Views/Home/_ResourceRegistrationForm.cshtml", new ResourceEntry());
     }
 
     private void LoadOperationalFeed(int CurrentUserId, bool includeAllResources)

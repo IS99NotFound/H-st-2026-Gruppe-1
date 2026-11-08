@@ -146,18 +146,18 @@
                 <ul class="dropdown-menu dropdown-menu-end">
                     @if (User.IsInRole("CivilianProvider") || User.IsInRole("Administrator"))
                     {
-                        <li><a class="dropdown-item" asp-controller="Home" asp-action="Index"
-                               asp-route-register="resource">
+                        <li><a class="dropdown-item" href="@Url.Action("RegistrationForm", "Home")"
+                               data-registration-type="resource">
                             <i class="bi bi-box-seam me-2" aria-hidden="true"></i>Ressurs
                         </a></li>
                     }
                     @if (User.IsInRole("PublicActor"))
                     {
-                        <li><a class="dropdown-item" asp-controller="PublicActor" asp-action="DashboardIndex"
-                               asp-route-register="need">
+                        <li><a class="dropdown-item" href="@Url.Action("RegistrationForm", "PublicActor")"
+                               data-registration-type="need">
                             <i class="bi bi-clipboard-check me-2" aria-hidden="true"></i>Behov
                         </a></li>
-                        <li><a class="dropdown-item" href="@Url.Action("Index", "Incidents", new { register = "incident" })#incident-create-panel">
+                        <li><a class="dropdown-item" href="@Url.Action(action, controller, new { register = "incident" })">
                             <i class="bi bi-exclamation-triangle me-2" aria-hidden="true"></i>Hendelse
                         </a></li>
                     }
@@ -232,6 +232,52 @@
     </main>
 </div>
 
+@if (isPublicActor)
+{
+    <div class="modal fade registration-modal" id="incidentRegistrationModal" tabindex="-1"
+         aria-labelledby="incidentRegistrationModalTitle" aria-hidden="true"
+         data-incident-registration-modal
+         data-open-incident-registration-modal="@((Context.Request.Query["register"] == "incident" ||
+             (controller == "Incidents" && !ViewData.ModelState.IsValid)) ? "true" : "false")">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg modal-fullscreen-md-down">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title" id="incidentRegistrationModalTitle">
+                        <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+                        <span>Registrer hendelse</span>
+                    </h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                            aria-label="Lukk registreringsskjema"></button>
+                </div>
+                <div class="modal-body">
+                    <partial name="~/Views/Incidents/_IncidentRegistrationForm.cshtml"
+                             model="@(new H_st_2026_Gruppe_1.Models.IncidentIndexViewModel())" />
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (!isGuestPage)
+{
+    <div class="modal fade registration-modal" id="pageRegistrationModal" tabindex="-1"
+         aria-labelledby="pageRegistrationModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl modal-fullscreen-md-down">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title" id="pageRegistrationModalTitle">Registrer</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Lukk registrering"></button>
+                </div>
+                <div id="pageRegistrationBody" class="modal-body">
+                    <p id="pageRegistrationStatus" class="registration-help p-4" hidden>
+                        Registreringsskjemaet kunne ikke lastes inn.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 @if (!isAuthPage)
 {
     <footer class="footer"> @* // Changes the bottom part of the page to look like the rest *@
@@ -243,6 +289,19 @@
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
 <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 <script src="~/js/site.js" asp-append-version="true"></script>
+@if (!isGuestPage)
+{
+    <script src="~/js/map-reverse-geocode.js" asp-append-version="true"></script>
+    <script src="~/js/registration-map.js" asp-append-version="true"></script>
+}
+@if (!isGuestPage)
+{
+    <script src="~/js/page-registration-modal.js" asp-append-version="true"></script>
+}
+@if (isPublicActor)
+{
+    <script src="~/js/incident-registration.js" asp-append-version="true"></script>
+}
 @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

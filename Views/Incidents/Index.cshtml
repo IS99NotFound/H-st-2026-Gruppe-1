@@ -4,8 +4,6 @@
     var isPublicActor = User.IsInRole("PublicActor");
     var incidentTypes = new[] { "Forest fire", "Landslide", "Flood", "Storm", "Power outage", "Other" };
     string TypeLabel(string? typeValue) => typeValue switch { "Forest fire" => "Skogbrann", "Landslide" => "Jordskred", "Flood" => "Flom", "Storm" => "Storm", "Power outage" => "Strømbrudd", "Other" => "Annet", _ => typeValue ?? "" };
-    var showCreatePanel = !ViewData.ModelState.IsValid && ViewBag.EditIncident is null ||
-                          Context.Request.Query["register"] == "incident";
 }
 
 <section class="subpage">
@@ -80,62 +78,6 @@
     @if (TempData["IncidentUpdated"] is string statusMessage)
     {
         <div class="alert alert-success" role="status">@statusMessage</div>
-    }
-
-    @if (isPublicActor)
-    {
-        <div id="incident-create-panel" class="collapse incident-create-panel @(showCreatePanel ? "show" : "")">
-            <form asp-controller="Incidents" asp-action="Create" method="post">
-                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-                <div class="incident-register-layout">
-                    <div class="incident-form-fields">
-                        <div>
-                            <label asp-for="CreateModel.Title" class="form-label">Navn på hendelse</label>
-                            <input asp-for="CreateModel.Title" class="form-control compact-field"
-                                   placeholder="Eksempel: Flom nær Arendal" />
-                            <span asp-validation-for="CreateModel.Title" class="text-danger"></span>
-                        </div>
-                        <div>
-                            <label asp-for="CreateModel.IncidentType" class="form-label">Hendelsestype</label>
-                            <select asp-for="CreateModel.IncidentType" class="form-select compact-field">
-                                <option value="">Velg type</option>
-                                @foreach (var incidentType in incidentTypes)
-                                {
-                                    <option value="@incidentType">@TypeLabel(incidentType)</option>
-                                }
-                            </select>
-                            <span asp-validation-for="CreateModel.IncidentType" class="text-danger"></span>
-                        </div>
-                        <div>
-                            <label asp-for="CreateModel.Description" class="form-label">Beskrivelse</label>
-                            <textarea asp-for="CreateModel.Description" class="form-control compact-field" rows="3"
-                                      placeholder="Beskriv hva som har skjedd og hvor det trengs hjelp."></textarea>
-                            <span asp-validation-for="CreateModel.Description" class="text-danger"></span>
-                        </div>
-                    </div>
-
-                    <div class="incident-map-panel">
-                        <label class="form-label">Sted</label>
-                        <div id="incident-map" class="incident-map" role="application" tabindex="0"
-                             aria-label="Velg sted for hendelsen på kartet"
-                             aria-describedby="incident-map-status"></div>
-                        <p id="incident-map-status" class="map-status" role="status" aria-live="polite">
-                            Klikk på kartet for å velge sted for hendelsen.
-                        </p>
-                        <input asp-for="CreateModel.Latitude" type="hidden" id="incident-latitude" />
-                        <input asp-for="CreateModel.Longitude" type="hidden" id="incident-longitude" />
-                        @if (ViewData.ModelState["CreateModel.Latitude"]?.Errors.Count > 0
-                            || ViewData.ModelState["CreateModel.Longitude"]?.Errors.Count > 0)
-                        {
-                            <span class="text-danger d-block">Dette feltet er påkrevd.</span>
-                        }
-                    </div>
-                </div>
-
-                <button type="submit" class="btn btn-sm btn-primary mt-3">Registrer hendelse</button>
-            </form>
-        </div>
     }
 
     @{
@@ -309,48 +251,6 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script src="~/js/map-reverse-geocode.js" asp-append-version="true"></script>
-    @if (isPublicActor)
-    {
-    <script nonce="@Context.Items["CspNonce"]">
-        const incidentMap = L.map('incident-map').setView([58.4614, 8.7683], 6);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(incidentMap);
-
-        let incidentMarker = null;
-        const latitudeInput = document.getElementById('incident-latitude');
-        const longitudeInput = document.getElementById('incident-longitude');
-        const mapStatus = document.getElementById('incident-map-status');
-
-        incidentMap.on('click', function (event) {
-            const latitude = event.latlng.lat;
-            const longitude = event.latlng.lng;
-
-            if (incidentMarker) {
-                incidentMap.removeLayer(incidentMarker);
-            }
-
-            incidentMarker = L.marker([latitude, longitude]).addTo(incidentMap);
-            latitudeInput.value = latitude.toFixed(6);
-            longitudeInput.value = longitude.toFixed(6);
-            const coordinates = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
-            mapStatus.textContent = `Valgt sted: ${coordinates}`;
-            window.resqReverseGeocode.lookup(latitude, longitude).then(placeName => {
-                if (placeName) mapStatus.textContent = `Valgt sted: ${placeName} (${coordinates})`;
-            });
-        });
-
-        setTimeout(() => incidentMap.invalidateSize(), 50);
-
-        const registerButton = document.querySelector('[data-bs-target="#incident-create-panel"]');
-        if (registerButton) {
-            registerButton.addEventListener('click', function () {
-                setTimeout(() => incidentMap.invalidateSize(), 100);
-            });
-        }
-    </script>
-    }
-
     @if (ViewBag.EditIncident is not null)
     {
     <script nonce="@Context.Items["CspNonce"]">

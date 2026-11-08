@@ -1,0 +1,51 @@
+@model H_st_2026_Gruppe_1.Models.IncidentIndexViewModel
+
+<form id="incidentRegistrationForm" class="registration-form"
+      asp-controller="Incidents" asp-action="Create" method="post">
+    <section class="registration-section">
+        <h3 class="registration-section-title">Detaljer</h3>
+        <div class="registration-field">
+            <label asp-for="CreateModel.Title" class="form-label">Navn på hendelse</label>
+            <input asp-for="CreateModel.Title" class="form-control" placeholder="Eksempel: Flom nær Arendal" />
+            <span asp-validation-for="CreateModel.Title" class="text-danger"></span>
+        </div>
+        <div class="registration-field">
+            <label asp-for="CreateModel.IncidentType" class="form-label">Hendelsestype</label>
+            <select asp-for="CreateModel.IncidentType" class="form-select">
+                <option value="">Velg type</option>
+                <option value="Forest fire">Skogbrann</option>
+                <option value="Landslide">Jordskred</option>
+                <option value="Flood">Flom</option>
+                <option value="Storm">Storm</option>
+                <option value="Power outage">Strømbrudd</option>
+                <option value="Other">Annet</option>
+            </select>
+            <span asp-validation-for="CreateModel.IncidentType" class="text-danger"></span>
+        </div>
+        <div class="registration-field">
+            <label asp-for="CreateModel.Description" class="form-label">Beskrivelse</label>
+            <textarea asp-for="CreateModel.Description" class="form-control" rows="3"
+                      placeholder="Beskriv hva som har skjedd og hvor det trengs hjelp."></textarea>
+            <span asp-validation-for="CreateModel.Description" class="text-danger"></span>
+        </div>
+    </section>
+
+    <section class="registration-section registration-location" data-incident-map-section>
+        <h3 class="registration-section-title">Sted</h3>
+        <div id="incident-registration-map" class="incident-map" role="application"
+             aria-label="Velg sted for hendelsen på kartet"></div>
+        <p id="incident-registration-map-status" class="map-status" role="status" aria-live="polite">
+            Klikk på kartet for å velge sted for hendelsen.
+        </p>
+        <input asp-for="CreateModel.Latitude" type="hidden" id="incident-registration-latitude" />
+        <input asp-for="CreateModel.Longitude" type="hidden" id="incident-registration-longitude" />
+        <span asp-validation-for="CreateModel.Latitude" class="text-danger d-block"></span>
+        <span asp-validation-for="CreateModel.Longitude" class="text-danger d-block"></span>
+    </section>
+
+    <div asp-validation-summary="ModelOnly" class="text-danger registration-validation"></div>
+    <div class="registration-actions">
+        <button type="button" class="btn registration-cancel" data-bs-dismiss="modal">Avbryt</button>
+        <button type="submit" class="btn btn-primary registration-submit">Registrer hendelse</button>
+    </div>
+</form>

@@ -15,10 +15,25 @@ window.resqMapRegistration = {
 
             const actions = [
                 { type: 'need', label: 'Registrer behov her', icon: 'bi-clipboard-plus' },
-                { type: 'resource', label: 'Registrer ressurs her', icon: 'bi-box-seam' }
+                { type: 'resource', label: 'Registrer ressurs her', icon: 'bi-box-seam' },
+                { type: 'incident', label: 'Registrer hendelse her', icon: 'bi-exclamation-triangle' }
             ];
 
             for (const action of actions) {
+                if (action.type === 'incident' && registrationUrls[action.type] === 'modal') {
+                    const button = L.DomUtil.create('button', 'btn btn-primary btn-sm map-register-action', content);
+                    button.type = 'button';
+                    button.addEventListener('click', () => {
+                        document.dispatchEvent(new CustomEvent('resq:open-incident-registration', {
+                            detail: { lat: latlng.lat, lng: latlng.lng, trigger: button }
+                        }));
+                    });
+                    const icon = L.DomUtil.create('i', `bi ${action.icon}`, button);
+                    icon.setAttribute('aria-hidden', 'true');
+                    const label = L.DomUtil.create('span', '', button);
+                    label.textContent = action.label;
+                    continue;
+                }
                 if (!registrationUrls[action.type]) continue;
                 const link = L.DomUtil.create('a', 'btn btn-primary btn-sm map-register-action', content);
                 const url = new URL(registrationUrls[action.type], document.baseURI);

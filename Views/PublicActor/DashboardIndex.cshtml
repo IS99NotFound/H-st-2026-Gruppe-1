@@ -17,6 +17,7 @@
         <div id="map" role="application" aria-label="Interaktivt kart"
              data-resource-registration-url="@(canRegisterResource ? Url.Action("Index", "Home") : null)"
              data-need-registration-url="@Url.Action("DashboardIndex", "PublicActor")"
+             data-incident-registration-url="modal"
              data-resource-markers-url="@Url.Action("GetResourceMarkers", "PublicActor")"
              data-registration-type="need"></div>
         <partial name="_MapColorLegend" />
@@ -111,6 +112,7 @@
         const registrationLinks = window.resqMapRegistration.bind(map, {
             resource: mapElement.dataset.resourceRegistrationUrl,
             need: mapElement.dataset.needRegistrationUrl,
+            incident: mapElement.dataset.incidentRegistrationUrl,
             currentType: mapElement.dataset.registrationType
         });
 
