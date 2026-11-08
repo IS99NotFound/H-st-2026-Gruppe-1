@@ -245,12 +245,21 @@ public class PublicActorController : Controller
                 CreatedAt = need.RegisteredAt
             })
             .ToList();
+        var currentOrganizationId = GetCurrentOrganizationId();
+        var editableIncidentOwnerIds = currentOrganizationId.HasValue
+            ? _db.PublicActors
+                .Where(actor => actor.OrganizationId == currentOrganizationId.Value)
+                .Select(actor => actor.PublicActorId)
+                .ToHashSet()
+            : new HashSet<int>();
         ViewBag.FeedIncidents = _db.Incidents
+            .Where(incident => incident.Status == "active")
             .AsEnumerable()
             .Select(incident => new OperationalFeedItem
             {
                 Type = "incident",
                 Id = incident.IncidentId,
+                CanEdit = editableIncidentOwnerIds.Contains(incident.PublicActorId),
                 Title = incident.Title,
                 Description = incident.Description,
                 Status = incident.Status,
@@ -844,12 +853,21 @@ public class HomeController : Controller
                 })
                 .ToList()
             : new List<OperationalFeedItem>();
+        var currentOrganizationId = GetCurrentOrganizationId();
+        var editableIncidentOwnerIds = currentOrganizationId.HasValue
+            ? _db.PublicActors
+                .Where(actor => actor.OrganizationId == currentOrganizationId.Value)
+                .Select(actor => actor.PublicActorId)
+                .ToHashSet()
+            : new HashSet<int>();
         ViewBag.FeedIncidents = _db.Incidents
+            .Where(incident => incident.Status == "active")
             .AsEnumerable()
             .Select(incident => new OperationalFeedItem
             {
                 Type = "incident",
                 Id = incident.IncidentId,
+                CanEdit = editableIncidentOwnerIds.Contains(incident.PublicActorId),
                 Title = incident.Title,
                 Description = incident.Description,
                 Status = incident.Status,

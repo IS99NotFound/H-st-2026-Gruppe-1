@@ -169,6 +169,15 @@ else
                                         <i class="bi bi-puzzle" aria-hidden="true"></i>
                                     </a>
                                 }
+                                @if (item.Type == "incident" && item.CanEdit)
+                                {
+                                    <a asp-controller="Incidents" asp-action="Index"
+                                       asp-route-id="@item.Id"
+                                       class="feed-card-edit-button" aria-label="Rediger @item.Title" title="Rediger">
+                                        <i class="bi bi-pencil" aria-hidden="true"></i>
+                                        <i class="bi bi-plus-lg feed-card-edit-mobile-icon" aria-hidden="true"></i>
+                                    </a>
+                                }
                             </div>
                         </div>
                         <h2>@item.Title</h2>

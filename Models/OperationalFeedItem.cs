@@ -7,6 +7,7 @@ public class OperationalFeedItem
     public string Type { get; set; } = "";
     public int Id { get; set; }
     public int? ProviderId { get; set; }
+    public bool CanEdit { get; set; }
     public string Title { get; set; } = "";
     public string? Description { get; set; }
     public string Status { get; set; } = "";
