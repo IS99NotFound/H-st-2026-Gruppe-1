@@ -64,7 +64,25 @@
         }
         if (!map || !items.length) return;
 
-        const feedMarkers = L.layerGroup().addTo(map);
+        function createClusterGroup(kind) {
+            return L.markerClusterGroup({
+                maxClusterRadius: 50,
+                disableClusteringAtZoom: 16,
+                showCoverageOnHover: false,
+                iconCreateFunction: cluster => L.divIcon({
+                    html: `<span>${cluster.getChildCount()}</span>`,
+                    className: `resq-cluster resq-cluster--${kind}`,
+                    iconSize: [36, 36]
+                })
+            }).addTo(map);
+        }
+
+        const groups = {
+            need: createClusterGroup("need"),
+            resource: createClusterGroup("resource"),
+            incident: createClusterGroup("incident")
+        };
+
         items.forEach(item => {
             const latitude = Number(item.latitude);
             const longitude = Number(item.longitude);
@@ -95,7 +113,7 @@
 
             L.marker([latitude, longitude], { icon: markerIcon })
                 .bindPopup(popup)
-                .addTo(feedMarkers);
+                .addTo(group[item.type] || groups.incident);
         });
     }
 

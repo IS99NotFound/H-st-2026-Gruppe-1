@@ -517,3 +517,24 @@ html[data-theme="light"] .layers-menu-control.leaflet-control-layers-expanded {
 @media (prefers-reduced-motion: reduce) {
     .crisis-cluster { animation: none; }
 }
+
+.resq-cluster {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    color: #fff;
+    font-weight: 700;
+    border: 3px solid rgba(255,255,255,.8);
+    box-shadow: 0 2px 6px rgba(0,0,0,.35);
+}
+
+.resq-cluster--resource {
+    background: #2e7d32;
+}
+.resq-cluster--need {
+    background: #c62828;
+}
+.resq-cluster--incident {
+    background: #ef6c00;
+}

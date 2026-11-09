@@ -29,7 +29,16 @@
         : [];
 
     
-    const resourceMarkers = L.layerGroup().addTo(map);
+    const resourceMarkers = L.markerClusterGroup({
+        maxClusterRadius: 50,
+        disableClusteringAtZoom: 16,
+        showCoverageOnHover: false,
+        iconCreateFunction: cluster => L.divIcon({
+            html: `<span>${cluster.getChildCount()}</span>`,
+            className: "resq-cluster resq-cluster--resource",
+            iconSize: [36, 36]
+        })
+    }).addTo(map);
 
     //Is used to avoid old requests from rewriting newer data.
     let activeController = null;
@@ -110,11 +119,6 @@
                 resourceStatus !== "available" &&
                 resourceStatus !== "unavailable"
             ){
-                return;
-            }
-
-            //Checks if the marker is outside of map-bounds
-            if(!map.getBounds().contains([latitude, longitude])) {
                 return;
             }
         
