@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using H_st_2026_Gruppe_1.Data;
+using H_st_2026_Gruppe_1.Helpers;
 using H_st_2026_Gruppe_1.Models;
 
 namespace H_st_2026_Gruppe_1.Controllers;
@@ -81,6 +82,11 @@ public class ResourcesController : Controller
         ViewBag.Categories = _db.Categories
             .Where(category => _db.Resources.Any(resource => resource.CategoryId == category.CategoryId))
             .OrderBy(category => category.CategoryName)
+            .ToList();
+        ViewBag.ResourceCategories = _db.Categories
+            .AsEnumerable()
+            .Where(category => ResourceCategoryPolicy.IsAllowed(category.CategoryName))
+            .OrderBy(category => category.CategoryId)
             .ToList();
 
         var resourceIds = allResources.Select(resource => resource.Id).ToList();

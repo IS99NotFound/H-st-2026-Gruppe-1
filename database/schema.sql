@@ -283,10 +283,12 @@ CREATE INDEX idx_ResourceNeed_Position ON ResourceNeed (Latitude, Longitude);
 -- Categories from the case description
 INSERT INTO Category (CategoryName, Description) VALUES
     ('Transport',          'Kjøretøy og transport av personer eller utstyr'),
+    ('Droneobservasjon',  'Droner og dronepiloter'),
     ('Strøm/aggregat',  'Aggregater og nødstrøm'),
     ('Snørydding',      'Brøyting og snørydding'),
     ('Sand/grus',      'Sand, grus og andre masser'),
     ('Maskiner',    'Gravemaskin, traktor, hjullaster, skogsmaskin'),
+    ('Evakuering',         'Evakuering og midlertidig innkvartering'),
     ('Samband',     'Kommunikasjonsutstyr'),
     ('Mannskap',   'Mannskap og frivillige'),
     ('Lokaler',           'Lokaler til overnatting, møter eller lagring'),
