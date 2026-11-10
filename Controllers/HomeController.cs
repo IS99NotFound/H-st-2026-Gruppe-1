@@ -152,16 +152,6 @@ public class PublicActorController : Controller
             .Where(category => _db.Needs.Any(need => need.Category == category.CategoryId))
             .OrderBy(category => category.CategoryName)
             .ToList();
-        var resourceCategoryIds = _db.Resources
-            .Select(resource => resource.CategoryId)
-            .Distinct()
-            .ToHashSet();
-        ViewBag.ResourceCategories = categories
-            .Where(category =>
-                ResourceCategoryPolicy.IsAllowed(category.CategoryName) &&
-                resourceCategoryIds.Contains(category.CategoryId))
-            .OrderBy(category => category.CategoryName)
-            .ToList();
         ViewBag.Incidents = _db.Incidents.OrderBy(i => i.IncidentId).ToList();
     }
     
@@ -815,8 +805,12 @@ public class HomeController : Controller
 
         }
         
-        // Sends an empty model to the form the first time the page is opened.
-        return View(new ResourceEntry());     
+        var currentUser = _db.Users.Find(currentUserId.Value);
+        return View(new ResourceEntry
+        {
+            Email = currentUser?.Email ?? "",
+            PhoneNumber = currentUser?.PhoneNumber ?? ""
+        });
     }
 
     [HttpGet]
@@ -830,7 +824,14 @@ public class HomeController : Controller
             .OrderBy(c => c.CategoryId)
             .ToList();
 
-        return PartialView("~/Views/Home/_ResourceRegistrationForm.cshtml", new ResourceEntry());
+        var currentUser = _db.Users.Find(GetCurrentUserId());
+        return PartialView(
+            "~/Views/Home/_ResourceRegistrationForm.cshtml",
+            new ResourceEntry
+            {
+                Email = currentUser?.Email ?? "",
+                PhoneNumber = currentUser?.PhoneNumber ?? ""
+            });
     }
 
     private void LoadOperationalFeed(int CurrentUserId, bool includeAllResources)

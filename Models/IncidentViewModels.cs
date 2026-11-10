@@ -5,6 +5,7 @@ namespace H_st_2026_Gruppe_1.Models;
 public class IncidentIndexViewModel
 {
     public IReadOnlyList<Incident> Incidents { get; set; } = [];
+    public IReadOnlySet<int> EditableIncidentOwnerIds { get; set; } = new HashSet<int>();
     public IncidentCreateViewModel CreateModel { get; set; } = new();
     public string? Search { get; set; }
 }

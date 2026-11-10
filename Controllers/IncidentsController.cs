@@ -54,6 +54,13 @@ public class IncidentsController : Controller
         int? id = null)
     {
         var incidents = GetIncidents(search, status, incidentType, startDate, endDate);
+        var currentOrganizationId = GetCurrentOrganizationId();
+        var editableIncidentOwnerIds = currentOrganizationId.HasValue
+            ? _db.PublicActors
+                .Where(actor => actor.OrganizationId == currentOrganizationId.Value)
+                .Select(actor => actor.PublicActorId)
+                .ToHashSet()
+            : new HashSet<int>();
 
         if (id.HasValue)
         {
@@ -71,6 +78,7 @@ public class IncidentsController : Controller
         return View(new IncidentIndexViewModel
         {
             Incidents = incidents,
+            EditableIncidentOwnerIds = editableIncidentOwnerIds,
             Search = search
         });
     }

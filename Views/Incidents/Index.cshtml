@@ -2,6 +2,7 @@
 @{
     ViewData["Title"] = "Hendelser";
     var isPublicActor = User.IsInRole("PublicActor");
+    var canManageIncidents = isPublicActor;
     var incidentTypes = new[] { "Forest fire", "Landslide", "Flood", "Storm", "Power outage", "Other" };
     string TypeLabel(string? typeValue) => typeValue switch { "Forest fire" => "Skogbrann", "Landslide" => "Jordskred", "Flood" => "Flom", "Storm" => "Storm", "Power outage" => "Strømbrudd", "Other" => "Annet", _ => typeValue ?? "" };
 }
@@ -134,15 +135,14 @@
                         </div>
                     </dl>
 
-                    @if ((isPublicActor || User.IsInRole("Administrator")) && incident.Status == "active")
+                    @if (canManageIncidents &&
+                        Model.EditableIncidentOwnerIds.Contains(incident.PublicActorId) &&
+                        incident.Status == "active")
                     {
                         <div class="dashboard-card-footer incident-card-footer">
-                            @if (isPublicActor)
-                            {
-                                <a asp-controller="Incidents" asp-action="Index"
-                                   asp-route-id="@incident.IncidentId"
-                                   class="btn btn-sm btn-outline-primary">Rediger</a>
-                            }
+                            <a asp-controller="Incidents" asp-action="Index"
+                               asp-route-id="@incident.IncidentId"
+                               class="btn btn-sm btn-outline-primary">Rediger</a>
                             <form asp-controller="Incidents" asp-action="MarkAsResolved" method="post">
                                 <input type="hidden" name="incidentId" value="@incident.IncidentId" />
                                 @Html.AntiForgeryToken()
@@ -202,15 +202,13 @@
                                     </div>
                                 </dl>
 
-                                @if (isPublicActor || User.IsInRole("Administrator"))
+                                @if (canManageIncidents &&
+                                    Model.EditableIncidentOwnerIds.Contains(incident.PublicActorId))
                                 {
                                     <div class="dashboard-card-footer incident-card-footer">
-                                        @if (isPublicActor)
-                                        {
-                                            <a asp-controller="Incidents" asp-action="Index"
-                                               asp-route-id="@incident.IncidentId"
-                                               class="btn btn-sm btn-outline-primary">Rediger</a>
-                                        }
+                                        <a asp-controller="Incidents" asp-action="Index"
+                                           asp-route-id="@incident.IncidentId"
+                                           class="btn btn-sm btn-outline-primary">Rediger</a>
                                         <form asp-controller="Incidents" asp-action="Reactivate" method="post">
                                             <input type="hidden" name="incidentId" value="@incident.IncidentId" />
                                             @Html.AntiForgeryToken()

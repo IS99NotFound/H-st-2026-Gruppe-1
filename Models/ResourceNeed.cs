@@ -49,6 +49,7 @@ namespace H_st_2026_Gruppe_1.Models
         [DataType(DataType.Date)]
         public DateTime? Deadline { get; set; }
 
+        [Required(ErrorMessage = "Stedsnavn er påkrevd.")]
         [StringLength(200, ErrorMessage = "Stedsnavn kan ikke være lengre enn 200 tegn.")]
         public string LocationName { get; set; } = string.Empty;
         
