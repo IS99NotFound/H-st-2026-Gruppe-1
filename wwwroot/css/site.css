@@ -2976,3 +2976,136 @@ html[data-theme="light"] .registration-modal .btn-close {
 .resq-map-marker--unavailable-resource {
     background-color: #3B3A3A;
 }
+
+.profile-container {
+    max-width: 1100px;
+    margin: 30px auto;
+}
+
+.profile-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    gap: 15px;
+}
+
+.profile-heading p {
+    color: var(--text-muted);
+}
+
+.profile-card,
+.profile-section {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px;
+    margin-bottom: 10px;
+}
+
+.profile-card {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.profile-card h2 {
+    margin: 0;
+    font-weight: bold;
+}
+
+.profile-card p {
+    color: var(--text-muted);
+    margin-top: 5px;
+}
+
+.profile-avatar {
+    width: 75px;
+    height: 75px;
+    border-radius: 50%;
+    background: #1d426b;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 35px;
+}
+
+.profile-section h3 {
+    font-size: 19px;
+    margin-bottom: 20px;
+}
+
+.profile-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    gap: 15px;
+}
+
+.profile-row:last-child {
+    border-bottom: none;
+}
+
+.profile-row span {
+    color: var(--text-muted);
+}
+
+.profile-row strong {
+    text-align: right;
+}
+
+.profile-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+}
+
+.profile-stat {
+    background: var(--bg-hover);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.profile-stat strong {
+    color: var(--accent);
+    font-size: 28px;
+}
+
+.profile-stat span {
+    color: var(--text-muted);
+}
+
+.profile-footer {
+    color: var(--text-muted);
+    font-size: 13px;
+    text-align: right;
+    margin-top: 20px;
+}
+
+/*Responsive design: Adjusys the profile layout for screens smaller than 650px.
+    easier to read on mobile*/
+@media (max-width: 650px) {
+    .profile-heading {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .profile-stat-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-row {
+        flex-direction: column;
+    }
+
+    .profile-row strong {
+        text-align: left;
+    }
+}

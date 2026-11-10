@@ -87,6 +87,10 @@ public class AppDbContext : DbContext
             entity.HasKey(u => u.Id);
             entity.Property(u => u.Id).HasColumnName("UserID");
             entity.Property(u => u.Role).HasConversion<string>();
+            entity.Property(u => u.ProfileAbout).HasMaxLength(500);
+            entity.Property(u => u.EmploymentDuration).HasMaxLength(500);
+            entity.Property(u => u.ProfileImagePath).HasMaxLength(255);
+
         });
 
         modelBuilder.Entity<CivilianProvider>(entity =>

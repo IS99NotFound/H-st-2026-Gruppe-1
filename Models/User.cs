@@ -8,6 +8,11 @@ public class User : IdentityUser<int>
     public string Name { get; set; } = "";
     public IdentityUserRole Role { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.Now;
+
+    //Ekstra informasjon som trengs for profilsiden
+    public string? ProfileAbout {get; set;}
+    public string? EmploymentDuration {get; set;}
+    public string? ProfileImagePath {get; set;}
     }
 
 public enum IdentityUserRole

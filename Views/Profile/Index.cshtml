@@ -1,0 +1,214 @@
+@model H_st_2026_Gruppe_1.Models.ProfileViewModel
+
+@{
+    ViewData["Title"] = "Min profil";
+
+    var memberDays = Math.Max(
+        0,
+        (DateTime.Today - Model.CreatedAt.Date).Days
+    );
+}
+
+<div class ="profile-container">
+    <!--Header-->
+    <div class ="profile-heading">
+
+        <div>
+            <h1>Min profil</h1>
+            <p>Se og oppdater profilinformasjonen din.</p>
+        </div>
+
+          <a asp-action="Index"
+           asp-route-edit="@(!Model.ProfileEdit)"
+           class="btn btn-outline-primary">
+
+            <i class="bi bi-pencil"></i>
+
+            @(Model.ProfileEdit ? "Tilbake" : "Rediger profil")
+
+        </a>
+    </div>
+
+    <!--Error-messages-->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Success"]
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-warning">
+            @TempData["Error"]
+        </div>
+    }
+
+    <!--Profile header-->
+    <div class =" profile-card">
+        <div class ="profile-avatar">
+            <i class ="bi bi-person-fill"></i>
+        </div>
+
+        <div>
+            <h2>@Model.Name</h2>
+
+            @if (Model.IsPublicActor)
+            {
+                <p>Offentlig aktør - Jobber i 
+                    <strong>@(Model.OrganizationName ?? "Organisasjon ikke oppgitt")</strong>
+                </p>
+            }
+            else
+            {
+                <p>Ressurs leverandør - Privatperson</p>
+            }
+        </div>
+    </div>
+
+    @if (Model.ProfileEdit)
+    {
+        <!--EditingView-->
+        <div class="profile-section">
+            <h3>Rediger profil</h3>
+
+            <form asp-action="Save" method="post">
+                @Html.AntiForgeryToken()
+
+                @if (Model.IsPublicActor)
+                {
+                    <div class="alert alert-warning">
+                        Din organisasjon er ikke verifisert.
+                    </div>  
+
+                    <div class="organization-deployment">
+                        <label class="form-label">
+                            Hvor lenge har du jobbet i organisasjonen?
+                        </label>
+
+                        <input type="text" 
+                            name="employmentDuration"
+                            value="@Model.EmploymentDuration"
+                            class="form-control"
+                            maxlength="100"
+                            placeholder="F.eks. Siden august 2022"/>
+
+                    </div>
+                }
+                else
+                {
+                    <div class="organization-deployment">
+                        <label class="form-label">
+                            Om meg
+                        </label>
+
+                        <textarea name="profileAbout"
+                            class="form-control"
+                            rows="4"
+                            maxlength="500"
+                            placeholder="Skriv litt om deg selv (valgfritt)">@Model.ProfileAbout</textarea>
+                    </div>    
+                }
+
+                <button type="submit" class="btn btn-primary">
+                    Lagre endringer
+                </button>
+
+                <a asp-action="Index"
+                    class="btn btn-secondary">
+                    Avbryt
+                </a>
+            </form>
+        </div>
+    }
+    else
+    {
+        <!-- Kontaktinformasjon -->
+
+        <div class="profile-section">
+
+            <h3>Kontaktinformasjon</h3>
+
+            <div class="profile-row">
+                <span>Navn</span>
+                <strong>@Model.Name</strong>
+            </div>
+
+            <div class="profile-row">
+                <span>E-post</span>
+                <strong>@(Model.Email ?? "Ikke oppgitt")</strong>
+            </div>
+
+            <div class="profile-row">
+                <span>Telefon</span>
+                <strong>@(Model.PhoneNumber ?? "Ikke oppgitt")</strong>
+            </div>
+        </div>
+
+        @if (Model.IsPublicActor)
+        {
+            <!--Offentlig aktør-->
+            <div class="profile-section">
+                <h3>Arbeidsforhold</h3>
+
+                <div class="profile-row">
+                    <span>Organisasjon </span>
+
+                    <strong>
+                        @(Model.OrganizationName ?? "Ikke oppgitt")
+                    </strong>
+                </div>
+
+                <div class="profile-row">
+                    <span>Jobbet her siden</span>
+
+                    <strong> @(Model.EmploymentDuration ?? "Ikke oppgitt")</strong>
+                </div>
+
+            </div>
+
+             <div class="profile-section">
+
+                <h3>Min aktivitet</h3>
+
+                <div class="profile-stat">
+                    <strong>@Model.NeedCount</strong>
+                    <span>Registrerte behov</span>
+                </div>
+            </div>
+        }
+        else
+        {
+            <!--Sivilperson-->
+            <div class="profile-section">
+                <h3>Om meg</h3>
+                <p>
+                    @(string.IsNullOrWhiteSpace(Model.ProfileAbout)
+                    ? "Tomt. Du har ikke skrevt noe i bioen ennå."
+                    : Model.ProfileAbout)
+                </p>
+            </div>
+
+            <div class="profile-section">
+
+                <h3>Mitt bidrag til ResQ</h3>
+
+                <div class="profile-stat-grid">
+
+                    <div class="profile-stat">
+                        <stong>@Model.ResourceCount</stong>
+                        <span>Registrerte ressurser</span>
+                    </div>
+
+                    <div class="profile-stat">
+                        <strong>@memberDays</strong>
+                        <span>Dager som medlem</span>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    <div class="profile-footer">
+        Medlem siden @Model.CreatedAt.ToString("dd.MM.yyyy")
+    </div>
+ </div>

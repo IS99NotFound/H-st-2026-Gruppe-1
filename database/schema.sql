@@ -69,7 +69,9 @@ CREATE TABLE `User` (
     Role                  ENUM('PublicActor', 'CivilianProvider', 'Administrator')
                           NOT NULL,
     CreatedAt             DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
+    ProfileAbout          VARCHAR(500) NULL,
+    EmploymentDuration    VARCHAR(100) NULL,
+    ProfileImagePath      VARCHAR(255) NULL,
     PRIMARY KEY (UserID),
     UNIQUE KEY uq_User_NormalizedUserName (NormalizedUserName),
     UNIQUE KEY uq_User_NormalizedEmail (NormalizedEmail)
