@@ -235,6 +235,15 @@ window.resqRadius = {
         if (savedRadius !== null && Number(savedRadius) >= 0 && Number(savedRadius) <= 100) {
             slider.value = savedRadius;
         }
+        const resetLink = slider.closest("form")?.querySelector(".dashboard-filter-actions a");
+        resetLink?.addEventListener("click", () => {
+            slider.value = "0";
+            output.textContent = window.resqRadius.format("0");
+            error.hidden = true;
+            if (storageKey) {
+                localStorage.removeItem(storageKey);
+            }
+        });
         output.textContent = window.resqRadius.format(slider.value);
         if (Number(slider.value) > 0) {
             requestLocation();

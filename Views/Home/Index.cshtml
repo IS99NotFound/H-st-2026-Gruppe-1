@@ -114,7 +114,31 @@
             lngInput: lngInput,
             positionText: document.getElementById('posText'),
             positionError: document.getElementById('posError'),
-            popupText: 'Valgt posisjon'
+            popupText: 'Valgt posisjon',
+            locationInput: document.getElementById('locationNameInput')
+        });
+        document.getElementById('searchLocationButton')?.addEventListener('click', async () => {
+            const input = document.getElementById('locationNameInput');
+            const button = document.getElementById('searchLocationButton');
+            if (!input?.value.trim()) return;
+            button.disabled = true;
+            try {
+                const result = await window.resqReverseGeocode.searchAddress(input.value.trim());
+                if (!result) {
+                    input.setCustomValidity('Fant ingen adresse.');
+                    input.reportValidity();
+                    return;
+                }
+                input.setCustomValidity('');
+                input.value = result.formatted_query;
+                setPosition(Number(result.lat), Number(result.lon), { preserveLocationName: true });
+                map.setView([Number(result.lat), Number(result.lon)], 14);
+            } catch {
+                input.setCustomValidity('Adressesøket kunne ikke gjennomføres.');
+                input.reportValidity();
+            } finally {
+                button.disabled = false;
+            }
         });
         const requestedLocation = window.resqMapRegistration.readRequestedLocation();
         const initialLat = Number(latInput?.value);
@@ -126,9 +150,6 @@
             (requestedLocation || selectedLat !== 0 || selectedLng !== 0)) {
             setPosition(selectedLat, selectedLng);
             map.setView([selectedLat, selectedLng], 13);
-        } else if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(position =>
-                map.setView([position.coords.latitude, position.coords.longitude], 13));
         }
         window.resqAbMap.initialize(map, {
             onMapClick: event => {
@@ -138,6 +159,8 @@
         });
         // A-B legges til før Layers for å få ønsket rekkefølge på kartkontrollene.
         mapSetup.addLayersControl();
+        mapSetup.addLocateControl();
+        mapSetup.locateCurrentPosition();
 
         document.getElementById('resourceType')?.addEventListener('change', event => {
             const expiryDate = document.getElementById('expiryDate');

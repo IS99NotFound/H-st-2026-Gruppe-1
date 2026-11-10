@@ -21,6 +21,7 @@ public class AppDbContext : DbContext
     public DbSet<CivilianProvider> CivilianProviders => Set<CivilianProvider>();
     public DbSet<PublicActor> PublicActors => Set<PublicActor>();
     public DbSet<Organization> Organizations => Set<Organization>();
+    public DbSet<Region> Regions => Set<Region>();
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -45,6 +46,7 @@ public class AppDbContext : DbContext
             entity.Property(n => n.Id).HasColumnName("NeedID");
             entity.Property(n => n.CrisisEventId).HasColumnName("IncidentID");
             entity.Property(n => n.PublicActorId).HasColumnName("PublicActorID");
+            entity.Property(n => n.RegionId).HasColumnName("RegionID");
             entity.Property(n => n.Category).HasColumnName("CategoryID");
             entity.Property(n => n.RegisteredAt).HasColumnName("CreatedAt");
             // Saved as text, the column is an ENUM
@@ -59,12 +61,21 @@ public class AppDbContext : DbContext
             entity.Property(c => c.CategoryId).HasColumnName("CategoryID");
         });
 
+        modelBuilder.Entity<Region>(entity =>
+        {
+            entity.ToTable("Region");
+            entity.HasKey(r => r.RegionId);
+            entity.Property(r => r.RegionId).HasColumnName("RegionID");
+            entity.Property(r => r.RegionName).HasColumnName("RegionName");
+        });
+
         modelBuilder.Entity<Incident>(entity =>
         {
             entity.ToTable("Incident");
             entity.HasKey(i => i.IncidentId);
             entity.Property(i => i.IncidentId).HasColumnName("IncidentID");
             entity.Property(i => i.PublicActorId).HasColumnName("PublicActorID");
+            entity.Property(i => i.RegionId).HasColumnName("RegionID");
             entity.Property(i => i.NormalizedTitle).HasColumnName("NormalizedTitle");
             entity.Property(i => i.IncidentType).HasColumnName("IncidentType");
             entity.Property(i => i.Latitude).HasPrecision(9, 6);

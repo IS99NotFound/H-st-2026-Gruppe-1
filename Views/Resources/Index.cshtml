@@ -2,21 +2,6 @@
 
 @{
     ViewData["Title"] = "Ressurser";
-    string StatusLabel(string? statusValue) => statusValue switch
-    {
-        "active" => "Aktiv",
-        "new" => "Ny",
-        "under_review" or "proposed" => "Vurderes",
-        "assigned" or "accepted" => "Tildelt",
-        "resolved" => "Løst",
-        "cancelled" => "Kansellert",
-        "rejected" or "declined" => "Avslått",
-        "completed" => "Fullført",
-        "available" => "Tilgjengelig",
-        "unavailable" => "Utilgjengelig",
-        "withdrawn" => "Trukket tilbake",
-        _ => statusValue ?? ""
-    };
     string StatusClass(string? statusValue) => statusValue switch
     {
         "accepted" or "assigned" => "status-assigned",
@@ -78,7 +63,7 @@
                 <option value="">Alle</option>
                 @foreach (var status in statuses)
                 {
-                    <option value="@status" selected="@(Model.Status == status)">@StatusLabel(status)</option>
+                    <option value="@status" selected="@(Model.Status == status)">@StatusLabelHelper.DisplayName(status)</option>
                 }
             </select>
         </div>
@@ -90,7 +75,7 @@
                 @foreach (var category in categories)
                 {
                     <option value="@category.CategoryId" selected="@(Model.ResourceType == category.CategoryId)">
-                        @category.CategoryName
+                        @CategoryLabelHelper.DisplayName(category.CategoryName)
                     </option>
                 }
             </select>
@@ -115,7 +100,7 @@
         </div>
 
         <div class="dashboard-filter-actions">
-            <button type="submit" class="btn btn-primary">Søk</button>
+            <button type="submit" class="btn btn-primary">Filtrer</button>
             <a asp-controller="Resources" asp-action="Index" class="btn btn-outline-secondary">Nullstill</a>
         </div>
     </form>
@@ -151,7 +136,7 @@
                         <h2>@resource.Name</h2>
                         <span class="status-label @StatusClass(resource.Status)">
                             <i class="bi @(isWithdrawn ? "bi-archive-fill" : StatusIcon(resource.Status))" aria-hidden="true"></i>
-                            @StatusLabel(resource.Status)
+                            @StatusLabelHelper.DisplayName(resource.Status)
                         </span>
                     </div>
 
@@ -160,7 +145,7 @@
                     <dl class="dashboard-details resource-details">
                         <div>
                             <dt><i class="bi bi-tag" aria-hidden="true"></i> Type</dt>
-                            <dd>@resource.Category?.CategoryName</dd>
+                            <dd>@(resource.Category is null ? "Ikke oppgitt" : CategoryLabelHelper.DisplayName(resource.Category.CategoryName))</dd>
                         </div>
                         <div>
                             <dt><i class="bi bi-person" aria-hidden="true"></i> Kontakt</dt>

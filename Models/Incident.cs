@@ -4,6 +4,7 @@ public class Incident
 {
         public int IncidentId { get; set; }
         public int PublicActorId { get; set; }
+        public int RegionId { get; set; }
         public string Title { get; set; } = "";
         // Lower case version of the title. It is used for searching.
         public string NormalizedTitle { get; set; } = "";

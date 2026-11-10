@@ -17,6 +17,7 @@ public class ResourceEntryValidationTests
             PhoneNumber = "+47 90010101",
             CategoryId = 1,
             Description = "Traktor med frontlaster",
+            LocationName = "Kristiansand",
             Latitude = 58.1467,
             Longitude = 7.9956
         };
@@ -73,6 +74,7 @@ public class ResourceNeedValidationTests
             Category = 1,
             Description = "Strømbrudd i bygget",
             Quantity = 1,
+            LocationName = "Kristiansand",
             Latitude = 58.1467,
             Longitude = 7.9956
         };

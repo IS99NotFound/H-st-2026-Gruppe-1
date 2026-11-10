@@ -12,8 +12,9 @@
     var controller = ViewContext.RouteData.Values["controller"]?.ToString();
     var isAuthenticated = User.Identity?.IsAuthenticated == true;
     var isAuthPage = controller == "Auth" || controller == "Register";
+    var isGuestPage = controller == "Guest";
     var isPublicActor = User.IsInRole("PublicActor");
-    var userName = User.Identity?.Name ?? "Bruker";
+    var userName = isGuestPage ? "Gjest" : User.Identity?.Name ?? "Bruker";
     var organizationName = string.Empty;
 
     if (isAuthenticated && isPublicActor &&
@@ -51,21 +52,29 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body class="@(ViewData["FullWidth"] is true ? "full-width-page" : "") @(isAuthPage ? "authentication-page" : "")">
-@if (isAuthenticated)
+@if (isAuthenticated || isGuestPage)
 {
     <header class="topbar">
         <!-- Top, left corner, logo and text  -->
         <div class="topbar-brand">
             <a class="brand-name"
-                asp-controller="@(isPublicActor ? "PublicActor" : "Home")"
-                asp-action="@(isPublicActor ? "DashboardIndex" : "Index")">ResQ</a>
+                asp-controller="@(isGuestPage ? "Guest" : isPublicActor ? "PublicActor" : "Home")"
+                asp-action="@(isGuestPage ? "Index" : isPublicActor ? "DashboardIndex" : "Index")">ResQ</a>
             <div class="brand-tagline">
             </div>
         </div>
 
         <!-- Top, middle part, menu -->
         <nav id="main-navigation" class="topbar-nav" aria-label="Hovednavigasjon">
-    @if (isPublicActor)
+    @if (isGuestPage)
+    {
+        <a asp-controller="Guest" asp-action="Index"
+           class="topbar-link active">
+            <i class="bi bi-map topbar-link-icon" aria-hidden="true"></i>
+            <span>Kart</span>
+        </a>
+    }
+    else if (isPublicActor)
     {
         <a asp-controller="PublicActor" asp-action="DashboardIndex"
            class="topbar-link @(controller == "PublicActor" && action == "DashboardIndex" ? "active" : "")">
@@ -82,13 +91,16 @@
         </a>
     }
 
+    @if (!isGuestPage)
+    {
     <a asp-controller="Incidents" asp-action="Index"
        class="topbar-link @(controller == "Incidents" ? "active" : "")">
         <i class="bi bi-exclamation-triangle topbar-link-icon" aria-hidden="true"></i>
         <span>Hendelser</span>
     </a>
+    }
 
-    @if (isPublicActor)
+    @if (!isGuestPage && isPublicActor)
     {
         <a asp-controller="PublicActor" asp-action="NeedsIndex"
            class="topbar-link @(controller == "PublicActor" && action == "NeedsIndex" ? "active" : "")">            <i class="bi bi-clipboard-check topbar-link-icon" aria-hidden="true"></i>
@@ -101,7 +113,7 @@
             <span>Matching</span>
         </a>
     }
-    else
+    else if (!isGuestPage)
     {
         <a asp-controller="Resources" asp-action="Index"
            class="topbar-link @(controller == "Resources" ? "active" : "")">
@@ -111,7 +123,7 @@
     }
     
 
-    @if (User.IsInRole("PublicActor") || User.IsInRole("Administrator"))
+    @if (!isGuestPage && (User.IsInRole("PublicActor") || User.IsInRole("Administrator")))
     {
         <a asp-controller="Reports" asp-action="Index"
            class="topbar-link @(controller == "Reports" ? "active" : "")">
@@ -123,6 +135,35 @@
 
         <!-- Top, right corner, User account  -->
         <div class="topbar-user-controls dropdown">
+            @if (!isGuestPage)
+            {
+            <div class="topbar-register dropdown">
+                <button type="button" class="btn btn-primary btn-sm dropdown-toggle"
+                        data-bs-toggle="dropdown" aria-expanded="false" aria-label="Registrer">
+                    <i class="bi bi-plus-lg topbar-register-icon" aria-hidden="true"></i>
+                    <span class="topbar-register-label">Registrer</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    @if (User.IsInRole("CivilianProvider") || User.IsInRole("Administrator"))
+                    {
+                        <li><a class="dropdown-item" href="@Url.Action("RegistrationForm", "Home")"
+                               data-registration-type="resource">
+                            <i class="bi bi-box-seam me-2" aria-hidden="true"></i>Ressurs
+                        </a></li>
+                    }
+                    @if (User.IsInRole("PublicActor"))
+                    {
+                        <li><a class="dropdown-item" href="@Url.Action("RegistrationForm", "PublicActor")"
+                               data-registration-type="need">
+                            <i class="bi bi-clipboard-check me-2" aria-hidden="true"></i>Behov
+                        </a></li>
+                        <li><a class="dropdown-item" href="@Url.Action(action, controller, new { register = "incident" })">
+                            <i class="bi bi-exclamation-triangle me-2" aria-hidden="true"></i>Hendelse
+                        </a></li>
+                    }
+                </ul>
+            </div>
+            }
             <button type="button" class="user-menu-button" data-bs-toggle="dropdown"
                     aria-expanded="false" aria-label="Åpne brukermeny">
                 <span class="user-avatar" aria-hidden="true">
@@ -134,6 +175,10 @@
             <div class="dropdown-menu dropdown-menu-end user-menu">
                 <div class="user-menu-header">
                     <span class="user-menu-name">@userName</span>
+                    @if (isGuestPage)
+                    {
+                        <span class="user-menu-organization">Gjest</span>
+                    }
                     @if (!string.IsNullOrWhiteSpace(organizationName))
                     {
                         <span class="user-menu-organization">
@@ -144,23 +189,39 @@
                 </div>
                 <div class="dropdown-divider"></div>
 
+                @if (isGuestPage)
+                {
+                <a class="dropdown-item user-menu-item" asp-controller="Auth" asp-action="Login">
+                    <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>
+                    <span>Logg inn</span>
+                </a>
+                <a class="dropdown-item user-menu-item" asp-controller="Register" asp-action="Index">
+                    <i class="bi bi-person-plus" aria-hidden="true"></i>
+                    <span>Registrer ny bruker</span>
+                </a>
+                }
+                else
+                {
                 <a class="dropdown-item user-menu-item" href="#">
                     <i class="bi bi-person-circle" aria-hidden="true"></i>
                     <span>Min profil</span>
                 </a>
+                }
                 <button type="button" class="dropdown-item user-menu-item" id="theme-toggle"
                         aria-pressed="false">
                     <i class="bi bi-sun" aria-hidden="true"></i>
                     <span id="theme-toggle-label">Lys modus</span>
                 </button>
+                @if (!isGuestPage)
+                {
                 <div class="dropdown-divider"></div>
-
                 <form asp-controller="Auth" asp-action="Logout" method="post">
                     <button type="submit" class="dropdown-item user-menu-item logout-item">
                         <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
                         <span>Logg ut</span>
                     </button>
                 </form>
+                }
             </div>
         </div>
         </header>
@@ -170,6 +231,52 @@
         @RenderBody()
     </main>
 </div>
+
+@if (isPublicActor)
+{
+    <div class="modal fade registration-modal" id="incidentRegistrationModal" tabindex="-1"
+         aria-labelledby="incidentRegistrationModalTitle" aria-hidden="true"
+         data-incident-registration-modal
+         data-open-incident-registration-modal="@((Context.Request.Query["register"] == "incident" ||
+             (controller == "Incidents" && !ViewData.ModelState.IsValid)) ? "true" : "false")">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg modal-fullscreen-md-down">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title" id="incidentRegistrationModalTitle">
+                        <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+                        <span>Registrer hendelse</span>
+                    </h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                            aria-label="Lukk registreringsskjema"></button>
+                </div>
+                <div class="modal-body">
+                    <partial name="~/Views/Incidents/_IncidentRegistrationForm.cshtml"
+                             model="@(new H_st_2026_Gruppe_1.Models.IncidentIndexViewModel())" />
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (!isGuestPage)
+{
+    <div class="modal fade registration-modal" id="pageRegistrationModal" tabindex="-1"
+         aria-labelledby="pageRegistrationModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl modal-fullscreen-md-down">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title" id="pageRegistrationModalTitle">Registrer</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Lukk registrering"></button>
+                </div>
+                <div id="pageRegistrationBody" class="modal-body">
+                    <p id="pageRegistrationStatus" class="registration-help p-4" hidden>
+                        Registreringsskjemaet kunne ikke lastes inn.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
 @if (!isAuthPage)
 {
@@ -182,6 +289,19 @@
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
 <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 <script src="~/js/site.js" asp-append-version="true"></script>
+@if (!isGuestPage)
+{
+    <script src="~/js/map-reverse-geocode.js" asp-append-version="true"></script>
+    <script src="~/js/registration-map.js" asp-append-version="true"></script>
+}
+@if (!isGuestPage)
+{
+    <script src="~/js/page-registration-modal.js" asp-append-version="true"></script>
+}
+@if (isPublicActor)
+{
+    <script src="~/js/incident-registration.js" asp-append-version="true"></script>
+}
 @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
