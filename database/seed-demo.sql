@@ -40,11 +40,17 @@ INSERT INTO CivilianProvider (ProviderID, ProviderType) VALUES
 
 INSERT INTO Incident (IncidentID, PublicActorID, RegionID, Title, NormalizedTitle, IncidentType, Description, Latitude, Longitude) VALUES
     (1, 1, 8, 'Storm i Agder',              'storm i agder',              'Storm',        'Veltede trær og stengte veier',          58.146700, 7.995600),
-    (2, 1, 9, 'Flom i Rogaland',           'flom i rogaland',             'Flom',         'Elver som flommer over',                 58.970000, 5.733100),
+    (2, 1, 9, 'Flom i Rogaland',           'flom i rogaland',            'Flom',         'Elver som flommer over',                 58.970000, 5.733100),
     (3, 1, 12, 'Strømbrudd i Trøndelag',    'strømbrudd i trøndelag',     'Strømbrudd',   'Stort strømbrudd etter kraftig snøfall', 63.430500, 10.395100),
-    (4, 6, 9, 'Storm langs Jærkysten',    'storm langs jærkysten',        'Storm',        'Kraftig vind har ført til stengte veier og skader på strømnettet.', 58.850000, 5.650000),
-    (5, 6, 9, 'Flom ved Sandnes',         'flom ved sandnes',             'Flom',         'Vannstanden stiger raskt etter mye nedbør i nedslagsfeltet.', 58.852000, 5.735000),
-    (6, 7, 8, 'Skogbrannøvelse i Setesdal','skogbrannøvelse i setesdal','Skogbrann', 'Øvelse med behov for logistikk og støtte under skogbrannøvelsen.', 58.700000, 7.800000);
+    (4, 6, 9, 'Storm langs Jærkysten',    'storm langs jærkysten',       'Storm',        'Kraftig vind har ført til stengte veier og skader på strømnettet.', 58.850000, 5.650000),
+    (5, 6, 9, 'Flom ved Sandnes',         'flom ved sandnes',            'Flom',         'Vannstanden stiger raskt etter mye nedbør i nedslagsfeltet.', 58.852000, 5.735000),
+    (6, 7, 8, 'Skogbrannøvelse i Setesdal','skogbrannøvelse i setesdal','Skogbrann', 'Øvelse med behov for logistikk og støtte under skogbrannøvelsen.', 58.700000, 7.800000),
+    -- Krisesentrum i Arendal: fem hendelser tett samlet, slik at kartet viser en klyngesirkel.
+    (7,  1, 8, 'Flom i Pollen',              'flom i pollen',              'Flom',       'Havnivået har steget og vann renner inn i gatene rundt Pollen.', 58.461200, 8.767200),
+    (8,  1, 8, 'Strømbrudd på Tyholmen',     'strømbrudd på tyholmen',     'Strømbrudd', 'Flere kvartaler på Tyholmen er uten strøm.',                     58.460000, 8.766000),
+    (9,  1, 8, 'Veltede trær ved stasjonen', 'veltede trær ved stasjonen', 'Storm',      'Trær har blåst ned og sperrer veien ved Arendal stasjon.',       58.462500, 8.770000),
+    (10, 1, 8, 'Brann i bygård Kittelsbukt', 'brann i bygård kittelsbukt', 'Other',      'Brann i eldre trebygning, behov for evakuering.',                58.458000, 8.774000),
+    (11, 1, 8, 'Stengt vei ved Barbu',       'stengt vei ved barbu',       'Storm',      'Ras og nedfall har stengt veien mot Barbu.',                     58.466000, 8.776000);
 
 INSERT INTO ResourceNeed
     (NeedID, IncidentID, PublicActorID, RegionID, CategoryID, Title, Description, Quantity,
