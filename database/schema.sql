@@ -139,6 +139,7 @@ CREATE TABLE InviteCode (
 CREATE TABLE Incident (
     IncidentID      INT           NOT NULL AUTO_INCREMENT,
     PublicActorID   INT           NOT NULL,
+    RegionID        INT           NOT NULL DEFAULT 8,
     Title           VARCHAR(150)  NOT NULL,
     NormalizedTitle VARCHAR(150)  NOT NULL DEFAULT '',
     IncidentType    VARCHAR(50)   NOT NULL DEFAULT 'Other',
@@ -151,6 +152,8 @@ CREATE TABLE Incident (
     PRIMARY KEY (IncidentID),
     CONSTRAINT fk_Incident_PublicActor
         FOREIGN KEY (PublicActorID) REFERENCES PublicActor (PublicActorID),
+    CONSTRAINT fk_Incident_Region
+        FOREIGN KEY (RegionID) REFERENCES Region (RegionID),
     CONSTRAINT ck_Incident_Position CHECK (
         Latitude BETWEEN -90 AND 90 AND Longitude BETWEEN -180 AND 180
     )
@@ -161,6 +164,7 @@ CREATE TABLE ResourceNeed (
     NeedID         INT           NOT NULL AUTO_INCREMENT,
     IncidentID     INT           NOT NULL,
     PublicActorID  INT           NOT NULL,
+    RegionID       INT           NOT NULL DEFAULT 8,
     CategoryID     INT           NOT NULL,
     Title          VARCHAR(100)  NOT NULL,
     Description    TEXT          NULL,
@@ -184,6 +188,8 @@ CREATE TABLE ResourceNeed (
         FOREIGN KEY (IncidentID) REFERENCES Incident (IncidentID),
     CONSTRAINT fk_ResourceNeed_PublicActor
         FOREIGN KEY (PublicActorID) REFERENCES PublicActor (PublicActorID),
+    CONSTRAINT fk_ResourceNeed_Region
+        FOREIGN KEY (RegionID) REFERENCES Region (RegionID),
     CONSTRAINT fk_ResourceNeed_Category
         FOREIGN KEY (CategoryID) REFERENCES Category (CategoryID),
 

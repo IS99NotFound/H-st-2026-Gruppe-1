@@ -12,24 +12,40 @@
     const resetLocationButton = document.querySelector("[data-feed-reset-location]");
     const filterToggle = document.querySelector("[data-feed-filter-toggle]");
     const filterControls = document.getElementById("feed-filter-controls");
-    const resultsToggle = document.querySelector("[data-feed-results-toggle]");
-    const resultsLabel = document.querySelector("[data-feed-results-label]");
     const exportToggle = document.querySelector("[data-feed-export-toggle]");
     const exportOptions = document.getElementById("feed-export-options");
     const exportButtons = document.querySelectorAll("[data-feed-export]");
     const exportBackButton = document.querySelector("[data-feed-export-back]");
+    const resultsToggle = document.querySelector("[data-feed-results-toggle]");
     const items = Array.from(document.querySelectorAll("[data-feed-item]"));
     const feed = document.querySelector(".operational-feed");
     const mapArea = document.querySelector(".map-area");
     const mapLegendToggle = document.querySelector("[data-map-legend-toggle]");
     const mapLegendContent = document.querySelector(".map-color-legend-content");
+    const isGuestFeed = document.querySelector(".guest-map-page") !== null;
     // State: the chosen tab (all, resource, need or incident), the position of the user, and map markers.
     let activeType = "all";
     let currentLocation = null;
-    let currentLocationMarker = null;
     let focusedFeedMarker = null;
 
-    if (!list || !search || !radius) return;
+    if (!list || (!isGuestFeed && (!search || !radius))) return;
+
+    window.resqMap?.on("locationfound", event => {
+        currentLocation = {
+            latitude: event.latlng.lat,
+            longitude: event.latlng.lng
+        };
+        render();
+    });
+
+    function setCardHeight(item, faceSelector) {
+        const inner = item.querySelector(".feed-card-inner");
+        const face = item.querySelector(faceSelector);
+        if (!inner || !face) return;
+        inner.style.height = `${face.scrollHeight}px`;
+    }
+
+    items.forEach(item => setCardHeight(item, ".feed-card-front"));
 
     const closeMapLegend = () => {
         if (!mapLegendToggle || !mapLegendContent) return;
@@ -191,49 +207,46 @@
         return earthRadius * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
-    function showCurrentLocation() {
-        const map = window.resqMap;
-        if (!map || !currentLocation) return;
-
-        const location = [currentLocation.latitude, currentLocation.longitude];
-        if (currentLocationMarker) {
-            currentLocationMarker.setLatLng(location);
-        } else {
-            currentLocationMarker = L.circleMarker(location, {
-                radius: 8,
-                color: "#ffffff",
-                weight: 2,
-                fillColor: "#258cfb",
-                fillOpacity: 1
-            }).bindTooltip("Nåværende posisjon").addTo(map);
-        }
-        map.setView(location, 13);
-    }
-
     function requestCurrentLocation() {
-        if (!navigator.geolocation) {
-            locationStatus.textContent = "Nåværende posisjon er ikke tilgjengelig i denne nettleseren.";
+        if (!window.resqMap?.resqLocateCurrentPosition) {
             return;
         }
 
         if (currentLocationButton) currentLocationButton.disabled = true;
-        locationStatus.textContent = "Finner din nåværende posisjon...";
-        navigator.geolocation.getCurrentPosition(position => {
-            currentLocation = {
-                latitude: position.coords.latitude,
-                longitude: position.coords.longitude
-            };
-            showCurrentLocation();
-            render();
+        if (locationStatus) {
+            locationStatus.textContent = "Finner din nåværende posisjon...";
+        }
+        window.resqMap.resqLocateCurrentPosition();
+        window.resqMap.once("locationfound", () => {
             if (currentLocationButton) currentLocationButton.disabled = false;
-        }, () => {
-            locationStatus.textContent = "Fikk ikke tilgang til posisjonen din.";
-            render();
+        });
+        window.resqMap.once("locationerror", () => {
+            if (locationStatus) {
+                locationStatus.textContent = "Fikk ikke tilgang til posisjonen din.";
+            }
             if (currentLocationButton) currentLocationButton.disabled = false;
         });
     }
 
     function focusFeedItem(item) {
+        if (!isGuestFeed) {
+            items.forEach(otherItem => {
+                if (otherItem === item) return;
+                otherItem.classList.remove("is-flipped");
+                setCardHeight(otherItem, ".feed-card-front");
+                otherItem.querySelector(".feed-card-back")?.setAttribute("aria-hidden", "true");
+                otherItem.querySelector(".feed-card-front")?.setAttribute("aria-hidden", "false");
+                otherItem.setAttribute("aria-label", `Vis ${otherItem.dataset.feedTitle || "element"} på kartet`);
+            });
+            const isFlipped = item.classList.toggle("is-flipped");
+            setCardHeight(item, isFlipped ? ".feed-card-back" : ".feed-card-front");
+            item.querySelector(".feed-card-back")?.setAttribute("aria-hidden", String(!isFlipped));
+            item.querySelector(".feed-card-front")?.setAttribute("aria-hidden", String(isFlipped));
+            item.setAttribute("aria-label", isFlipped
+                ? `Skjul detaljer for ${item.dataset.feedTitle || "element"}`
+                : `Vis ${item.dataset.feedTitle || "element"} på kartet`);
+        }
+
         const map = window.resqMap;
         if (!map) return;
         const lat = Number(item.dataset.latitude);
@@ -248,7 +261,7 @@
             fillColor: "#4a9eff",
             fillOpacity: 0.9
         }).addTo(map);
-        map.setView([lat, lng], 14);
+        map.setView([lat, lng], Number(item.dataset.feedZoom) || 14);
         focusedFeedMarker.bindPopup(item.dataset.feedTitle || "Valgt sted").openPopup();
     }
 
@@ -332,9 +345,11 @@
 
     // Updates the list: sorts by distance and hides items that do not match the tab, the search or the radius.
     function render() {
-        const query = search.value.trim().toLowerCase();
-        const maxRadius = Number(radius.value);
-        radiusValue.textContent = window.resqRadius.format(maxRadius);
+        const query = search?.value.trim().toLowerCase() ?? "";
+        const maxRadius = Number(radius?.value ?? 0);
+            if (radiusValue) {
+                radiusValue.textContent = window.resqRadius.format(maxRadius);
+            }
         let visible = 0;
         const sortedItems = items
             .map(item => ({ item, distance: distanceInKm(Number(item.dataset.latitude), Number(item.dataset.longitude)) }))
@@ -343,23 +358,24 @@
         sortedItems.forEach(({ item, distance }) => {
             list.appendChild(item);
             const matchesType = activeType === "all" || item.dataset.feedType === activeType;
-            const matchesSearch = !query || item.dataset.feedSearch.toLowerCase().includes(query);
+            const matchesSearch = isGuestFeed ||
+                !query ||
+                (item.dataset.feedSearch || item.dataset.feedTitle || "")
+                    .toLowerCase().includes(query);
             const matchesRadius = !maxRadius || !currentLocation || distance <= maxRadius;
             const isVisible = matchesType && matchesSearch && matchesRadius;
             item.hidden = !isVisible;
             if (isVisible) visible++;
         });
-        empty.hidden = visible !== 0;
-        if (resultsLabel) {
-            const resultText = `${visible} ${visible === 1 ? "resultat" : "resultater"}`;
-            resultsLabel.textContent = currentLocation
-                ? `Vis ${resultText}, sortert etter avstand fra din posisjon`
-                : `Vis ${resultText}`;
+        if (empty) {
+            empty.hidden = visible !== 0;
         }
-        if (currentLocation) {
-            locationStatus.textContent = `${visible} elementer vist, sortert etter avstand fra din posisjon.`;
-        } else {
-            locationStatus.textContent = `${visible} elementer vist. Tillat posisjon for å sortere og filtrere etter avstand.`;
+        if (locationStatus) {
+            if (currentLocation) {
+                locationStatus.textContent = `${visible} elementer vist, sortert etter avstand fra din posisjon.`;
+            } else {
+                locationStatus.textContent = `${visible} elementer vist. Tillat posisjon for å sortere og filtrere etter avstand.`;
+            }
         }
     }
 
@@ -382,14 +398,14 @@
     });
 
     resultsToggle?.addEventListener("click", () => {
-        const isOpen = list.classList.toggle("is-open");
-        resultsToggle.setAttribute("aria-expanded", String(isOpen));
+        const isOpen = !list.classList.toggle("is-collapsed");
         resultsToggle.classList.toggle("is-open", isOpen);
-        if (isOpen) closeMapLegend();
+        resultsToggle.setAttribute("aria-expanded", String(isOpen));
     });
-    search.addEventListener("input", render);
-    radius.addEventListener("change", render);
-    radius.addEventListener("input", render);
+
+    search?.addEventListener("input", render);
+    radius?.addEventListener("change", render);
+    radius?.addEventListener("input", render);
     exportToggle?.addEventListener("click", () => {
         if (!exportOptions) return;
         exportOptions.hidden = false;
@@ -427,6 +443,10 @@
             search.value = "";
             radius.value = "0";
             activeType = "all";
+            if (filterControls) {
+                filterControls.classList.remove("is-open");
+                filterToggle?.setAttribute("aria-expanded", "false");
+            }
             document.querySelectorAll(".operational-feed-tabs [data-feed-type]").forEach(tab => {
                 const active = tab.dataset.feedType === "all";
                 tab.classList.toggle("active", active);
@@ -438,12 +458,8 @@
                 focusedFeedMarker = null;
                 window.resqMap.closePopup();
             }
-            if (currentLocation) {
-                showCurrentLocation();
-                render();
-            } else {
-                requestCurrentLocation();
-            }
+            window.resqMap?.resqLocateCurrentPosition?.();
+            render();
         });
     }
 
@@ -481,7 +497,6 @@
         });
     }
 
-    requestCurrentLocation();
     addFeedMarkers();
     addCrisisClusters();
     render();

@@ -36,7 +36,11 @@
             </form>
 
             <p class="auth-back-link">
-                <a asp-controller="Register" asp-action="Index">Opprett konto</a>
+                <span class="auth-link-group">
+                    <a asp-controller="Register" asp-action="Index">Opprett konto</a>
+                    <span class="auth-link-separator" aria-hidden="true">·</span>
+                    <a asp-controller="Guest" asp-action="Index">Fortsett som gjest</a>
+                </span>
             </p>
         </div>
     </section>

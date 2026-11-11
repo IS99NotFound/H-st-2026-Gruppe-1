@@ -148,9 +148,8 @@ body {
 
 /* Top, left part */
 .topbar-brand {
-    display: flex;
-    align-items: center;
-    gap: 16px;
+    justify-content: flex-end;
+    margin-top: 8px;
 }
 
 .brand-name {
@@ -255,22 +254,198 @@ body {
 }
 
 .feed-search-row {
-    display: contents;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.operational-feed-search .form-control {
+    width: 100%;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    font-size: 0.8rem;
+}
+
+.operational-feed-search {
+    flex: 1 1 auto;
+    min-width: 0;
 }
 
 .feed-filter-toggle,
 .feed-results-toggle {
-    display: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
     color: var(--text);
+    padding: 6px 9px;
+    font-size: 0.8rem;
+    margin-left: auto;
+    white-space: nowrap;
+}
+
+.feed-results-toggle {
+    display: none;
+    border: 0;
+    background: transparent;
+    color: var(--text-muted);
+    padding: 6px 0 0;
+    font-size: 0.75rem;
 }
 
 .feed-filter-controls {
-    display: contents;
+    display: none;
+    margin-top: 8px;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background-color: var(--bg-hover);
+}
+
+.feed-filter-controls.is-open {
+    display: block;
 }
 
 .feed-filter-column,
 .feed-location-column {
-    display: contents;
+    display: block;
+}
+
+.feed-filter-column + .feed-location-column {
+    margin-top: 8px;
+}
+
+.dashboard-card.report-card {
+    max-width: none;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 24px;
+    padding: 10px 20px;
+}
+
+.report-card-content {
+    color: inherit;
+    text-decoration: none;
+}
+
+.report-card-content .dashboard-card-header {
+    margin-bottom: 8px;
+}
+
+.report-card-content .dashboard-card-description {
+    margin-bottom: 0;
+}
+
+.report-card-content:hover .dashboard-card-description,
+.report-card-content:focus-visible .dashboard-card-description {
+    color: var(--accent);
+}
+
+.report-card-footer {
+    grid-column: 2;
+    grid-row: 1;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: flex-end;
+    gap: 16px;
+    margin-top: 0;
+}
+
+@media print {
+    @page {
+        size: portrait;
+        margin: 12mm;
+    }
+
+    html,
+    body,
+    .report-page,
+    .report-page .dashboard-card {
+        background: #fff !important;
+        color: #000 !important;
+    }
+
+    .topbar,
+    .footer,
+    .report-actions {
+        display: none !important;
+    }
+
+    .report-page {
+        max-width: none;
+        padding: 0;
+    }
+
+    .report-page .dashboard-card {
+        border: 0;
+        box-shadow: none;
+    }
+
+    .report-page .table-wrapper {
+        overflow: visible;
+    }
+
+    .report-page .table {
+        width: 100%;
+        table-layout: fixed;
+        font-size: 8pt;
+        --bs-table-bg: #fff;
+        --bs-table-striped-bg: #f2f2f2;
+        --bs-table-color: #000;
+        --bs-table-border-color: #000;
+    }
+
+    .report-page .table th,
+    .report-page .table td {
+        overflow-wrap: anywhere;
+        padding: 4px 5px;
+        vertical-align: top;
+    }
+
+    .report-page .report-column-name {
+        width: 14%;
+    }
+
+    .report-page .report-column-category {
+        width: 12%;
+    }
+
+    .report-page .report-column-description {
+        width: 24%;
+    }
+
+    .report-page .report-column-location {
+        width: 12%;
+    }
+
+    .report-page .report-column-contact {
+        width: 18%;
+    }
+
+    .report-page .report-column-status {
+        width: 10%;
+    }
+
+    .report-page .report-column-registered {
+        width: 10%;
+    }
+}
+
+@media (max-width: 576px) {
+    .dashboard-card.report-card {
+        grid-template-columns: 1fr;
+    }
+
+    .report-card-footer {
+        grid-column: 1;
+        grid-row: auto;
+        align-items: stretch;
+    }
+
+    .report-card-footer .btn {
+        width: 100%;
+    }
 }
 
 .operational-feed-search {
@@ -423,10 +598,12 @@ body {
 
 .feed-card {
     margin-bottom: 10px;
-    padding: 12px;
+    padding: 0;
     border: 1px solid var(--border);
     border-radius: 8px;
     background-color: var(--bg-hover);
+    perspective: 900px;
+    overflow: hidden;
 }
 
 .feed-card--interactive {
@@ -447,12 +624,105 @@ body {
     margin-bottom: 0;
 }
 
+.feed-card-inner {
+    position: relative;
+    height: 0;
+    transition: height 0.3s ease;
+    transform-style: preserve-3d;
+}
+
+.feed-card-face {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 12px;
+    backface-visibility: hidden;
+    transform: rotateY(0);
+    transition: transform 0.3s ease;
+}
+
+.feed-card-back {
+    transform: rotateY(180deg);
+}
+
+.feed-card.is-flipped .feed-card-front {
+    transform: rotateY(-180deg);
+}
+
+.feed-card.is-flipped .feed-card-back {
+    transform: rotateY(0);
+}
+
+.feed-card-empty-detail {
+    font-style: italic;
+}
+
 .feed-card-heading,
 .feed-card-actions,
 .feed-card dl div {
     display: flex;
     align-items: center;
     gap: 8px;
+}
+
+.feed-card-actions {
+    justify-content: flex-end;
+    margin-top: 8px;
+}
+
+.feed-card-edit-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    color: var(--text-muted);
+    text-decoration: none;
+}
+
+.feed-card-edit-mobile-icon {
+    display: none;
+}
+
+.feed-card-edit-button:hover,
+.feed-card-edit-button:focus-visible {
+    background-color: var(--bg-hover);
+    color: var(--accent);
+}
+
+.feed-match-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 8px;
+    border-radius: 6px;
+    background-color: var(--accent);
+    color: #fff;
+    font-size: 0.72rem;
+    text-decoration: none;
+}
+
+.feed-match-button:hover,
+.feed-match-button:focus-visible {
+    background-color: #1473d2;
+    color: #fff;
+}
+
+@media (max-width: 520px) {
+    .feed-card-edit-button {
+        width: 26px;
+        height: 26px;
+    }
+
+    .feed-card-edit-button .bi-pencil {
+        display: none;
+    }
+
+    .feed-card-edit-mobile-icon {
+        display: inline-block;
+    }
 }
 
 .feed-card-heading {
@@ -934,7 +1204,8 @@ html[data-theme="light"] .registration-modal .btn-close {
         overflow: hidden;
     }
 
-    .registration-modal-page .operational-feed {
+    .registration-modal-page .operational-feed,
+    .guest-map-page .operational-feed {
         position: relative;
         z-index: 1;
         width: 100%;
@@ -948,7 +1219,8 @@ html[data-theme="light"] .registration-modal .btn-close {
         position: relative;
     }
 
-    .registration-modal-page .operational-feed {
+    .registration-modal-page .operational-feed,
+    .guest-map-page .operational-feed {
         position: absolute;
         right: 0;
         bottom: 0;
@@ -973,41 +1245,12 @@ html[data-theme="light"] .registration-modal .btn-close {
         display: none;
     }
 
-    .feed-search-row {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-
     .operational-feed-search {
         flex: 1;
         min-width: 0;
     }
 
     .feed-filter-toggle,
-    .feed-results-toggle {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        padding: 6px 9px;
-        font-size: 0.75rem;
-    }
-
-    .feed-filter-controls {
-        display: none;
-        padding-top: 0;
-    }
-
-    .feed-filter-controls.is-open {
-        display: block;
-        margin-top: 8px;
-        padding: 10px;
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        background-color: var(--bg-hover);
-    }
-
     .feed-filter-controls .operational-feed-tabs {
         margin-top: 0;
         gap: 4px;
@@ -1059,8 +1302,9 @@ html[data-theme="light"] .registration-modal .btn-close {
 
     .feed-results-toggle {
         display: flex;
-        width: 100%;
-        margin-top: 6px;
+        align-items: center;
+        width: auto;
+        margin-top: 4px;
     }
 
     .feed-results-toggle .bi {
@@ -1072,13 +1316,13 @@ html[data-theme="light"] .registration-modal .btn-close {
     }
 
     .operational-feed-list {
-        display: none;
+        display: block;
         max-height: 46dvh;
         padding: 8px 10px;
     }
 
-    .operational-feed-list.is-open {
-        display: block;
+    .operational-feed-list.is-collapsed {
+        display: none;
     }
 
     .feed-resizer {
@@ -1196,8 +1440,9 @@ html[data-theme="light"] .registration-modal .btn-close {
 .dashboard-filter-bar .dashboard-filter-field label {
     display: flex;
     align-items: flex-start;
-    min-height: 2.5em;
-    margin-bottom: 6px;
+    min-height: 1.5em;
+    margin-bottom: 4px;
+    font-size: 0.8rem;
 }
 
 .dashboard-filter-bar .form-control,
@@ -1218,6 +1463,7 @@ html[data-theme="light"] .registration-modal .btn-close {
 .dashboard-filter-bar .dashboard-filter-actions {
     display: flex;
     flex-wrap: wrap;
+    justify-content: flex-end;
     gap: 8px;
 }
 
@@ -1229,7 +1475,8 @@ html[data-theme="light"] .registration-modal .btn-close {
 
 @media (min-width: 1100px) {
     .dashboard-filter-bar {
-        grid-template-columns: minmax(180px, 1.4fr) repeat(4, minmax(120px, 1fr)) auto;
+        grid-template-columns: minmax(180px, 1.6fr) minmax(110px, 0.8fr) minmax(110px, 0.8fr)
+            minmax(110px, 0.75fr) minmax(110px, 0.75fr) minmax(130px, 0.9fr) auto;
     }
 }
 
@@ -1304,26 +1551,6 @@ html[data-theme="light"] .registration-modal .btn-close {
     transform: rotate(180deg);
 }
 
-.incident-create-panel {
-    margin-bottom: 18px;
-    padding: 0;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    background: var(--bg-panel);
-    overflow: hidden;
-}
-
-.incident-create-panel form {
-    padding: 18px;
-}
-
-.incident-register-layout {
-    display: grid;
-    grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
-    gap: 18px;
-    align-items: start;
-}
-
 .incident-form-fields {
     display: grid;
     gap: 12px;
@@ -1335,6 +1562,29 @@ html[data-theme="light"] .registration-modal .btn-close {
 
 .compact-field {
     min-height: 42px;
+}
+
+.registration-form-map {
+    display: block;
+    width: 100%;
+    height: 220px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.incident-registration-map-hidden #incident-registration-map {
+    display: none;
+}
+
+.registration-map-locate {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    color: var(--feed-text) !important;
+    text-decoration: none;
 }
 
 .table-wrapper {
@@ -2288,6 +2538,35 @@ html[data-theme="light"] .registration-modal .btn-close {
     border-left: 1px solid var(--border);
 }
 
+.topbar-register-icon {
+    display: none;
+}
+
+.topbar-register .dropdown-item > i {
+    width: 1.1rem;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    opacity: 0.85;
+}
+
+@media (max-width: 576px) {
+    .topbar-register .dropdown-toggle {
+        width: 34px;
+        height: 34px;
+        padding: 0;
+        font-size: 1.15rem;
+    }
+
+    .topbar-register-icon {
+        display: inline-block;
+    }
+
+    .topbar-register-label,
+    .topbar-register .dropdown-toggle::after {
+        display: none;
+    }
+}
+
 /* User menu, icon with name below */
 .user-menu-button {
     display: flex;
@@ -2877,6 +3156,18 @@ html[data-theme="light"] .registration-modal .btn-close {
     margin-top: 14px;
     color: var(--text-muted);
     text-align: center;
+}
+
+.auth-link-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.auth-link-separator {
+    font-size: 1.35em;
+    font-weight: 700;
+    line-height: 1;
 }
 
 .auth-back-link a {

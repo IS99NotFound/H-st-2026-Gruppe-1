@@ -3,6 +3,7 @@
 @{
     ViewData["Title"] = "Behov";
     var categories = ViewBag.Categories as List<H_st_2026_Gruppe_1.Models.Category> ?? new();
+    var needCategories = ViewBag.NeedCategories as List<H_st_2026_Gruppe_1.Models.Category> ?? categories;
     var incidents = ViewBag.Incidents as List<H_st_2026_Gruppe_1.Models.Incident> ?? new();
     var matchStatuses = ViewBag.NeedMatchStatuses
         as List<H_st_2026_Gruppe_1.Models.NeedMatchStatusViewModel>
@@ -36,11 +37,11 @@
             <label for="categoryFilter" class="form-label text-muted small fw-bold">Filtrer på kategori</label>
             <select name="category" id="categoryFilter" class="form-select">
                 <option value="">Alle kategorier</option>
-                @foreach (var category in categories)
+                @foreach (var category in needCategories)
                 {
                     <option value="@category.CategoryId"
                             selected="@(Context.Request.Query["category"] == category.CategoryId.ToString())">
-                        @category.CategoryName
+                        @CategoryLabelHelper.DisplayName(category.CategoryName)
                     </option>
                 }
             </select>
@@ -127,7 +128,7 @@
                         </div>
                         <div>
                             <dt><i class="bi bi-tag" aria-hidden="true"></i> Kategori</dt>
-                            <dd>@(need.CategoryInfo?.CategoryName ?? "Ikke oppgitt")</dd>
+                            <dd>@(need.CategoryInfo is null ? "Ikke oppgitt" : CategoryLabelHelper.DisplayName(need.CategoryInfo.CategoryName))</dd>
                         </div>
                         <div>
                             <dt><i class="bi bi-box-seam" aria-hidden="true"></i> Antall</dt>
@@ -234,6 +235,7 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/map-reverse-geocode.js" asp-append-version="true"></script>
     <script nonce="@Context.Items["CspNonce"]">
         window.resqRegistration.initializeDateTimeFields('needForm', [
             { dateId: 'requiredFromDate', timeId: 'requiredFromTime', valueId: 'requiredFromValue' },
@@ -246,6 +248,12 @@
                 document.getElementById('lngInput').value = longitude;
                 document.getElementById('posText').textContent =
                     'Valgt posisjon: bredde: ' + latitude.toFixed(5) + ', lengde: ' + longitude.toFixed(5);
+                window.resqReverseGeocode.lookup(latitude, longitude).then(placeName => {
+                    if (placeName) {
+                        document.getElementById('locationNameInput').value =
+                            placeName.replace(/^Nær\s+/, '');
+                    }
+                });
             }
         });
         const modalElement = document.getElementById('registrationModal');

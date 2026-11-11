@@ -40,6 +40,7 @@ public class ResourceEntry : IValidatableObject
 	[Required(ErrorMessage = "Posisjon på kartet må fylles ut.")]
 	public double? Longitude { get; set; }
 
+	[Required(ErrorMessage = "Stedsnavn er påkrevd.")]
 	[StringLength(200, ErrorMessage = "Stedsnavn kan ikke være lengre enn 200 tegn.")]
 	public string LocationName { get; set; } = "";
 

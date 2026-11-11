@@ -11,9 +11,53 @@
         out var parsedUserId)
         ? parsedUserId
         : (int?)null;
-    string StatusLabel(string? statusValue) => statusValue switch { "active" => "Aktiv", "new" => "Ny", "under_review" => "Vurderes", "assigned" => "Tildelt", "resolved" => "Løst", "cancelled" => "Kansellert", "rejected" => "Avvist", "available" => "Tilgjengelig", "unavailable" => "Utilgjengelig", "withdrawn" => "Trukket tilbake", _ => statusValue ?? "" };
 }
 
+@if (ViewContext.RouteData.Values["controller"]?.ToString() == "Guest")
+{
+<aside class="operational-feed" aria-label="Sikkerhetsoversikt">
+    <div class="operational-feed-header">
+        <p class="section-label">Hendelser</p>
+        <p class="feed-status">Overordnet informasjon om pågående hendelser.</p>
+        <button type="button" class="feed-results-toggle" data-feed-results-toggle
+                aria-expanded="false" aria-controls="operational-feed-list">
+            <span data-feed-results-label>Vis hendelser</span>
+            <i class="bi bi-chevron-down ms-1" aria-hidden="true"></i>
+        </button>
+    </div>
+    <div id="operational-feed-list" class="operational-feed-list is-collapsed">
+        @foreach (var item in incidents)
+        {
+            <article class="feed-card feed-card--@item.ColorKey guest-feed-card"
+                     data-feed-item data-feed-type="incident"
+                     data-latitude="@item.Latitude" data-longitude="@item.Longitude"
+                     data-feed-zoom="8"
+                     data-feed-title="@item.Title">
+                <div class="feed-card-inner">
+                    <div class="feed-card-face feed-card-front">
+                        <div class="feed-card-heading">
+                            <span class="feed-color-badge feed-color-badge--@item.ColorKey">Hendelse</span>
+                        </div>
+                        <h2>@item.Title</h2>
+                        <dl>
+                            <div>
+                                <dt><i class="bi bi-geo-alt" aria-hidden="true"></i> Område</dt>
+                                <dd>@item.LocationName</dd>
+                            </div>
+                        </dl>
+                    </div>
+                </div>
+            </article>
+        }
+        @if (incidents.Count == 0)
+        {
+            <p class="feed-empty-state">Ingen pågående hendelser er publisert.</p>
+        }
+    </div>
+</aside>
+}
+else
+{
 <aside class="operational-feed" aria-label="Operativ oversikt">
     <div class="operational-feed-header">
         <p class="section-label">Operativ oversikt</p>
@@ -25,8 +69,9 @@
                        placeholder="Søk i behov, ressurser, hendelser..." autocomplete="off" />
             </div>
             <button type="button" class="btn btn-outline-secondary feed-filter-toggle"
-                    data-feed-filter-toggle aria-expanded="false" aria-controls="feed-filter-controls">
-                <i class="bi bi-sliders me-1" aria-hidden="true"></i>Filtrer
+                    data-feed-filter-toggle aria-expanded="false" aria-controls="feed-filter-controls"
+                    title="Filtrer" aria-label="Filtrer">
+                <i class="bi bi-sliders" aria-hidden="true"></i>
             </button>
         </div>
         <div id="feed-filter-controls" class="feed-filter-controls">
@@ -70,85 +115,104 @@
         <p id="feed-location-status" class="feed-status" role="status">
             Viser alle registrerte elementer. Tillat posisjon for å sortere etter avstand.
         </p>
-        <button type="button" class="btn btn-outline-secondary feed-results-toggle"
-                data-feed-results-toggle aria-expanded="false" aria-controls="operational-feed-list">
-            <span data-feed-results-label>Vis resultater</span>
-            <i class="bi bi-chevron-up ms-1" aria-hidden="true"></i>
+        <button type="button" class="feed-results-toggle" data-feed-results-toggle
+                aria-expanded="false" aria-controls="operational-feed-list">
+            <span data-feed-results-label>Vis registrerte elementer</span>
+            <i class="bi bi-chevron-down ms-1" aria-hidden="true"></i>
         </button>
     </div>
-    <div id="operational-feed-list" class="operational-feed-list">
+    <div id="operational-feed-list" class="operational-feed-list is-collapsed">
         @foreach (var item in feedItems)
         {
             <article class="feed-card feed-card--interactive feed-card--@item.ColorKey" data-feed-item data-feed-type="@item.Type"
-                     data-feed-search="@($"{item.Title} {item.Description} {item.Category} {item.Status}")"
+                     data-feed-search="@($"{item.Title} {item.Description} {item.Category} {item.Status} {item.LocationName}")"
                      data-latitude="@item.Latitude" data-longitude="@item.Longitude"
                      data-feed-category="@item.Category" data-feed-description="@item.Description"
                      data-feed-status="@item.Status"
                      data-feed-created-at="@item.CreatedAt.ToString("dd.MM.yyyy HH:mm")"
                      data-feed-title="@item.Title" role="button" tabindex="0"
                      aria-label="Vis @item.Title på kartet">
-                <div class="feed-card-heading">
-                    <span class="feed-color-badge feed-color-badge--@item.ColorKey">
-                        @(item.Priority switch
+                <div class="feed-card-inner">
+                    <div class="feed-card-face feed-card-front">
+                        <div class="feed-card-heading">
+                            <span class="feed-color-badge feed-color-badge--@item.ColorKey">
+                                @(item.Priority switch
+                                {
+                                    "Critical" => "Akutt behov",
+                                    "Planned" => "Planlagt behov",
+                                    _ when item.Type == "resource" => "Tilgjengelig ressurs",
+                                    _ when item.Type == "incident" => "Hendelse",
+                                    _ => "Offentlig aktør"
+                                })
+                            </span>
+                            <div class="feed-card-edit">
+                                @if (item.Type == "resource" &&
+                                    (User.IsInRole("Administrator") ||
+                                     User.IsInRole("CivilianProvider") && item.ProviderId == currentUserId))
+                                {
+                                    <a asp-controller="Home" asp-action="Index" asp-route-id="@item.Id"
+                                       class="feed-card-edit-button" aria-label="Rediger @item.Title" title="Rediger">
+                                        <i class="bi bi-pencil" aria-hidden="true"></i>
+                                        <i class="bi bi-plus-lg feed-card-edit-mobile-icon" aria-hidden="true"></i>
+                                    </a>
+                                }
+                                @if (item.Type == "need" &&
+                                    (User.IsInRole("PublicActor") || User.IsInRole("Administrator")))
+                                {
+                                    <a asp-controller="PublicActor" asp-action="DashboardIndex" asp-route-id="@item.Id"
+                                       class="feed-card-edit-button" aria-label="Rediger @item.Title" title="Rediger">
+                                        <i class="bi bi-pencil" aria-hidden="true"></i>
+                                        <i class="bi bi-plus-lg feed-card-edit-mobile-icon" aria-hidden="true"></i>
+                                    </a>
+                                    <a asp-controller="PublicActor" asp-action="Matches" asp-route-needId="@item.Id"
+                                       class="feed-match-button" aria-label="Match ressurs for @item.Title" title="Match ressurs">
+                                        <i class="bi bi-puzzle" aria-hidden="true"></i>
+                                    </a>
+                                }
+                                @if (item.Type == "incident" && item.CanEdit)
+                                {
+                                    <a asp-controller="Incidents" asp-action="Index"
+                                       asp-route-id="@item.Id"
+                                       class="feed-card-edit-button" aria-label="Rediger @item.Title" title="Rediger">
+                                        <i class="bi bi-pencil" aria-hidden="true"></i>
+                                        <i class="bi bi-plus-lg feed-card-edit-mobile-icon" aria-hidden="true"></i>
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                        <h2>@item.Title</h2>
+                        <dl>
+                            <div>
+                                <dt><i class="bi bi-geo-alt" aria-hidden="true"></i> Sted</dt>
+                                <dd>@(string.IsNullOrWhiteSpace(item.LocationName)
+                                    ? $"{item.Latitude:F4}, {item.Longitude:F4}"
+                                    : item.LocationName)</dd>
+                            </div>
+                        </dl>
+                    </div>
+                    <div class="feed-card-face feed-card-back" aria-hidden="true">
+                        <div class="feed-card-heading">
+                            <span class="feed-color-badge feed-color-badge--@item.ColorKey">Detaljer</span>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(item.Description))
                         {
-                            "Critical" => "Akutt behov",
-                            "Planned" => "Planlagt behov",
-                            _ when item.Type == "resource" => "Tilgjengelig ressurs",
-                            _ when item.Type == "incident" => "Hendelse",
-                            _ => "Offentlig aktør"
-                        })
-                    </span>
-                    <time datetime="@item.CreatedAt.ToString("O")">@item.CreatedAt.ToString("dd.MM.yyyy HH:mm")</time>
-                </div>
-                <h2>@item.Title</h2>
-                @if (!string.IsNullOrWhiteSpace(item.Description))
-                {
-                    <p>@item.Description</p>
-                }
-                <dl>
-                    @if (!string.IsNullOrWhiteSpace(item.Category))
-                    {
-                        <div><dt>Kategori</dt><dd>@item.Category</dd></div>
-                    }
-                    @if (!string.IsNullOrWhiteSpace(item.Status))
-                    {
-                        <div><dt>Status</dt><dd>@StatusLabel(item.Status)</dd></div>
-                    }
-                    <div><dt>Sted</dt><dd>@item.Latitude.ToString("F4"), @item.Longitude.ToString("F4")</dd></div>
-                </dl>
-                <div class="feed-card-actions">
-                    @if (item.Type == "resource" &&
-                        (User.IsInRole("Administrator") ||
-                         User.IsInRole("CivilianProvider") && item.ProviderId == currentUserId))
-                    {
-                        <a asp-controller="Home" asp-action="Index" asp-route-id="@item.Id"
-                           class="btn btn-primary btn-sm">Rediger</a>
-                    }
-                    @if (item.Type == "need" &&
-                        (User.IsInRole("PublicActor") || User.IsInRole("Administrator")))
-                    {
-                        <a asp-controller="PublicActor" asp-action="Matches" asp-route-needId="@item.Id" class="btn btn-primary btn-sm">Match ressurs</a>
-                    }
+                            <p>@item.Description</p>
+                        }
+                        else
+                        {
+                            <p class="feed-card-empty-detail">Ingen beskrivelse registrert.</p>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(item.Category))
+                        {
+                            <dl>
+                                <div><dt>Kategori</dt><dd>@item.Category</dd></div>
+                            </dl>
+                        }
+                    </div>
                 </div>
             </article>
         }
         <p class="placeholder-copy feed-empty" hidden>Ingen elementer samsvarer med filtrene.</p>
     </div>
-    <div class="feed-export-actions">
-        <button type="button" class="btn btn-outline-secondary btn-sm" data-feed-export-toggle
-                aria-expanded="false" aria-controls="feed-export-options">
-            <i class="bi bi-download me-1" aria-hidden="true"></i>Eksporter ressurser
-        </button>
-        <div id="feed-export-options" class="feed-export-options" hidden>
-            <button type="button" class="btn btn-outline-secondary btn-sm" data-feed-export="csv">
-                <i class="bi bi-filetype-csv me-1" aria-hidden="true"></i>CSV
-            </button>
-            <button type="button" class="btn btn-outline-secondary btn-sm" data-feed-export="json">
-                <i class="bi bi-filetype-json me-1" aria-hidden="true"></i>JSON
-            </button>
-            <button type="button" class="btn btn-outline-secondary btn-sm" data-feed-export-back>
-                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Tilbake
-            </button>
-        </div>
-    </div>
 </aside>
+}
