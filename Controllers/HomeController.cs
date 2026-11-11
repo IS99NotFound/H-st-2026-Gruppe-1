@@ -602,13 +602,14 @@ public class PublicActorController : Controller
     }
 
     // Saves the decision about a resource for a need in the ResourceMatch table.
-    // newStatus: accepted = assigned, proposed = under review, declined = rejected
+    // newStatus: proposed = request sent to the provider, declined = withdrawn.
+    // The provider sets accepted/declined in ResourcesController.RespondToMatch.
     [HttpPost]
     [Authorize(Roles = "PublicActor,Administrator")]
     [ValidateAntiForgeryToken]
     public IActionResult UpdateResourceStatus(int resourceId, int needId, string newStatus, string? statusComment)
     {
-        if (newStatus is not ("proposed" or "accepted" or "declined"))
+        if (newStatus is not ("proposed" or "declined"))
         {
             return BadRequest();
         }
@@ -641,29 +642,6 @@ public class PublicActorController : Controller
             return RedirectToAction("Matches", new { needId });
         }
 
-        //Assign: lock the resource FIRST. If someone else took it first, nothing is saved.
-        if (newStatus == "accepted")
-        {
-            //Checks to see if the resource is still avaiable in the database..
-            bool resourceIsAvailable = _db.Resources.Any(resource =>
-                resource.Id == resourceId &&
-                resource.Status == "available");
-            if (resourceIsAvailable)
-            {
-                if (!_lifecycle.TryReserveResource(resourceId))
-                {
-                    TempData["MatchError"] = "Denne ressursen er midlertidig utilgjengelig. Den er allerede tildelt et annet behov.";
-                    return RedirectToAction("Matches", new { needId });
-                }
-            }
-            else if (!wasAssigned)
-            {
-                //The resource is unavailable and no already assigned to this need
-                TempData["MatchError"] = "Denne ressursen er allerede tildelt et annet behov.";
-
-                return RedirectToAction("Matches", new {needId});
-            }
-        }
         if (record == null)
         {
             record = new MatchRecord
@@ -689,9 +667,9 @@ public class PublicActorController : Controller
 
         TempData["MatchMessage"] = newStatus switch
         {
-            "accepted" => "Ressursen er tildelt. Den er nå midlertidig utilgjengelig for andre offentlige aktører.",
-            "proposed" when wasAssigned => "Ressursen er satt til vurdering og er tilgjengelig igjen.",
-            "declined" when wasAssigned => "Ressursen er avslått og er tilgjengelig igjen.",
+            "proposed" => "Forslaget er sendt til ressursleverandøren.",
+            "declined" when wasAssigned => "Forslaget er trukket tilbake og ressursen er tilgjengelig igjen.",
+            "declined" => "Forslaget er trukket tilbake.",
             _ => "Status er lagret."
         };
 

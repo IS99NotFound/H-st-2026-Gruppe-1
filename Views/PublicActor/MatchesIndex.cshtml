@@ -153,7 +153,7 @@
                         var statusText = match.MatchStatus switch
                         {
                             "accepted" => "Tildelt",
-                            "proposed" => "Vurderes",
+                            "proposed" => "Sendt til leverandør",
                             "declined" => "Avslått",
                             _ => "Tilgjengelig"
                         };
@@ -181,7 +181,16 @@
                             <dl class="dashboard-details match-details">
                                 <div>
                                     <dt><i class="bi bi-person" aria-hidden="true"></i> Kontakt</dt>
-                                    <dd>@match.Resource.Email<br />@match.Resource.PhoneNumber</dd>
+                                    <dd>
+                                        @if (match.MatchStatus == "accepted")
+                                        {
+                                            <span>@match.Resource.Email<br />@match.Resource.PhoneNumber</span>
+                                        }
+                                        else
+                                        {
+                                            <span>Vises når leverandøren har godtatt</span>
+                                        }
+                                    </dd>
                                 </div>
                                 <div>
                                     <dt><i class="bi bi-geo-alt" aria-hidden="true"></i> Sted</dt>
@@ -227,18 +236,20 @@
                                         placeholder="Skriv en kommentar">@match.Comment</textarea>
                                 
                                 <div class="match-status-buttons">
-                                    <button type="submit" name="newStatus" value="accepted"
-                                            class="btn btn-sm match-action match-action-accepted @(match.MatchStatus == "accepted" ? "status-selected" : "")">
-                                        <i class="bi bi-check2" aria-hidden="true"></i> Tildel
-                                    </button>
-                                    <button type="submit" name="newStatus" value="proposed"
-                                            class="btn btn-sm match-action match-action-proposed @(match.MatchStatus == "proposed" ? "status-selected" : "")">
-                                        <i class="bi bi-hourglass-split" aria-hidden="true"></i> Vurder
-                                    </button>
-                                    <button type="submit" name="newStatus" value="declined"
-                                            class="btn btn-sm match-action match-action-declined @(match.MatchStatus == "declined" ? "status-selected" : "")">
-                                        <i class="bi bi-x-lg" aria-hidden="true"></i> Avslå
-                                    </button>
+                                    @if (match.MatchStatus is "proposed" or "accepted")
+                                    {
+                                        <button type="submit" name="newStatus" value="declined"
+                                                class="btn btn-sm match-action match-action-declined">
+                                            <i class="bi bi-x-lg" aria-hidden="true"></i> Trekk tilbake
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button type="submit" name="newStatus" value="proposed"
+                                                class="btn btn-sm match-action match-action-proposed">
+                                            <i class="bi bi-send" aria-hidden="true"></i> Send forslag
+                                        </button>
+                                    }
                                 </div>
                             </form>
                         </article>
