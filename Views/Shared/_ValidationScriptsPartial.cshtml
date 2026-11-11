@@ -1,6 +1,6 @@
 ﻿<script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
 <script src="~/lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.min.js"></script>
-<script>
+<script nonce="@Context.Items["CspNonce"]">
     // Norwegian default texts for jQuery Validation (used when the server has not supplied a message)
     jQuery.extend(jQuery.validator.messages, {
         required: "Dette feltet er påkrevd.",
