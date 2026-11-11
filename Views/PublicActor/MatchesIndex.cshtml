@@ -182,14 +182,7 @@
                                 <div>
                                     <dt><i class="bi bi-person" aria-hidden="true"></i> Kontakt</dt>
                                     <dd>
-                                        @if (match.MatchStatus == "accepted")
-                                        {
-                                            <span>@match.Resource.Email<br />@match.Resource.PhoneNumber</span>
-                                        }
-                                        else
-                                        {
-                                            <span>Vises når leverandøren har godtatt</span>
-                                        }
+                                        @match.Resource.Email<br />@match.Resource.PhoneNumber
                                     </dd>
                                 </div>
                                 <div>
