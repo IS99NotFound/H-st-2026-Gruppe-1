@@ -29,16 +29,10 @@
         : [];
 
     
-    const resourceMarkers = L.markerClusterGroup({
-        maxClusterRadius: 50,
-        disableClusteringAtZoom: 16,
-        showCoverageOnHover: false,
-        iconCreateFunction: cluster => L.divIcon({
-            html: `<span>${cluster.getChildCount()}</span>`,
-            className: "resq-cluster resq-cluster--resource",
-            iconSize: [36, 36]
-        })
-    }).addTo(map);
+    // Ressursene deler klyngegruppe med behov og hendelser (se map-base.js).
+    // Vi husker våre egne markører, så vi bare fjerner dem og ikke de andre typene.
+    const clusterGroup = window.resqMapBase.getMarkerCluster(map);
+    let resourceMarkers = [];
 
     //Is used to avoid old requests from rewriting newer data.
     let activeController = null;
@@ -69,7 +63,8 @@
     //Shows the resurces on the map
     function renderResources() {
         
-        resourceMarkers.clearLayers();
+        clusterGroup.removeLayers(resourceMarkers);
+        resourceMarkers = [];
 
         //Gets the categories that the user choose
         const selectedTypes = getSelectedTypes();
@@ -134,7 +129,7 @@
                 iconSize: [18, 18],
                 iconAnchor: [9, 9]
             });
-            const marker = L.marker([latitude, longitude], { icon: markerIcon });
+            const marker = L.marker([latitude, longitude], { icon: markerIcon, resqKind: "resource" });
 
 
             //Creating a popup-window for resource
@@ -182,11 +177,13 @@
             }
 
             marker.bindPopup(popup);
-            marker.addTo(resourceMarkers);
+            resourceMarkers.push(marker);
 
             visibleCount ++;
         });
-        
+
+        clusterGroup.addLayers(resourceMarkers);
+
     if(statusElement) {
         statusElement.textContent =
         `${visibleCount} registrerte ressurser vist på kartet.`;

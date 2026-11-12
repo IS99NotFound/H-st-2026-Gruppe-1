@@ -80,24 +80,9 @@
         }
         if (!map || !items.length) return;
 
-        function createClusterGroup(kind) {
-            return L.markerClusterGroup({
-                maxClusterRadius: 50,
-                disableClusteringAtZoom: 16,
-                showCoverageOnHover: false,
-                iconCreateFunction: cluster => L.divIcon({
-                    html: `<span>${cluster.getChildCount()}</span>`,
-                    className: `resq-cluster resq-cluster--${kind}`,
-                    iconSize: [36, 36]
-                })
-            }).addTo(map);
-        }
-
-        const groups = {
-            need: createClusterGroup("need"),
-            resource: createClusterGroup("resource"),
-            incident: createClusterGroup("incident")
-        };
+        // Felles klyngegruppe for alle typer (se map-base.js).
+        const clusterGroup = window.resqMapBase.getMarkerCluster(map);
+        const markers = [];
 
         items.forEach(item => {
             const latitude = Number(item.latitude);
@@ -127,10 +112,14 @@
                 iconAnchor: [9, 9]
             });
 
-            L.marker([latitude, longitude], { icon: markerIcon })
-                .bindPopup(popup)
-                .addTo(group[item.type] || groups.incident);
+            // resqKind brukes til å farge klyngen når alle punktene i den er av samme type.
+            markers.push(
+                L.marker([latitude, longitude], { icon: markerIcon, resqKind: item.type || "incident" })
+                    .bindPopup(popup)
+            );
         });
+
+        clusterGroup.addLayers(markers);
     }
 
     // Distance between to points
