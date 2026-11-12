@@ -250,7 +250,7 @@ public class PublicActorControllerTests : IDisposable
         Assert.Equal("Trenger strøm", ReadNeed(1).Title);
     }
 
-    // ---------- UpdateResourceStatus (the Assign / Under review / Decline buttons) ----------
+    // ---------- UpdateResourceStatus (the Send request / Withdraw buttons) ----------
 
     [Fact]
     public void UpdateResourceStatus_UnknownStatusText_IsBadRequest()
@@ -272,7 +272,7 @@ public class PublicActorControllerTests : IDisposable
         AddResource(1);
         var controller = NewController(1, "PublicActor");
 
-        var result = controller.UpdateResourceStatus(1, 1, "accepted", null);
+        var result = controller.UpdateResourceStatus(1, 1, "proposed", null);
 
         Assert.IsType<ForbidResult>(result);
         Assert.Equal("available", ResourceStatus(1));
@@ -280,7 +280,24 @@ public class PublicActorControllerTests : IDisposable
     }
 
     [Fact]
-    public void UpdateResourceStatus_Accept_AssignsTheResourceAndLocksIt()
+    public void UpdateResourceStatus_Propose_SendsTheRequestWithoutLockingTheResource()
+    {
+        AddNeed(1);
+        AddResource(1);
+        var controller = NewController(1, "PublicActor");
+
+        var result = controller.UpdateResourceStatus(1, 1, "proposed", null);
+
+        var redirect = Assert.IsType<RedirectToActionResult>(result);
+        Assert.Equal("Matches", redirect.ActionName);
+        Assert.Equal(1, redirect.RouteValues!["needId"]);
+        Assert.Equal("proposed", ReadMatch(1, 1)!.Status);
+        Assert.Equal("available", ResourceStatus(1));
+        Assert.Equal("under_review", ReadNeed(1).Status);
+    }
+
+    [Fact]
+    public void UpdateResourceStatus_PublicActorCannotAcceptTheirOwnRequest()
     {
         AddNeed(1);
         AddResource(1);
@@ -288,29 +305,22 @@ public class PublicActorControllerTests : IDisposable
 
         var result = controller.UpdateResourceStatus(1, 1, "accepted", null);
 
-        var redirect = Assert.IsType<RedirectToActionResult>(result);
-        Assert.Equal("Matches", redirect.ActionName);
-        Assert.Equal(1, redirect.RouteValues!["needId"]);
-        Assert.Equal("accepted", ReadMatch(1, 1)!.Status);
-        Assert.Equal("unavailable", ResourceStatus(1));
-        Assert.Equal("assigned", ReadNeed(1).Status);
+        Assert.IsType<BadRequestResult>(result);
+        Assert.Null(ReadMatch(1, 1));
+        Assert.Equal("available", ResourceStatus(1));
     }
 
     [Fact]
-    public void UpdateResourceStatus_ResourceAssignedToAnotherNeed_IsRejectedWithAMessage()
+    public void UpdateResourceStatus_WithdrawProposal_NeedGoesBackToNew()
     {
-        AddNeed(1, publicActorId: 1);
-        AddNeed(2, publicActorId: 5, status: "assigned");
-        AddResource(1, status: "unavailable");
-        AddMatch(2, 1, "accepted");
+        AddNeed(1, status: "under_review");
+        AddResource(1);
+        AddMatch(1, 1, "proposed");
         var controller = NewController(1, "PublicActor");
 
-        var result = controller.UpdateResourceStatus(1, 1, "accepted", null);
+        controller.UpdateResourceStatus(1, 1, "declined", null);
 
-        var redirect = Assert.IsType<RedirectToActionResult>(result);
-        Assert.Equal("Matches", redirect.ActionName);
-        Assert.NotNull(controller.TempData["MatchError"]);
-        Assert.Null(ReadMatch(1, 1));
+        Assert.Equal("declined", ReadMatch(1, 1)!.Status);
         Assert.Equal("new", ReadNeed(1).Status);
     }
 
@@ -322,7 +332,7 @@ public class PublicActorControllerTests : IDisposable
         AddResource(1);
         var controller = NewController(1, "PublicActor");
 
-        controller.UpdateResourceStatus(1, 1, "accepted", null);
+        controller.UpdateResourceStatus(1, 1, "proposed", null);
 
         Assert.NotNull(controller.TempData["MatchError"]);
         Assert.Equal("available", ResourceStatus(1));

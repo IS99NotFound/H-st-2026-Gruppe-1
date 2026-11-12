@@ -129,7 +129,7 @@
 
             L.marker([latitude, longitude], { icon: markerIcon })
                 .bindPopup(popup)
-                .addTo(group[item.type] || groups.incident);
+                .addTo(groups[item.type] || groups.incident);
         });
     }
 
