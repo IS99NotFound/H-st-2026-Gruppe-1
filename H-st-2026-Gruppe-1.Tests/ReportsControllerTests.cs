@@ -1,6 +1,7 @@
 using System.Text.Json;
 using H_st_2026_Gruppe_1.Controllers;
 using H_st_2026_Gruppe_1.Models;
+using H_st_2026_Gruppe_1.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace H_st_2026_Gruppe_1.Tests;
@@ -18,6 +19,8 @@ public class ReportsControllerTests : IDisposable
                 1,
                 name: "Traktor",
                 categoryId: 1));
+            context.Incidents.Add(TestData.NewIncident(1));
+            context.Needs.Add(TestData.NewNeed(1, title: "Trenger sand", categoryId: 1));
         });
     }
 
@@ -65,9 +68,23 @@ public class ReportsControllerTests : IDisposable
         Assert.Equal("Traktor", Assert.Single(resources).Name);
     }
 
+    [Fact]
+    public async Task ExportAllCsv_IncludesResourcesIncidentsAndNeeds()
+    {
+        var result = await NewController().ExportAllCsv(null, null, null, null);
+
+        var file = Assert.IsType<FileContentResult>(result);
+        var csv = System.Text.Encoding.UTF8.GetString(file.FileContents);
+
+        Assert.Contains("\"Ressurs\";\"1\";\"Traktor\"", csv);
+        Assert.Contains("\"Hendelse\";\"1\";\"Brann i lagerhall\"", csv);
+        Assert.Contains("\"Behov\";\"1\";\"Trenger sand\"", csv);
+    }
+
     private ReportsController NewController()
     {
-        var controller = new ReportsController(_db.CreateContext());
+        var context = _db.CreateContext();
+        var controller = new ReportsController(context, new ReportsService(context));
         ControllerTestHelper.Attach(controller, 1, "PublicActor");
         return controller;
     }

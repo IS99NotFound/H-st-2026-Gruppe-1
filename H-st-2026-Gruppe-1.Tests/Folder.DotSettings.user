@@ -1,0 +1,12 @@
+﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=42f309a1_002D804b_002D4b0e_002D8a36_002D9fd00d24b645/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="RegistrationsForm_Returns_PartialViewWithCorrectViewName" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+  &lt;TestAncestor&gt;
+    &lt;TestId&gt;xUnit::825E7B1B-2163-4461-EA65-5CFA416CB299::net10.0::H_st_2026_Gruppe_1.Tests.ReportsServiceTests.RegistrationsForm_Returns_PartialViewWithCorrectViewName&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::825E7B1B-2163-4461-EA65-5CFA416CB299::net10.0::H_st_2026_Gruppe_1.Tests.ReportsServiceTests.RegistrationForm_WithNonExistingUser_ReturnsEmptyFields&lt;/TestId&gt;
+  &lt;/TestAncestor&gt;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=4826d731_002D217e_002D4b99_002Db459_002De1abb69975a0/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="RegistrationsForm_Returns_PartialViewWithCorrectViewName #2" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+  &lt;TestAncestor&gt;
+    &lt;TestId&gt;xUnit::825E7B1B-2163-4461-EA65-5CFA416CB299::net10.0::H_st_2026_Gruppe_1.Tests.ReportsServiceTests.RegistrationsForm_Returns_PartialViewWithCorrectViewName&lt;/TestId&gt;
+  &lt;/TestAncestor&gt;
+&lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>

@@ -75,6 +75,8 @@ builder.Services.AddScoped<MatchNeedLifecycle>();
 builder.Services.AddScoped<LocationRegionResolver>();
 builder.Services.AddHostedService<MatchLifecycleWorker>();
 
+builder.Services.AddScoped<IReportsService, ReportsService>();
+
 var app = builder.Build();
 
 // Forces application to use period for decimal values (en-us)
