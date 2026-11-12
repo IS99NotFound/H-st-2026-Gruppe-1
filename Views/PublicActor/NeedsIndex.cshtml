@@ -256,6 +256,15 @@
                 });
             }
         });
+        window.resqRegistration.bindAddressSearch('needForm', {
+            onPosition: (latitude, longitude) => {
+                document.getElementById('latInput').value = latitude;
+                document.getElementById('lngInput').value = longitude;
+                document.getElementById('posText').textContent =
+                    'Valgt posisjon: bredde: ' + latitude.toFixed(5) +
+                    ', lengde: ' + longitude.toFixed(5);
+            }
+        });
         const modalElement = document.getElementById('registrationModal');
         if (modalElement?.dataset.openRegistrationModal === 'true') {
             bootstrap.Modal.getOrCreateInstance(modalElement).show();

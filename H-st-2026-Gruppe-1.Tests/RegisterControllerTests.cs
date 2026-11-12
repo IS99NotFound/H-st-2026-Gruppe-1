@@ -186,6 +186,6 @@ public class RegisterControllerTests : IDisposable
         var result = await controller.Index(ValidModel());
 
         Assert.IsType<ViewResult>(result);
-        Assert.Contains(expectedMessage, ErrorsFor(controller, string.Empty));
+        Assert.Contains(expectedMessage, ErrorsFor(controller, "Password"));
     }
 }

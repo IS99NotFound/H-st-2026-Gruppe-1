@@ -149,5 +149,5 @@ document.addEventListener('keydown', event => {
     if (event.key !== 'Enter' || event.target?.id !== 'locationNameInput') return;
 
     event.preventDefault();
-    document.getElementById('searchLocationButton')?.click();
+    event.target.closest('form')?.querySelector('#searchLocationButton')?.click();
 });

@@ -68,29 +68,10 @@ window.resqRegistrationMap = {
         });
         new LocateControl().addTo(map);
 
-        form.querySelector('#searchLocationButton')?.addEventListener('click', async () => {
-            const input = form.querySelector('#locationNameInput');
-            const button = form.querySelector('#searchLocationButton');
-            if (!input?.value.trim() || !window.resqReverseGeocode) return;
-
-            button.disabled = true;
-            try {
-                const result = await window.resqReverseGeocode.searchAddress(input.value.trim());
-                if (!result) {
-                    input.setCustomValidity('Fant ingen adresse.');
-                    input.reportValidity();
-                    return;
-                }
-
-                input.setCustomValidity('');
-                input.value = result.formatted_query;
-                setPosition(Number(result.lat), Number(result.lon));
-                map.setView([Number(result.lat), Number(result.lon)], 14);
-            } catch {
-                input.setCustomValidity('Adressesøket kunne ikke gjennomføres.');
-                input.reportValidity();
-            } finally {
-                button.disabled = false;
+        window.resqRegistration.bindAddressSearch(form, {
+            onPosition: (latitude, longitude) => {
+                setPosition(latitude, longitude);
+                map.setView([latitude, longitude], 14);
             }
         });
 

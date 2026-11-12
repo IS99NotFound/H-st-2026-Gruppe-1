@@ -1,6 +1,8 @@
 using H_st_2026_Gruppe_1.Controllers;
 using H_st_2026_Gruppe_1.Models;
+using H_st_2026_Gruppe_1.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace H_st_2026_Gruppe_1.Tests;
 
@@ -38,7 +40,8 @@ public class ResourcesControllerTests : IDisposable
 
     private ResourcesController NewController(int? userId, string? role)
     {
-        var controller = new ResourcesController(_db.CreateContext());
+        var context = _db.CreateContext();
+        var controller = new ResourcesController(context, new MatchNeedLifecycle(context));
         ControllerTestHelper.Attach(controller, userId, role);
         return controller;
     }
@@ -153,5 +156,129 @@ public class ResourcesControllerTests : IDisposable
         var result = CallIndex(controller, id: 3);
 
         Assert.IsType<NotFoundResult>(result);
+    }
+
+    // ---------- Requests from public actors (the Accept / Decline buttons) ----------
+
+    // A need with a request (proposed) on one resource
+    private void AddRequest(int needId, int resourceId, string needStatus = "under_review")
+    {
+        _db.Seed(c =>
+        {
+            c.Needs.Add(TestData.NewNeed(needId, status: needStatus));
+            c.MatchRecords.Add(TestData.NewMatch(needId, resourceId, "proposed"));
+        });
+    }
+
+    private string MatchStatusOf(int needId, int resourceId)
+    {
+        using var context = _db.CreateContext();
+        return context.MatchRecords.AsNoTracking()
+            .Single(m => m.NeedId == needId && m.ResourceId == resourceId).Status;
+    }
+
+    private string ResourceStatusOf(int id)
+    {
+        using var context = _db.CreateContext();
+        return context.Resources.AsNoTracking().Single(r => r.Id == id).Status;
+    }
+
+    private string NeedStatusOf(int id)
+    {
+        using var context = _db.CreateContext();
+        return context.Needs.AsNoTracking().Single(n => n.Id == id).Status;
+    }
+
+    [Fact]
+    public void Index_Provider_SeesRequestsOnlyForOpenNeeds()
+    {
+        AddRequest(1, 1);
+        AddRequest(2, 1, needStatus: "cancelled");
+        var controller = NewController(2, "CivilianProvider");
+
+        var dashboard = DashboardFrom(CallIndex(controller));
+
+        var request = Assert.Single(dashboard.MatchStatuses);
+        Assert.Equal(1, request.NeedId);
+        Assert.Equal("proposed", request.Status);
+    }
+
+    [Fact]
+    public void RespondToMatch_Accept_AssignsTheResourceAndLocksIt()
+    {
+        AddRequest(1, 1);
+        var controller = NewController(2, "CivilianProvider");
+
+        var result = controller.RespondToMatch(1, 1, "accepted");
+
+        var redirect = Assert.IsType<RedirectToActionResult>(result);
+        Assert.Equal("Index", redirect.ActionName);
+        Assert.Equal("accepted", MatchStatusOf(1, 1));
+        Assert.Equal("unavailable", ResourceStatusOf(1));
+        Assert.Equal("assigned", NeedStatusOf(1));
+    }
+
+    [Fact]
+    public void RespondToMatch_Decline_KeepsTheResourceAvailable()
+    {
+        AddRequest(1, 1);
+        var controller = NewController(2, "CivilianProvider");
+
+        controller.RespondToMatch(1, 1, "declined");
+
+        Assert.Equal("declined", MatchStatusOf(1, 1));
+        Assert.Equal("available", ResourceStatusOf(1));
+        Assert.Equal("new", NeedStatusOf(1));
+    }
+
+    [Fact]
+    public void RespondToMatch_OtherProvidersResource_IsForbidden()
+    {
+        AddRequest(1, 1);
+        var controller = NewController(3, "CivilianProvider");
+
+        var result = controller.RespondToMatch(1, 1, "accepted");
+
+        Assert.IsType<ForbidResult>(result);
+        Assert.Equal("proposed", MatchStatusOf(1, 1));
+    }
+
+    [Fact]
+    public void RespondToMatch_UnknownAnswer_IsBadRequest()
+    {
+        AddRequest(1, 1);
+        var controller = NewController(2, "CivilianProvider");
+
+        var result = controller.RespondToMatch(1, 1, "hacked");
+
+        Assert.IsType<BadRequestResult>(result);
+        Assert.Equal("proposed", MatchStatusOf(1, 1));
+    }
+
+    [Fact]
+    public void RespondToMatch_ResourceAlreadyTaken_ShowsAMessageAndChangesNothing()
+    {
+        // Resource 2 is already unavailable (assigned to another need)
+        AddRequest(1, 2);
+        var controller = NewController(2, "CivilianProvider");
+
+        controller.RespondToMatch(2, 1, "accepted");
+
+        Assert.NotNull(controller.TempData["ResourceError"]);
+        Assert.Equal("proposed", MatchStatusOf(1, 2));
+        Assert.Equal("under_review", NeedStatusOf(1));
+    }
+
+    [Fact]
+    public void RespondToMatch_ClosedNeed_CannotBeAnswered()
+    {
+        AddRequest(1, 1, needStatus: "cancelled");
+        var controller = NewController(2, "CivilianProvider");
+
+        controller.RespondToMatch(1, 1, "accepted");
+
+        Assert.NotNull(controller.TempData["ResourceError"]);
+        Assert.Equal("proposed", MatchStatusOf(1, 1));
+        Assert.Equal("available", ResourceStatusOf(1));
     }
 }

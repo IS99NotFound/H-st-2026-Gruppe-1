@@ -50,6 +50,14 @@
         </div>
     }
 
+    @if (TempData["ResourceError"] is string resourceError)
+    {
+        <div class="alert alert-danger" role="alert">
+            <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
+            <span>@resourceError</span>
+        </div>
+    }
+
     <form id="resourceFilterForm" method="get" asp-controller="Resources" asp-action="Index" class="dashboard-filter-bar">
         <div class="dashboard-filter-field">
             <label for="resourceSearch" class="form-label text-muted small fw-bold">Søk</label>
@@ -183,16 +191,55 @@
                         <div class="resource-assigned-matches">
                             @foreach (var match in resourceMatches)
                             {
-                                <div class="resource-assigned-match">
-                                    <span>
-                                        <i class="bi bi-link-45deg" aria-hidden="true"></i>
-                                        Tildelt til behov: <strong>@match.NeedTitle</strong>
-                                    </span>
-                                    @if (!string.IsNullOrWhiteSpace(match.Comment))
-                                    {
-                                        <span class="resource-match-comment">@match.Comment</span>
-                                    }
-                                </div>
+                                if (match.Status == "proposed")
+                                {
+                                    <div class="resource-assigned-match">
+                                        <span>
+                                            <i class="bi bi-hourglass-split" aria-hidden="true"></i>
+                                            Forespørsel for behov: <strong>@match.NeedTitle</strong>
+                                        </span>
+                                        <span>Sted: @match.NeedLocation</span>
+                                        <span>Frist: @(match.NeedDeadline?.ToString("dd.MM.yyyy") ?? "Ikke oppgitt")</span>
+                                        <span>Prioritet: @(match.NeedPriority == H_st_2026_Gruppe_1.Models.NeedPriorityEnum.Critical ? "Akutt" : "Planlagt")</span>
+                                        <span>Kontakt: @match.NeedEmail, @match.NeedPhone</span>
+                                        @if (!string.IsNullOrWhiteSpace(match.Comment))
+                                        {
+                                            <span class="resource-match-comment">@match.Comment</span>
+                                        }
+                                        @if (User.IsInRole("CivilianProvider"))
+                                        {
+                                            <form asp-controller="Resources" asp-action="RespondToMatch" method="post"
+                                                  class="match-status-form">
+                                                <input type="hidden" name="resourceId" value="@resource.Id" />
+                                                <input type="hidden" name="needId" value="@match.NeedId" />
+                                                <div class="match-status-buttons">
+                                                    <button type="submit" name="answer" value="accepted"
+                                                            class="btn btn-sm match-action match-action-accepted">
+                                                        <i class="bi bi-check2" aria-hidden="true"></i> Godta
+                                                    </button>
+                                                    <button type="submit" name="answer" value="declined"
+                                                            class="btn btn-sm match-action match-action-declined">
+                                                        <i class="bi bi-x-lg" aria-hidden="true"></i> Avslå
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="resource-assigned-match">
+                                        <span>
+                                            <i class="bi bi-link-45deg" aria-hidden="true"></i>
+                                            Tildelt til behov: <strong>@match.NeedTitle</strong>
+                                        </span>
+                                        <span>Kontakt: @match.NeedEmail, @match.NeedPhone</span>
+                                        @if (!string.IsNullOrWhiteSpace(match.Comment))
+                                        {
+                                            <span class="resource-match-comment">@match.Comment</span>
+                                        }
+                                    </div>
+                                }
                             }
                         </div>
                     }
