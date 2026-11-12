@@ -48,7 +48,7 @@ public class SecurityHeadersMiddleware
     // In development, localhost is allowed for browser refresh.
     public static string CreatePolicy(string nonce, bool isDevelopment)
     {
-        var connectSource = "connect-src 'self' https://overpass-api.de https://nominatim.openstreetmap.org https://unpkg.com/leaflet@1.9.4/dist/leaflet.js.map";
+        var connectSource = "connect-src 'self' https://overpass-api.de https://nominatim.openstreetmap.org https://unpkg.com/leaflet@1.9.4/dist/leaflet.js.map https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js.map";
         if (isDevelopment)
         {
             connectSource += " http://localhost:* ws://localhost:*";

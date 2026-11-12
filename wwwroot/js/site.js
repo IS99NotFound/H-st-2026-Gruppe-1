@@ -86,6 +86,39 @@ window.resqRegistration = {
                 button.disabled = false;
             });
         });
+    },
+
+    bindAddressSearch(formOrId, { onPosition }) {
+        const form = typeof formOrId === "string"
+            ? document.getElementById(formOrId)
+            : formOrId;
+        const input = form?.querySelector("#locationNameInput");
+        const button = form?.querySelector("#searchLocationButton");
+        if (!form || !input || !button || !window.resqReverseGeocode) return;
+
+        button.addEventListener("click", async () => {
+            const query = input.value.trim();
+            if (!query) return;
+
+            button.disabled = true;
+            try {
+                const result = await window.resqReverseGeocode.searchAddress(query);
+                if (!result) {
+                    input.setCustomValidity("Fant ingen adresse.");
+                    input.reportValidity();
+                    return;
+                }
+
+                input.setCustomValidity("");
+                input.value = result.formatted_query;
+                onPosition(Number(result.lat), Number(result.lon));
+            } catch {
+                input.setCustomValidity("Adressesøket kunne ikke gjennomføres.");
+                input.reportValidity();
+            } finally {
+                button.disabled = false;
+            }
+        });
     }
 };
 

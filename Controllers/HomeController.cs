@@ -345,17 +345,7 @@ public class PublicActorController : Controller
                 Status = match.Status
             }).ToList();
 
-        ViewBag.Categories = _db.Categories.OrderBy(c => c.CategoryId).ToList();
-        ViewBag.ResourceCategories = _db.Categories
-            .AsEnumerable()
-            .Where(category => ResourceCategoryPolicy.IsAllowed(category.CategoryName))
-            .OrderBy(c => c.CategoryId)
-            .ToList();
-        ViewBag.NeedCategories = _db.Categories
-            .Where(category => _db.Needs.Any(need => need.Category == category.CategoryId))
-            .OrderBy(category => category.CategoryName)
-            .ToList();
-        ViewBag.Incidents = _db.Incidents.OrderBy(i => i.IncidentId).ToList();
+        LoadDropdowns();
         if (id.HasValue)
         {
             var editNeed = sortedResults.FirstOrDefault(need => need.Id == id.Value);
@@ -768,6 +758,30 @@ public class HomeController : Controller
         _locationRegionResolver = locationRegionResolver;
     }
 
+    private void LoadResourceDropdowns()
+    {
+        var categories = _db.Categories
+            .OrderBy(category => category.CategoryId)
+            .ToList();
+        ViewBag.Categories = categories;
+        ViewBag.ResourceCategories = categories
+            .Where(category => ResourceCategoryPolicy.IsAllowed(category.CategoryName))
+            .OrderBy(category => category.CategoryId)
+            .ToList();
+    }
+
+    private void LoadDropdowns()
+    {
+        LoadResourceDropdowns();
+        ViewBag.NeedCategories = _db.Categories
+            .Where(category => _db.Needs.Any(need => need.Category == category.CategoryId))
+            .OrderBy(category => category.CategoryName)
+            .ToList();
+        ViewBag.Incidents = _db.Incidents
+            .OrderBy(incident => incident.IncidentId)
+            .ToList();
+    }
+
     [Authorize(Roles = "CivilianProvider,Administrator")]
     public IActionResult Index(int? id)
     {
@@ -776,12 +790,7 @@ public class HomeController : Controller
             return RedirectToAction("DashboardIndex", "PublicActor");
         }
         
-        ViewBag.Categories = _db.Categories.OrderBy(c => c.CategoryId).ToList();
-        ViewBag.ResourceCategories = _db.Categories
-            .AsEnumerable()
-            .Where(category => ResourceCategoryPolicy.IsAllowed(category.CategoryName))
-            .OrderBy(c => c.CategoryId)
-            .ToList();
+        LoadResourceDropdowns();
         var currentUserId = GetCurrentUserId();
         if (currentUserId is null)
         {
@@ -817,12 +826,7 @@ public class HomeController : Controller
     [Authorize(Roles = "CivilianProvider,Administrator")]
     public IActionResult RegistrationForm()
     {
-        ViewBag.Categories = _db.Categories.OrderBy(c => c.CategoryId).ToList();
-        ViewBag.ResourceCategories = _db.Categories
-            .AsEnumerable()
-            .Where(category => ResourceCategoryPolicy.IsAllowed(category.CategoryName))
-            .OrderBy(c => c.CategoryId)
-            .ToList();
+        LoadResourceDropdowns();
 
         var currentUser = _db.Users.Find(GetCurrentUserId());
         return PartialView(
@@ -937,12 +941,7 @@ public class HomeController : Controller
         if (!ModelState.IsValid)
         {
             // sends the user to form with attributes and error messages filled out
-            ViewBag.Categories = _db.Categories.OrderBy(c => c.CategoryId).ToList();
-            ViewBag.ResourceCategories = _db.Categories
-                .AsEnumerable()
-                .Where(category => ResourceCategoryPolicy.IsAllowed(category.CategoryName))
-                .OrderBy(c => c.CategoryId)
-                .ToList();
+            LoadResourceDropdowns();
             LoadOperationalFeed(currentUserId.Value, User.IsInRole("Administrator"));
             ViewBag.OpenRegistrationModal = true;
             return View("Index", resource);
@@ -956,12 +955,7 @@ public class HomeController : Controller
         {
             ModelState.AddModelError(nameof(ResourceEntry.CategoryId),
                 "Velg en gyldig ressurskategori.");
-            ViewBag.Categories = _db.Categories.OrderBy(c => c.CategoryId).ToList();
-            ViewBag.ResourceCategories = _db.Categories
-                .AsEnumerable()
-                .Where(category => ResourceCategoryPolicy.IsAllowed(category.CategoryName))
-                .OrderBy(c => c.CategoryId)
-                .ToList();
+            LoadResourceDropdowns();
             LoadOperationalFeed(currentUserId.Value, User.IsInRole("Administrator"));
             ViewBag.OpenRegistrationModal = true;
             return View("Index", resource);
@@ -973,12 +967,7 @@ public class HomeController : Controller
         if (!location.IsValid)
         {
             ModelState.AddModelError(nameof(ResourceEntry.Latitude), location.ErrorMessage!);
-            ViewBag.Categories = _db.Categories.OrderBy(c => c.CategoryId).ToList();
-            ViewBag.ResourceCategories = _db.Categories
-                .AsEnumerable()
-                .Where(category => ResourceCategoryPolicy.IsAllowed(category.CategoryName))
-                .OrderBy(c => c.CategoryId)
-                .ToList();
+            LoadResourceDropdowns();
             LoadOperationalFeed(currentUserId.Value, User.IsInRole("Administrator"));
             ViewBag.OpenRegistrationModal = true;
             return View("Index", resource);
