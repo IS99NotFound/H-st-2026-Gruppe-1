@@ -250,6 +250,13 @@ public class MatchNeedLifecycleTests : IDisposable
             NullLogger<MatchLifecycleWorker>.Instance);
 
         await worker.StartAsync(CancellationToken.None);
+
+        // Wait until the clean-up has run (max 5 seconds), before the worker is stopped
+        for (var i = 0; i < 50 && MatchStatus(1, 1) != "completed"; i++)
+        {
+            await Task.Delay(100);
+        }
+
         await worker.StopAsync(CancellationToken.None);
 
         Assert.Equal("completed", MatchStatus(1, 1));

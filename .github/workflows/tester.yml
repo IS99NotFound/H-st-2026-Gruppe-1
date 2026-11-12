@@ -1,0 +1,25 @@
+name: Tester
+
+on:
+  push:
+    branches: [ main, "Prøve-Main" ]
+  pull_request:
+    branches: [ main, "Prøve-Main" ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hent koden
+        uses: actions/checkout@v4
+
+      - name: Installer .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Bygg
+        run: dotnet build H-st-2026-Gruppe-1.Tests/H-st-2026-Gruppe-1.Tests.csproj
+
+      - name: Kjør tester
+        run: dotnet test H-st-2026-Gruppe-1.Tests/H-st-2026-Gruppe-1.Tests.csproj --no-build
