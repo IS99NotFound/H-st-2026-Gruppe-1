@@ -1,23 +1,103 @@
+@model H_st_2026_Gruppe_1.Models.ReportsIndexViewModel
+
 @{
-    ViewData["Title"] = "Rapporter";
+    ViewData["Title"] = "Rapportoversikt";
 }
 
-<section class="placeholder-page">
-    <h1>Rapporter</h1>
-    <article class="dashboard-card report-card">
-        <a asp-controller="Reports" asp-action="ResourcesView" class="report-card-content">
-            <div class="dashboard-card-header">
-                <h2>Ressurser</h2>
+<section class="subpage reports-page">
+    <header class="reports-page-header">
+        <h1>Rapporter</h1>
+        <p class="page-intro">Nøkkeltall og oversikter over registrerte hendelser, behov og ressurser.</p>
+    </header>
+
+    <div class="report-stat-grid" aria-label="Nøkkeltall">
+        <article class="dashboard-card report-stat-card report-stat-card--incidents">
+            <div class="report-stat-icon"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i></div>
+            <div class="report-stat-content">
+                <h2>Hendelser</h2>
+                <p class="report-stat-total">@Model.TotalIncidents <span>totalt</span></p>
+                <div class="report-stat-details">
+                    <span><i class="bi bi-circle-fill" aria-hidden="true"></i>@Model.ActiveIncidents aktive</span>
+                    <span><i class="bi bi-check-circle-fill" aria-hidden="true"></i>@Model.ResolvedIncidents løste</span>
+                </div>
             </div>
-            <p class="dashboard-card-description">Få en oversikt over alle registrerte ressurser</p>
-        </a>
-        <div class="dashboard-card-footer report-card-footer">
-            <a asp-controller="Reports" asp-action="Resources" class="btn btn-sm btn-outline-primary">
-                <i class="bi bi-filetype-csv me-1" aria-hidden="true"></i>Last ned CSV
+        </article>
+        <article class="dashboard-card report-stat-card report-stat-card--needs">
+            <div class="report-stat-icon"><i class="bi bi-clipboard2-check" aria-hidden="true"></i></div>
+            <div class="report-stat-content">
+                <h2>Behov</h2>
+                <p class="report-stat-total">@Model.TotalNeeds <span>totalt</span></p>
+                <div class="report-stat-details">
+                    <span><i class="bi bi-hourglass-split" aria-hidden="true"></i>@Model.UnansweredNeeds ubesvarte</span>
+                </div>
+            </div>
+        </article>
+        <article class="dashboard-card report-stat-card report-stat-card--resources">
+            <div class="report-stat-icon"><i class="bi bi-box-seam" aria-hidden="true"></i></div>
+            <div class="report-stat-content">
+                <h2>Ressurser</h2>
+                <p class="report-stat-total">@Model.TotalResources <span>totalt</span></p>
+                <div class="report-stat-details">
+                    <span><i class="bi bi-check-circle-fill" aria-hidden="true"></i>@Model.AvailableResources tilgjengelige</span>
+                </div>
+            </div>
+        </article>
+    </div>
+    <br>
+        
+    </br>
+
+    <div class="reports-links-grid">
+        <article class="dashboard-card report-card reports-link-card">
+            <a asp-controller="Reports" asp-action="ResourcesView" class="report-card-content">
+                <div class="reports-link-title">
+                    <i class="bi bi-box-seam" aria-hidden="true"></i>
+                    <h3>Ressurser</h3>
+                </div>
+                <p class="dashboard-card-description">Oversikt over alle registrerte ressurser.</p>
             </a>
-            <a asp-controller="Reports" asp-action="ResourcesJson" class="btn btn-sm btn-outline-primary">
-                <i class="bi bi-filetype-json me-1" aria-hidden="true"></i>Last ned JSON
+            <div class="dashboard-card-footer report-card-footer">
+                <a asp-controller="Reports" asp-action="Resources" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-filetype-csv me-1" aria-hidden="true"></i>CSV
+                </a>
+                <a asp-controller="Reports" asp-action="ResourcesJson" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-filetype-json me-1" aria-hidden="true"></i>JSON
+                </a>
+            </div>
+        </article>
+        <article class="dashboard-card report-card reports-link-card">
+            <a asp-controller="Reports" asp-action="NeedsView" class="report-card-content">
+                <div class="reports-link-title">
+                    <i class="bi bi-clipboard2-check" aria-hidden="true"></i>
+                    <h3>Behov</h3>
+                </div>
+                <p class="dashboard-card-description">Oversikt over alle registrerte behov.</p>
             </a>
-        </div>
-    </article>
+            <div class="dashboard-card-footer report-card-footer">
+                <a asp-controller="Reports" asp-action="Needs" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-filetype-csv me-1" aria-hidden="true"></i>CSV
+                </a>
+                <a asp-controller="Reports" asp-action="NeedsJson" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-filetype-json me-1" aria-hidden="true"></i>JSON
+                </a>
+            </div>
+        </article>
+        <article class="dashboard-card report-card reports-link-card">
+            <a asp-controller="Reports" asp-action="IncidentsView" class="report-card-content">
+                <div class="reports-link-title">
+                    <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+                    <h3>Hendelser</h3>
+                </div>
+                <p class="dashboard-card-description">Oversikt over alle registrerte hendelser.</p>
+            </a>
+            <div class="dashboard-card-footer report-card-footer">
+                <a asp-controller="Reports" asp-action="Incidents" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-filetype-csv me-1" aria-hidden="true"></i>CSV
+                </a>
+                <a asp-controller="Reports" asp-action="IncidentsJson" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-filetype-json me-1" aria-hidden="true"></i>JSON
+                </a>
+            </div>
+        </article>
+    </div>
 </section>
