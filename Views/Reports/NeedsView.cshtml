@@ -1,0 +1,64 @@
+@model IReadOnlyList<H_st_2026_Gruppe_1.Models.NeedReportViewModel>
+
+@{
+    ViewData["Title"] = "Behovsrapport";
+}
+
+<section class="subpage report-page">
+    <div class="subpage-header">
+        <div>
+            <h1>Behovsrapport</h1>
+            <p class="page-intro">Oversikt over alle registrerte behov.</p>
+        </div>
+        <div class="d-flex gap-2 report-actions">
+            <a asp-controller="Reports" asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Tilbake
+            </a>
+            <button type="button" class="btn btn-primary" id="printReportButton">
+                <i class="bi bi-printer me-1" aria-hidden="true"></i>Skriv ut / Lagre som PDF
+            </button>
+        </div>
+    </div>
+
+    <div class="dashboard-card">
+        <div class="table-wrapper">
+            <table class="table table-striped align-middle mb-0">
+                <caption class="visually-hidden">Registrerte behov</caption>
+                <thead>
+                    <tr>
+                        <th scope="col" class="report-column-name">Tittel</th>
+                        <th scope="col" class="report-column-category">Kategori</th>
+                        <th scope="col" class="report-column-description">Beskrivelse</th>
+                        <th scope="col" class="report-column-location">Område</th>
+                        <th scope="col" class="report-column-contact">Prioritet</th>
+                        <th scope="col" class="report-column-status">Epost</th>
+                        <th scope="col" class="report-column-registered">Telefonnummer</th>
+                        <th scope="col" class="report-column-registered">Status</th>
+                        <th scope="col" class="report-column-registered">Registrert</th>
+
+                        </tr>
+                </thead>
+                <tbody>
+                @foreach (var need in Model)
+                {
+                    <tr>
+                        <td class="report-column-name">@need.Title</td>
+                        <td class="report-column-category">@CategoryLabelHelper.DisplayName(need.CategoryInfo)</td>
+                        <td class="report-column-description">@need.Description</td>
+                        <td class="report-column-location">@need.LocationName</td>
+                        <td class="report-column-location">@need.Priority.ToString()</td>
+                        <td class="report-column-location">@need.Email</td>
+                        <td class="report-column-location">@need.PhoneNumber</td>
+                        <td class="report-column-location">@StatusLabelHelper.DisplayName(need.Status)</td>
+                        <td class="report-column-location">@need.RegisteredAt.ToString("yyyy-MM-dd HH:mm")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<script nonce="@Context.Items["CspNonce"]">
+    document.getElementById("printReportButton")?.addEventListener("click", () => window.print());
+</script>
