@@ -1,4 +1,32 @@
 window.resqMapBase = {
+    // Én felles klyngegruppe per kart. Behov, ressurser og hendelser legges alle her,
+    // slik at de slås sammen til ett tall når man zoomer ut.
+    getMarkerCluster(map) {
+        if (map.resqMarkerCluster) return map.resqMarkerCluster;
+
+        // Fra og med denne zoomen grupperes bare punkter som ligger (nesten) oppå hverandre.
+        const detailZoom = 5;
+
+        map.resqMarkerCluster = L.markerClusterGroup({
+            maxClusterRadius: zoom => (zoom >= detailZoom ? 5 : 50),
+            showCoverageOnHover: false,
+            spiderfyOnMaxZoom: true,
+            iconCreateFunction: cluster => {
+                // Samme farge som typen hvis alle punktene er av samme type, ellers nøytral farge.
+                const kinds = new Set(cluster.getAllChildMarkers()
+                    .map(marker => marker.options.resqKind || "mixed"));
+                const kind = kinds.size === 1 ? [...kinds][0] : "mixed";
+                return L.divIcon({
+                    html: `<span>${cluster.getChildCount()}</span>`,
+                    className: `resq-cluster resq-cluster--${kind}`,
+                    iconSize: [36, 36]
+                });
+            }
+        }).addTo(map);
+
+        return map.resqMarkerCluster;
+    },
+
     // Oppretter felles kart, standardlag og lagvelger for begge kart-sidene.
     initialize({ center, zoom }) {
         // OpenStreetMap brukes som standard. De andre lagene lastes først når brukeren velger dem.

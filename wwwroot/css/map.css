@@ -554,3 +554,7 @@ html[data-theme="light"] .layers-menu-control.leaflet-control-layers-expanded {
 .resq-cluster--incident {
     background: #ef6c00;
 }
+/* Klynge med flere typer (behov, ressurser og hendelser blandet) */
+.resq-cluster--mixed {
+    background: #37474f;
+}
