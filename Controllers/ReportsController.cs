@@ -18,36 +18,39 @@ public class ReportsController : Controller
     }
 
     [Authorize(Roles = "PublicActor, Administrator")]
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(int? regionId = null)
     {
-        var model =  await GetReportDataAsync();
+        ViewBag.Regions = await _db.Regions.AsNoTracking().OrderBy(r => r.RegionName).ToListAsync();
+        ViewBag.RegionId = regionId;
+        var model =  await GetReportDataAsync(regionId);
         return View(model);
     }
 
     [HttpGet]
     [Authorize(Roles = "PublicActor, Administrator")]
-    public IActionResult ResourcesView()
+    public IActionResult ResourcesView(int? regionId = null)
     {
-        return View(GetResourceReportRows());
+        return View(GetResourceReportRows(regionId));
     }
 
     [HttpGet]
     [Authorize(Roles = "PublicActor, Administrator")]
-    public IActionResult Resources()
+    public IActionResult Resources(int? regionId = null)
     {
-        var resources = GetResourceReportRows();
+        var resources = GetResourceReportRows(regionId);
 
         static string Csv(string? value) =>
             "\"" + (value ?? string.Empty).Replace("\"", "\"\"") + "\"";
 
         var builder = new StringBuilder();
-        builder.AppendLine("Navn;Kategori;Beskrivelse;Sted;E-post;Telefon;Status;Registrert");
+        builder.AppendLine("Navn;Kategori;Beskrivelse;Region;Sted;E-post;Telefon;Status;Registrert");
         foreach (var resource in resources)
         {
             builder.AppendLine(string.Join(";",
                 Csv(resource.Name),
                 Csv(resource.Category),
                 Csv(resource.Description),
+                Csv(resource.RegionName),
                 Csv(resource.LocationName),
                 Csv(resource.Email),
                 Csv(resource.PhoneNumber),
@@ -61,9 +64,9 @@ public class ReportsController : Controller
 
     [HttpGet]
     [Authorize(Roles = "PublicActor, Administrator")]
-    public IActionResult ResourcesJson()
+    public IActionResult ResourcesJson(int? regionId = null)
     {
-        var resources = GetResourceReportRows();
+        var resources = GetResourceReportRows(regionId);
         var json = JsonSerializer.Serialize(resources, new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -73,14 +76,17 @@ public class ReportsController : Controller
         return File(Encoding.UTF8.GetBytes(json), "application/json; charset=utf-8", "Ressurser.json");
     }
 
-    private List<ResourceReportRow> GetResourceReportRows()
+    private List<ResourceReportRow> GetResourceReportRows(int? regionId = null)
     {
         return _db.Resources
+            .Where(resource => regionId == null || resource.RegionId == regionId)
             .OrderBy(resource => resource.Name)
             .Select(resource => new ResourceReportRow(
                 resource.Name,
                 resource.Category!.CategoryName,
                 resource.Description,
+                _db.Regions.Where(region => region.RegionId == resource.RegionId)
+                    .Select(region => region.RegionName).FirstOrDefault() ?? "",
                 resource.LocationName,
                 resource.Email,
                 resource.PhoneNumber,
@@ -95,28 +101,29 @@ public class ReportsController : Controller
     
     [HttpGet]
     [Authorize(Roles = "PublicActor, Administrator")]
-    public IActionResult NeedsView()
+    public IActionResult NeedsView(int? regionId = null)
     {
-        return View(GetNeedsReportRows());
+        return View(GetNeedsReportRows(regionId));
     }
     
     [HttpGet]
     [Authorize(Roles = "PublicActor, Administrator")]
-    public IActionResult Needs()
+    public IActionResult Needs(int? regionId = null)
     {
-        var needs = GetNeedsReportRows();
+        var needs = GetNeedsReportRows(regionId);
 
         static string Csv(string? value) =>
             "\"" + (value ?? string.Empty).Replace("\"", "\"\"") + "\"";
 
         var builder = new StringBuilder();
-        builder.AppendLine("Tittel;Kategori;Beskrivelse;Sted;Prioritet;E-post;Telefon;Status;Registrert");
+        builder.AppendLine("Tittel;Kategori;Beskrivelse;Region;Sted;Prioritet;E-post;Telefon;Status;Registrert");
         foreach (var need in  needs)
         {
             builder.AppendLine(string.Join(";",
                 Csv(need.Title),
                 Csv(need.CategoryInfo),
                 Csv(need.Description),
+                Csv(need.RegionName),
                 Csv(need.LocationName), 
                 Csv(need.Priority.ToString()),
                 Csv(need.Email),
@@ -131,9 +138,9 @@ public class ReportsController : Controller
     
     [HttpGet]
     [Authorize(Roles = "PublicActor, Administrator")]
-    public IActionResult NeedsJson()
+    public IActionResult NeedsJson(int? regionId = null)
     {
-        var needs = GetNeedsReportRows();
+        var needs = GetNeedsReportRows(regionId);
         var json = JsonSerializer.Serialize(needs, new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -143,14 +150,17 @@ public class ReportsController : Controller
         return File(Encoding.UTF8.GetBytes(json), "application/json; charset=utf-8", "Behov.json");
     }
     
-    private List<NeedReportViewModel> GetNeedsReportRows()
+    private List<NeedReportViewModel> GetNeedsReportRows(int? regionId = null)
     {
         return _db.Needs
+            .Where(Need => regionId == null || Need.RegionId == regionId)
             .OrderBy(Need => Need.Title)
             .Select(Need => new NeedReportViewModel(
                 Need.Title,
                 Need.CategoryInfo == null ? null : Need.CategoryInfo.CategoryName,
                 Need.Description,
+                _db.Regions.Where(region => region.RegionId == Need.RegionId)
+                    .Select(region => region.RegionName).FirstOrDefault() ?? "",
                 Need.LocationName,
                 Need.Status,
                 Need.Priority,
@@ -164,16 +174,16 @@ public class ReportsController : Controller
 
     [HttpGet]
     [Authorize(Roles = "PublicActor, Administrator")]
-    public IActionResult IncidentsView()
+    public IActionResult IncidentsView(int? regionId = null)
     {
-        return View(GetIncidentReportRows());
+        return View(GetIncidentReportRows(regionId));
     }
 
     [HttpGet]
     [Authorize(Roles = "PublicActor, Administrator")]
-    public IActionResult Incidents()
+    public IActionResult Incidents(int? regionId = null)
     {
-        var incidents = GetIncidentReportRows();
+        var incidents = GetIncidentReportRows(regionId);
 
         static string Csv(string? value) =>
             "\"" + (value ?? string.Empty).Replace("\"", "\"\"") + "\"";
@@ -199,9 +209,9 @@ public class ReportsController : Controller
 
     [HttpGet]
     [Authorize(Roles = "PublicActor, Administrator")]
-    public IActionResult IncidentsJson()
+    public IActionResult IncidentsJson(int? regionId = null)
     {
-        var incidents = GetIncidentReportRows();
+        var incidents = GetIncidentReportRows(regionId);
         var json = JsonSerializer.Serialize(incidents, new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -211,11 +221,12 @@ public class ReportsController : Controller
         return File(Encoding.UTF8.GetBytes(json), "application/json; charset=utf-8", "Hendelser.json");
     }
 
-    private List<IncidentReportRow> GetIncidentReportRows()
+    private List<IncidentReportRow> GetIncidentReportRows(int? regionId = null)
     {
         return (
             from incident in _db.Incidents
             join region in _db.Regions on incident.RegionId equals region.RegionId
+            where regionId == null || incident.RegionId == regionId
             orderby incident.CreatedAt descending
             select new IncidentReportRow(
                 incident.Title,
@@ -229,19 +240,21 @@ public class ReportsController : Controller
             .ToList();
     }
 
-    private async Task<ReportsIndexViewModel> GetReportDataAsync()
+    private async Task<ReportsIndexViewModel> GetReportDataAsync(int? regionId)
     {
+        var incidents = _db.Incidents.AsNoTracking().Where(i => regionId == null || i.RegionId == regionId);
+        var resources = _db.Resources.AsNoTracking().Where(r => regionId == null || r.RegionId == regionId);
+        var needs = _db.Needs.AsNoTracking().Where(n => regionId == null || n.RegionId == regionId);
 
-        var totalIncidents = await _db.Incidents.AsNoTracking().CountAsync();
-        var activeIncidents = await _db.Incidents.AsNoTracking().CountAsync(i => i.Status == "active"); 
-        var resolvedIncidents = await _db.Incidents.AsNoTracking().CountAsync(i => i.Status == "resolved");
-        var totalResources = await _db.Resources.AsNoTracking().CountAsync();
-        var availableResources = await _db.Resources.AsNoTracking().CountAsync(r => r.Status == "available");
+        var totalIncidents = await incidents.CountAsync();
+        var activeIncidents = await incidents.CountAsync(i => i.Status == "active");
+        var resolvedIncidents = await incidents.CountAsync(i => i.Status == "resolved");
+        var totalResources = await resources.CountAsync();
+        var availableResources = await resources.CountAsync(r => r.Status == "available");
 
-        var totalNeeds = await _db.Needs.AsNoTracking().CountAsync();
-        var unansweredNeeds = await _db.Needs
-            .AsNoTracking()
-            .Where(n => n.Status != "resolved" && n.Status != "cancelled") 
+        var totalNeeds = await needs.CountAsync();
+        var unansweredNeeds = await needs
+            .Where(n => n.Status != "resolved" && n.Status != "cancelled")
             .CountAsync();
 
         return new ReportsIndexViewModel

@@ -47,9 +47,20 @@
         
     </br>
 
+    <form method="get" asp-controller="Reports" asp-action="Index" class="mb-3">
+        <label for="regionId" class="form-label">Region for rapporter og eksport</label>
+        <select name="regionId" id="regionId" class="form-select" data-auto-submit>
+            <option value="">Alle regioner</option>
+            @foreach (var region in (IEnumerable<H_st_2026_Gruppe_1.Models.Region>)ViewBag.Regions)
+            {
+                <option value="@region.RegionId" selected="@(ViewBag.RegionId == region.RegionId)">@region.RegionName</option>
+            }
+        </select>
+    </form>
+
     <div class="reports-links-grid">
         <article class="dashboard-card report-card reports-link-card">
-            <a asp-controller="Reports" asp-action="ResourcesView" class="report-card-content">
+            <a asp-controller="Reports" asp-action="ResourcesView" asp-route-regionId="@ViewBag.RegionId" class="report-card-content">
                 <div class="reports-link-title">
                     <i class="bi bi-box-seam" aria-hidden="true"></i>
                     <h3>Ressurser</h3>
@@ -57,16 +68,16 @@
                 <p class="dashboard-card-description">Oversikt over alle registrerte ressurser.</p>
             </a>
             <div class="dashboard-card-footer report-card-footer">
-                <a asp-controller="Reports" asp-action="Resources" class="btn btn-sm btn-outline-primary">
+                <a asp-controller="Reports" asp-action="Resources" asp-route-regionId="@ViewBag.RegionId" class="btn btn-sm btn-outline-primary">
                     <i class="bi bi-filetype-csv me-1" aria-hidden="true"></i>CSV
                 </a>
-                <a asp-controller="Reports" asp-action="ResourcesJson" class="btn btn-sm btn-outline-primary">
+                <a asp-controller="Reports" asp-action="ResourcesJson" asp-route-regionId="@ViewBag.RegionId" class="btn btn-sm btn-outline-primary">
                     <i class="bi bi-filetype-json me-1" aria-hidden="true"></i>JSON
                 </a>
             </div>
         </article>
         <article class="dashboard-card report-card reports-link-card">
-            <a asp-controller="Reports" asp-action="NeedsView" class="report-card-content">
+            <a asp-controller="Reports" asp-action="NeedsView" asp-route-regionId="@ViewBag.RegionId" class="report-card-content">
                 <div class="reports-link-title">
                     <i class="bi bi-clipboard2-check" aria-hidden="true"></i>
                     <h3>Behov</h3>
@@ -74,16 +85,16 @@
                 <p class="dashboard-card-description">Oversikt over alle registrerte behov.</p>
             </a>
             <div class="dashboard-card-footer report-card-footer">
-                <a asp-controller="Reports" asp-action="Needs" class="btn btn-sm btn-outline-primary">
+                <a asp-controller="Reports" asp-action="Needs" asp-route-regionId="@ViewBag.RegionId" class="btn btn-sm btn-outline-primary">
                     <i class="bi bi-filetype-csv me-1" aria-hidden="true"></i>CSV
                 </a>
-                <a asp-controller="Reports" asp-action="NeedsJson" class="btn btn-sm btn-outline-primary">
+                <a asp-controller="Reports" asp-action="NeedsJson" asp-route-regionId="@ViewBag.RegionId" class="btn btn-sm btn-outline-primary">
                     <i class="bi bi-filetype-json me-1" aria-hidden="true"></i>JSON
                 </a>
             </div>
         </article>
         <article class="dashboard-card report-card reports-link-card">
-            <a asp-controller="Reports" asp-action="IncidentsView" class="report-card-content">
+            <a asp-controller="Reports" asp-action="IncidentsView" asp-route-regionId="@ViewBag.RegionId" class="report-card-content">
                 <div class="reports-link-title">
                     <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
                     <h3>Hendelser</h3>
@@ -91,10 +102,10 @@
                 <p class="dashboard-card-description">Oversikt over alle registrerte hendelser.</p>
             </a>
             <div class="dashboard-card-footer report-card-footer">
-                <a asp-controller="Reports" asp-action="Incidents" class="btn btn-sm btn-outline-primary">
+                <a asp-controller="Reports" asp-action="Incidents" asp-route-regionId="@ViewBag.RegionId" class="btn btn-sm btn-outline-primary">
                     <i class="bi bi-filetype-csv me-1" aria-hidden="true"></i>CSV
                 </a>
-                <a asp-controller="Reports" asp-action="IncidentsJson" class="btn btn-sm btn-outline-primary">
+                <a asp-controller="Reports" asp-action="IncidentsJson" asp-route-regionId="@ViewBag.RegionId" class="btn btn-sm btn-outline-primary">
                     <i class="bi bi-filetype-json me-1" aria-hidden="true"></i>JSON
                 </a>
             </div>

@@ -250,6 +250,29 @@ public class PublicActorControllerTests : IDisposable
         Assert.Equal("Trenger strøm", ReadNeed(1).Title);
     }
 
+    [Fact]
+    public void RegisterNeed_TwoDifferentNeeds_AreBothSaved()
+    {
+        var controller = NewController(1, "PublicActor");
+
+        controller.RegisterNeed(FormNeed(title: "Trenger aggregat"));
+        controller.RegisterNeed(FormNeed(title: "Trenger mannskap"));
+
+        Assert.Equal(2, NeedCount());
+    }
+
+    [Fact]
+    public void RegisterNeed_EditOwnNeed_UpdatesTheNeedInsteadOfCreatingANewOne()
+    {
+        AddNeed(1, publicActorId: 1);
+        var controller = NewController(1, "PublicActor");
+
+        controller.RegisterNeed(FormNeed(id: 1, title: "Endret tittel"));
+
+        Assert.Equal(1, NeedCount());
+        Assert.Equal("Endret tittel", ReadNeed(1).Title);
+    }
+
     // ---------- UpdateResourceStatus (the Send request / Withdraw buttons) ----------
 
     [Fact]

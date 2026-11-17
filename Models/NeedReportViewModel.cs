@@ -4,6 +4,7 @@ public sealed record NeedReportViewModel(
     string Title,
     string? CategoryInfo,
     string Description,
+    string RegionName,
     string LocationName,
     string Status,
     Enum Priority,
