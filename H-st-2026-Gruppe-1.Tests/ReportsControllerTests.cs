@@ -36,7 +36,7 @@ public class ReportsControllerTests : IDisposable
         Assert.Equal("Ressurser.csv", file.FileDownloadName);
 
         var csv = System.Text.Encoding.UTF8.GetString(file.FileContents);
-        Assert.Contains("Navn;Kategori;Beskrivelse;Sted;E-post;Telefon;Status;Registrert", csv);
+        Assert.Contains("Navn;Kategori;Beskrivelse;Region;Sted;E-post;Telefon;Status;Registrert", csv);
         Assert.Contains("\"Traktor\"", csv);
     }
 
@@ -126,6 +126,120 @@ public class ReportsControllerTests : IDisposable
         Assert.Equal(1, model.AvailableResources);
         Assert.Equal(2, model.TotalNeeds);
         Assert.Equal(1, model.UnansweredNeeds);
+    }
+
+    // ---------- Region filter ----------
+
+    // Adds one incident, need and resource in Agder (8) and one of each in Rogaland (9)
+    private void AddTwoRegions()
+    {
+        _db.Seed(context =>
+        {
+            context.Regions.Add(new Region { RegionId = 8, RegionName = "Agder" });
+            context.Regions.Add(new Region { RegionId = 9, RegionName = "Rogaland" });
+
+            context.Incidents.Add(TestData.NewIncident(1, title: "Storm Agder"));
+            context.Incidents.Add(TestData.NewIncident(2, title: "Flom Rogaland"));
+            context.Incidents.Find(1)!.RegionId = 8;
+            context.Incidents.Find(2)!.RegionId = 9;
+
+            context.Needs.Add(TestData.NewNeed(1, title: "Behov Agder"));
+            context.Needs.Add(TestData.NewNeed(2, title: "Behov Rogaland"));
+            context.Needs.Find(1)!.RegionId = 8;
+            context.Needs.Find(2)!.RegionId = 9;
+
+            var rogalandResource = TestData.NewResource(2, name: "Beltevogn");
+            rogalandResource.RegionId = 9;
+            context.Resources.Add(rogalandResource);
+        });
+    }
+
+    [Fact]
+    public async Task Index_WithRegion_OnlyCountsThatRegion()
+    {
+        AddTwoRegions();
+
+        var result = await NewController().Index(9);
+
+        var model = Assert.IsType<ReportsIndexViewModel>(Assert.IsType<ViewResult>(result).Model);
+        Assert.Equal(1, model.TotalIncidents);
+        Assert.Equal(1, model.TotalNeeds);
+        Assert.Equal(1, model.TotalResources);
+    }
+
+    [Fact]
+    public async Task Index_WithoutRegion_CountsEverything()
+    {
+        AddTwoRegions();
+
+        var result = await NewController().Index();
+
+        var model = Assert.IsType<ReportsIndexViewModel>(Assert.IsType<ViewResult>(result).Model);
+        Assert.Equal(2, model.TotalIncidents);
+        Assert.Equal(2, model.TotalNeeds);
+        Assert.Equal(2, model.TotalResources);
+    }
+
+    [Fact]
+    public void NeedsView_WithRegion_OnlyShowsNeedsFromThatRegion()
+    {
+        AddTwoRegions();
+
+        var result = NewController().NeedsView(9);
+
+        var view = Assert.IsType<ViewResult>(result);
+        var need = Assert.Single(Assert.IsAssignableFrom<IReadOnlyList<NeedReportViewModel>>(view.Model));
+        Assert.Equal("Behov Rogaland", need.Title);
+        Assert.Equal("Rogaland", need.RegionName);
+    }
+
+    [Fact]
+    public void ResourcesView_WithRegion_OnlyShowsResourcesFromThatRegion()
+    {
+        AddTwoRegions();
+
+        var result = NewController().ResourcesView(9);
+
+        var view = Assert.IsType<ViewResult>(result);
+        var resource = Assert.Single(Assert.IsAssignableFrom<IReadOnlyList<ResourceReportRow>>(view.Model));
+        Assert.Equal("Beltevogn", resource.Name);
+        Assert.Equal("Rogaland", resource.RegionName);
+    }
+
+    [Fact]
+    public void IncidentsView_WithRegion_OnlyShowsIncidentsFromThatRegion()
+    {
+        AddTwoRegions();
+
+        var result = NewController().IncidentsView(8);
+
+        var view = Assert.IsType<ViewResult>(result);
+        var incident = Assert.Single(Assert.IsAssignableFrom<IReadOnlyList<IncidentReportRow>>(view.Model));
+        Assert.Equal("Storm Agder", incident.Title);
+    }
+
+    [Fact]
+    public void Needs_Csv_HasRegionColumnAndOnlyRowsFromTheChosenRegion()
+    {
+        AddTwoRegions();
+
+        var file = Assert.IsType<FileContentResult>(NewController().Needs(8));
+
+        var csv = System.Text.Encoding.UTF8.GetString(file.FileContents);
+        Assert.Contains("Tittel;Kategori;Beskrivelse;Region;Sted", csv);
+        Assert.Contains("\"Behov Agder\"", csv);
+        Assert.DoesNotContain("Behov Rogaland", csv);
+    }
+
+    [Fact]
+    public void IncidentsJson_WithRegionWithoutData_ReturnsEmptyList()
+    {
+        AddTwoRegions();
+
+        var file = Assert.IsType<FileContentResult>(NewController().IncidentsJson(3));
+
+        using var document = JsonDocument.Parse(file.FileContents);
+        Assert.Empty(document.RootElement.EnumerateArray());
     }
 
     private ReportsController NewController()

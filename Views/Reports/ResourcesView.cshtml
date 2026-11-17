@@ -29,6 +29,7 @@
                         <th scope="col" class="report-column-name">Navn</th>
                         <th scope="col" class="report-column-category">Kategori</th>
                         <th scope="col" class="report-column-description">Beskrivelse</th>
+                        <th scope="col" class="report-column-location">Region</th>
                         <th scope="col" class="report-column-location">Område</th>
                         <th scope="col" class="report-column-contact">Telefonnummer</th>
                         <th scope="col" class="report-column-status">Status</th>
@@ -42,6 +43,7 @@
                         <td class="report-column-name">@resource.Name</td>
                         <td class="report-column-category">@CategoryLabelHelper.DisplayName(resource.Category)</td>
                         <td class="report-column-description">@resource.Description</td>
+                        <td class="report-column-location">@resource.RegionName</td>
                         <td class="report-column-location">@resource.LocationName</td>
                         <td class="report-column-contact">@resource.Email<br />@resource.PhoneNumber</td>
                         <td class="report-column-status">@StatusLabelHelper.DisplayName(resource.Status)</td>

@@ -4,6 +4,7 @@ public sealed record ResourceReportRow(
     string Name,
     string Category,
     string Description,
+    string RegionName,
     string LocationName,
     string Email,
     string PhoneNumber,

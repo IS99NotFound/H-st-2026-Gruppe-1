@@ -194,14 +194,24 @@
                     <div class="dashboard-card-footer">
                         @if (need.PublicActorId == currentUserId)
                         {
-                            <form class="dashboard-card-actions" asp-controller="Home" asp-action="DeleteNeed"
-                                  asp-route-id="@need.Id" method="post"
-                                  data-confirm="Er du sikker på at du vil slette dette behovet?">
-                                @Html.AntiForgeryToken()
-                                <a asp-controller="PublicActor" asp-action="NeedsIndex" asp-route-id="@need.Id"
-                                   class="btn btn-sm btn-primary">Rediger</a>
-                                <button type="submit" class="btn btn-sm btn-danger">Slett</button>
-                            </form>
+                            <div class="dashboard-card-actions">
+                                @if (need.Status == "assigned")
+                                {
+                                    <form asp-controller="PublicActor" asp-action="ResolveNeed"
+                                          asp-route-id="@need.Id" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-success">Marker som løst</button>
+                                    </form>
+                                }
+                                <form class="dashboard-card-actions" asp-controller="Home" asp-action="DeleteNeed"
+                                      asp-route-id="@need.Id" method="post"
+                                      data-confirm="Er du sikker på at du vil slette dette behovet?">
+                                    @Html.AntiForgeryToken()
+                                    <a asp-controller="PublicActor" asp-action="NeedsIndex" asp-route-id="@need.Id"
+                                       class="btn btn-sm btn-primary">Rediger</a>
+                                    <button type="submit" class="btn btn-sm btn-danger">Slett</button>
+                                </form>
+                            </div>
                         }
                     </div>
                 </article>
