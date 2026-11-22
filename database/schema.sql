@@ -48,7 +48,7 @@ CREATE TABLE Organization (
     )
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- All users, with the columns ASP.NET Core Identity expects. Administrator is only Role = 'Administrator'.
+-- All users, with the columns ASP.NET Core Identity expects.
 CREATE TABLE `User` (
     UserID                INT           NOT NULL AUTO_INCREMENT,
     UserName              VARCHAR(50)   NOT NULL,
@@ -66,26 +66,13 @@ CREATE TABLE `User` (
     LockoutEnabled        BOOLEAN       NOT NULL DEFAULT TRUE,
     AccessFailedCount     INT           NOT NULL DEFAULT 0,
     Name                  VARCHAR(100)  NOT NULL,
-    Role                  ENUM('PublicActor', 'CivilianProvider', 'Administrator')
+    Role                  ENUM('PublicActor', 'CivilianProvider')
                           NOT NULL,
     CreatedAt             DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     PRIMARY KEY (UserID),
     UNIQUE KEY uq_User_NormalizedUserName (NormalizedUserName),
     UNIQUE KEY uq_User_NormalizedEmail (NormalizedEmail)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- Identity stores the two-factor key and recovery codes here.
-CREATE TABLE UserToken (
-    UserID         INT           NOT NULL,
-    LoginProvider  VARCHAR(128)  NOT NULL,
-    Name           VARCHAR(128)  NOT NULL,
-    Value          TEXT          NULL,
-
-    PRIMARY KEY (UserID, LoginProvider, Name),
-    CONSTRAINT fk_UserToken_User
-        FOREIGN KEY (UserID) REFERENCES `User` (UserID)
-        ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- A user who works for a public organization. PublicActorID is the same number as UserID.
@@ -112,25 +99,6 @@ CREATE TABLE CivilianProvider (
     CONSTRAINT fk_CivilianProvider_User
         FOREIGN KEY (ProviderID) REFERENCES `User` (UserID)
         ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- A code an employee needs to register as a public actor. It decides which organization they belong to.
-CREATE TABLE InviteCode (
-    InviteCodeID    INT          NOT NULL AUTO_INCREMENT,
-    Code            VARCHAR(32)  NOT NULL,
-    OrganizationID  INT          NOT NULL,
-    ExpiresAt       DATETIME     NOT NULL,
-    UsedByUserID    INT          NULL,
-    UsedAt          DATETIME     NULL,
-
-    PRIMARY KEY (InviteCodeID),
-    UNIQUE KEY uq_InviteCode_Code (Code),
-    UNIQUE KEY uq_InviteCode_UsedByUserID (UsedByUserID),
-    CONSTRAINT fk_InviteCode_Organization
-        FOREIGN KEY (OrganizationID) REFERENCES Organization (OrganizationID),
-    CONSTRAINT fk_InviteCode_User
-        FOREIGN KEY (UsedByUserID) REFERENCES `User` (UserID)
-        ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Incidents and needs
