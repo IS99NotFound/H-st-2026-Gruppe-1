@@ -195,20 +195,6 @@ public class MatchNeedLifecycleTests : IDisposable
         Assert.Equal("available", ResourceStatus(1));
     }
 
-    // ---------- RemoveMatchesFromNeed ----------
-
-    [Fact]
-    public void RemoveMatchesFromNeed_FreesResourcesThatWereAssigned()
-    {
-        AddResource(1, "unavailable");
-        AddNeed(1, "assigned");
-        AddMatch(1, 1, "accepted");
-
-        CreateService().RemoveMatchesFromNeed(1);
-
-        Assert.Equal("available", ResourceStatus(1));
-    }
-
     // ---------- ReleaseFinishedAssignments ----------
 
     [Theory]

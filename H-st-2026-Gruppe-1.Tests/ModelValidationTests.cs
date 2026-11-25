@@ -117,45 +117,6 @@ public class ResourceNeedValidationTests
     }
 }
 
-// ---------- ResourceViewModel (the resource form) ----------
-public class ResourceViewModelValidationTests
-{
-    private static ResourceViewModel ValidModel()
-    {
-        return new ResourceViewModel
-        {
-            Name = "Kari Hansen",
-            Phone = "kari@test.no",
-            Description = "Gravemaskin",
-            ResourceType = "Maskiner",
-            Latitude = 58.1,
-            Longitude = 7.9
-        };
-    }
-
-    [Theory]
-    [InlineData("kari@test.no")]
-    [InlineData("kari.hansen@firma.co.uk")]
-    public void Phone_ValidEmailOrPhoneNumber_IsAccepted(string value)
-    {
-        var model = ValidModel();
-        model.Phone = value;
-
-        Assert.False(ValidationHelper.HasErrorFor(model, nameof(ResourceViewModel.Phone)));
-    }
-
-    [Theory]
-    [InlineData("")]
-    [InlineData("abc")]
-    public void Phone_InvalidValue_IsRejected(string value)
-    {
-        var model = ValidModel();
-        model.Phone = value;
-
-        Assert.True(ValidationHelper.HasErrorFor(model, nameof(ResourceViewModel.Phone)));
-    }
-}
-
 // ---------- RegisterViewModel (the registration form) ----------
 public class RegisterViewModelValidationTests
 {

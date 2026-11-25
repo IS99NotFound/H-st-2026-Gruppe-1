@@ -455,8 +455,6 @@ public class PublicActorController : Controller
                 existingNeed.Deadline =need.Deadline;
                 existingNeed.Priority = need.Priority;
                 existingNeed.RegisteredAt = DateTime.Now;
-               // existingNeed.Status = need.Status;
-               // <- Bug, no status-field. After changes, status will always be new
                 _db.SaveChanges();
             }
         }

@@ -350,8 +350,7 @@ body {
     margin-bottom: 28px;
 }
 
-.reports-page-header h1,
-.reports-section-heading h2 {
+.reports-page-header h1 {
     margin: 0;
     color: var(--text);
     font-weight: 700;
@@ -361,8 +360,7 @@ body {
     font-size: 1.8rem;
 }
 
-.reports-page-header .page-intro,
-.reports-section-heading p {
+.reports-page-header .page-intro {
     margin: 8px 0 0;
     color: var(--text-muted);
 }
@@ -450,14 +448,6 @@ body {
 .report-stat-details i {
     color: var(--accent);
     font-size: 0.75rem;
-}
-
-.reports-section-heading {
-    margin: 36px 0 16px;
-}
-
-.reports-section-heading h2 {
-    font-size: 1.3rem;
 }
 
 .reports-links-grid {
@@ -748,14 +738,6 @@ body {
     overflow-y: auto;
 }
 
-.feed-export-actions {
-    display: flex;
-    justify-content: flex-end;
-    flex-shrink: 0;
-    padding: 10px 12px;
-    border-top: 1px solid var(--border);
-}
-
 .feed-export-options {
     display: flex;
     justify-content: flex-end;
@@ -831,16 +813,10 @@ body {
 }
 
 .feed-card-heading,
-.feed-card-actions,
 .feed-card dl div {
     display: flex;
     align-items: center;
     gap: 8px;
-}
-
-.feed-card-actions {
-    justify-content: flex-end;
-    margin-top: 8px;
 }
 
 .feed-card-edit-button {
@@ -933,20 +909,8 @@ body {
     margin: 0;
 }
 
-.feed-card-actions .btn {
-    font-size: 0.75rem;
-}
-
 .registration-modal-page .operational-feed {
     flex-basis: var(--feed-width, 304px);
-}
-
-.placeholder-text {
-    color: var(--text-muted);
-    border: 1px dashed var(--border);
-    border-radius: 8px;
-    padding: 24px;
-    text-align: center;
 }
 
 .registration-modal .modal-content {
@@ -981,7 +945,6 @@ body {
     filter: invert(1) grayscale(100%) brightness(200%);
 }
 
-.theme-light .registration-modal .btn-close,
 html[data-theme="light"] .registration-modal .btn-close {
     filter: none;
 }
@@ -1143,11 +1106,6 @@ html[data-theme="light"] .registration-modal .btn-close {
     margin: -1px 0 0;
     color: var(--text-muted);
     font-size: 0.75rem;
-}
-
-.registration-location .placeholder-text {
-    margin: 0;
-    font-size: 0.78rem;
 }
 
 .registration-validation {
@@ -1501,10 +1459,6 @@ html[data-theme="light"] .registration-modal .btn-close {
         display: none;
     }
 
-    .feed-export-actions {
-        display: none;
-    }
-
     .full-width-page .footer {
         display: none;
     }
@@ -1519,10 +1473,6 @@ html[data-theme="light"] .registration-modal .btn-close {
         }
     }
 
-    .placeholder-page {
-        padding: 32px 16px 100px;
-    }
-
     .subpage {
         padding: 32px 16px 100px;
     }
@@ -1531,18 +1481,6 @@ html[data-theme="light"] .registration-modal .btn-close {
         align-items: flex-start;
         flex-direction: column;
     }
-}
-
-.placeholder-page {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 48px 24px;
-}
-
-.placeholder-page h1 {
-    margin: 0 0 16px;
-    font-size: 1.8rem;
-    font-weight: 700;
 }
 
 .subpage {
@@ -1913,8 +1851,7 @@ html[data-theme="light"] .registration-modal .btn-close {
     }
 }
 
-.needs-empty-state,
-.match-empty-state {
+.needs-empty-state {
     margin: 0;
     padding: 20px;
     border: 1px solid var(--border);
@@ -1953,20 +1890,6 @@ html[data-theme="light"] .registration-modal .btn-close {
     color: var(--text-muted);
     font-size: 0.9rem;
     font-weight: 600;
-}
-
-.match-heading {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 24px;
-}
-
-.match-heading form {
-    flex: 1 1 280px;
-    max-width: 520px;
-    margin: 0;
 }
 
 .match-list {
@@ -2037,45 +1960,6 @@ html[data-theme="light"] .registration-modal .btn-close {
     margin-top: 22px;
     padding-top: 18px;
     border-top: 1px solid var(--border);
-}
-
-.match-feedback {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    padding: 11px 13px;
-    border: 1px solid var(--status-assigned-border);
-    border-radius: 10px;
-    background: var(--status-assigned-background);
-    color: var(--status-assigned-text);
-    font-size: 0.9rem;
-    line-height: 1.45;
-}
-
-.match-feedback > i {
-    flex: 0 0 auto;
-    margin-top: 2px;
-}
-
-.match-card .match-feedback {
-    margin-top: 16px;
-}
-
-.match-toolbar > .match-feedback {
-    margin-top: 14px;
-}
-
-.match-feedback--proposed {
-    border-color: var(--status-review-border);
-    background: var(--status-review-background);
-    color: var(--status-review-text);
-}
-
-.match-feedback--declined,
-.match-feedback--error {
-    border-color: var(--status-rejected-border);
-    background: var(--status-rejected-background);
-    color: var(--status-rejected-text);
 }
 
 .match-toast {
@@ -2256,13 +2140,6 @@ html[data-theme="light"] .registration-modal .btn-close {
 @media (max-width: 991px) and (min-width: 576px) {
     .match-details {
         grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-}
-
-@media (max-width: 575px) {
-    .match-feedback {
-        padding: 10px 12px;
-        font-size: 0.85rem;
     }
 }
 
@@ -2856,17 +2733,6 @@ html[data-theme="light"] .registration-modal .btn-close {
     color: var(--text);
 }
 
-.user-menu-role {
-    padding: 4px 16px;
-}
-
-.user-menu-role label {
-    display: block;
-    margin-bottom: 4px;
-    color: var(--text-muted);
-    font-size: 0.75rem;
-}
-
 .user-menu .logout-item,
 .user-menu .logout-item:hover {
     color: var(--brand-red);
@@ -3011,8 +2877,7 @@ html[data-theme="light"] .registration-modal .btn-close {
     font-weight: 700;
 }
 
-.auth-description,
-.auth-demo-note {
+.auth-description {
     color: var(--text-muted);
 }
 
@@ -3151,8 +3016,7 @@ html[data-theme="light"] .registration-modal .btn-close {
     opacity: 0.85;
 }
 
-.auth-field label,
-.auth-code-label {
+.auth-field label {
     display: block;
     margin-bottom: 5px;
     font-size: 0.9rem;
@@ -3196,11 +3060,6 @@ html[data-theme="light"] .registration-modal .btn-close {
     color: var(--button-text);
 }
 
-.auth-demo-note {
-    margin: 14px 0 0;
-    font-size: 0.8rem;
-}
-
 .auth-shield {
     display: grid;
     width: 44px;
@@ -3211,12 +3070,6 @@ html[data-theme="light"] .registration-modal .btn-close {
     background-color: var(--bg-hover);
     color: var(--accent);
     font-size: 1.3rem;
-}
-
-.auth-code-display {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 12px;
 }
 
 .auth-code-inputs {
@@ -3240,18 +3093,6 @@ html[data-theme="light"] .registration-modal .btn-close {
     border-color: var(--accent);
     outline: none;
     box-shadow: 0 0 0 0.1rem var(--focus-background), 0 0 0 0.25rem var(--focus-ring);
-}
-
-.auth-code-display span {
-    display: grid;
-    width: 48px;
-    height: 52px;
-    place-items: center;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background-color: var(--bg-panel);
-    font-size: 1.4rem;
-    font-weight: 700;
 }
 
 .auth-code-dialog {
@@ -3437,15 +3278,6 @@ html[data-theme="light"] .registration-modal .btn-close {
     .auth-password-grid {
         grid-column: auto;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .auth-code-display {
-        gap: 5px;
-    }
-
-    .auth-code-display span {
-        width: min(15vw, 48px);
-        height: 48px;
     }
 }
 
