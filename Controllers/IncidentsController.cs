@@ -1,4 +1,5 @@
 using H_st_2026_Gruppe_1.Data;
+using H_st_2026_Gruppe_1.Helpers;
 using H_st_2026_Gruppe_1.Models;
 using H_st_2026_Gruppe_1.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -20,20 +21,10 @@ public class IncidentsController : Controller
         _locationRegionResolver = locationRegionResolver;
     }
 
-    private int? GetCurrentOrganizationId()
-    {
-        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    private int? GetCurrentOrganizationId() => _db.GetOrganizationId(User.GetUserId());
 
-        if (!int.TryParse(userIdClaim, out var currentUserId))
-        {
-            return null;
-        }
-
-        return _db.PublicActors
-            .Where(actor => actor.PublicActorId == currentUserId)
-            .Select(actor => (int?)actor.OrganizationId)
-            .FirstOrDefault();
-    }
+    private HashSet<int> GetEditableIncidentOwnerIds() =>
+        _db.GetOrganizationMemberIds(GetCurrentOrganizationId());
 
     private bool BelongsToCurrentOrganization(int publicActorId)
     {
@@ -45,6 +36,7 @@ public class IncidentsController : Controller
                 actor.OrganizationId == organizationId.Value);
     }
     
+    [HttpGet]
     public IActionResult Index(
         string? search,
         string? status,
@@ -54,14 +46,6 @@ public class IncidentsController : Controller
         int? id = null)
     {
         var incidents = GetIncidents(search, status, incidentType, startDate, endDate);
-        var currentOrganizationId = GetCurrentOrganizationId();
-        var editableIncidentOwnerIds = currentOrganizationId.HasValue
-            ? _db.PublicActors
-                .Where(actor => actor.OrganizationId == currentOrganizationId.Value)
-                .Select(actor => actor.PublicActorId)
-                .ToHashSet()
-            : new HashSet<int>();
-
         if (id.HasValue)
         {
             var incident = incidents.FirstOrDefault(item => item.IncidentId == id.Value);
@@ -78,7 +62,7 @@ public class IncidentsController : Controller
         return View(new IncidentIndexViewModel
         {
             Incidents = incidents,
-            EditableIncidentOwnerIds = editableIncidentOwnerIds,
+            EditableIncidentOwnerIds = GetEditableIncidentOwnerIds(),
             Search = search
         });
     }
@@ -92,6 +76,7 @@ public class IncidentsController : Controller
         if (!ModelState.IsValid)
         {
             model.Incidents = GetIncidents();
+            model.EditableIncidentOwnerIds = GetEditableIncidentOwnerIds();
             return View("Index", model);
         }
 
@@ -109,8 +94,11 @@ public class IncidentsController : Controller
                 (double)createModel.Longitude!.Value);
         if (!location.IsValid)
         {
-            ModelState.AddModelError(nameof(IncidentCreateViewModel.Latitude), location.ErrorMessage!);
+            ModelState.AddModelError(
+                $"{nameof(model.CreateModel)}.{nameof(IncidentCreateViewModel.Latitude)}",
+                location.ErrorMessage!);
             model.Incidents = GetIncidents();
+            model.EditableIncidentOwnerIds = GetEditableIncidentOwnerIds();
             return View("Index", model);
         }
 
@@ -159,6 +147,7 @@ public class IncidentsController : Controller
             return View("Index", new IncidentIndexViewModel
             {
                 Incidents = GetIncidents(),
+                EditableIncidentOwnerIds = GetEditableIncidentOwnerIds(),
                 Search = model.Title
             });
         }
@@ -175,6 +164,7 @@ public class IncidentsController : Controller
             return View("Index", new IncidentIndexViewModel
             {
                 Incidents = GetIncidents(),
+                EditableIncidentOwnerIds = GetEditableIncidentOwnerIds(),
                 Search = model.Title
             });
         }

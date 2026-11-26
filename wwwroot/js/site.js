@@ -1,13 +1,5 @@
 window.addEventListener("resize", () => window.resqMap?.invalidateSize());
 
-// Colours for the map markers. The names match the ColorKey values from the server.
-window.resqMapColors = {
-    "critical-need": "#ef4444",
-    "planned-need": "#f59e0b",
-    "available-resource": "#22c55e",
-    "public-team": "#3b82f6"
-};
-
 document.querySelectorAll("[data-map-legend-toggle]").forEach(toggle => {
     toggle.addEventListener("click", () => {
         const legend = toggle.closest("[data-map-legend]");
@@ -34,8 +26,10 @@ window.resqRegistration = {
             const valueInput = findInput(mapping.valueId);
             if (!dateInput || !timeInput || !valueInput) return;
 
+            // An end date without a time lasts the whole day
+            const defaultTime = mapping === mappings[1] ? "23:59" : "00:00";
             valueInput.value = dateInput.value
-                ? `${dateInput.value}T${timeInput.value || "00:00"}`
+                ? `${dateInput.value}T${timeInput.value || defaultTime}`
                 : "";
         };
 

@@ -115,13 +115,3 @@ window.resqMapRegistration = {
         };
     }
 };
-
-// Opens the registration form (a Bootstrap modal) when a popup button asks for it.
-document.addEventListener('resq:open-registration-modal', event => {
-    const modal = document.querySelector('[data-registration-modal]');
-    if (!modal || event.detail?.type !== modal.closest('body')?.querySelector('[data-registration-type]')?.dataset.registrationType) {
-        return;
-    }
-    bootstrap.Modal.getOrCreateInstance(modal).show();
-    event.detail.trigger?.blur();
-});

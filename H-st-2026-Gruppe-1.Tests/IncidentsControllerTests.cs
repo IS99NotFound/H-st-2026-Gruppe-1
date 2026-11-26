@@ -135,7 +135,7 @@ public class IncidentsControllerTests : IDisposable
     // ---------- Index: opening one incident for editing ----------
 
     [Theory]
-    [InlineData("Administrator")]
+    [InlineData("CivilianProvider")]
     public void Index_WithId_OtherRolesCannotOpenTheEditForm(string role)
     {
         _db.Seed(c => c.Incidents.Add(TestData.NewIncident(1)));
@@ -225,11 +225,11 @@ public class IncidentsControllerTests : IDisposable
     }
 
     [Fact]
-    public void Edit_Administrator_IsForbidden()
+    public void Edit_Provider_IsForbidden()
     {
         _db.Seed(c => c.Incidents.Add(TestData.NewIncident(1, title: "Gammelt navn")));
-        // An administrator is not a public actor, so there is no organization to match
-        var controller = NewController(99, "Administrator");
+        // A provider is not a public actor, so there is no organization to match
+        var controller = NewController(99, "CivilianProvider");
 
         var result = controller.Edit(NewEditModel());
 

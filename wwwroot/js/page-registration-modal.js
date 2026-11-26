@@ -4,8 +4,6 @@
     const status = document.getElementById('pageRegistrationStatus');
     if (!modal || !body || !status) return;
 
-    const currentRegistrationType = document.querySelector('[data-registration-modal]')?.closest('body')
-        ?.querySelector('[data-registration-type]')?.dataset.registrationType;
     const modalInstance = bootstrap.Modal.getOrCreateInstance(modal);
 
     document.querySelectorAll('[data-registration-type]').forEach(link => {
@@ -15,8 +13,12 @@
             event.preventDefault();
             const type = link.dataset.registrationType;
             const existingModal = document.querySelector('[data-registration-modal]');
+            const formSelector = type === 'need' ? '#needForm' : '#resourceForm';
 
-            if (existingModal && currentRegistrationType === type) {
+            if (Number(existingModal?.querySelector('[name="Id"]')?.value) > 0) {
+                // The page's form is editing something, so it is removed and an empty one is loaded
+                existingModal.remove();
+            } else if (existingModal?.querySelector(formSelector)) {
                 bootstrap.Modal.getOrCreateInstance(existingModal).show();
                 return;
             }
@@ -47,6 +49,18 @@
     function initializeRegistrationForm(type) {
         const form = body.querySelector('.registration-form');
         if (!form) return;
+
+        window.resqRegistration.initializeDateTimeFields(form.id, type === 'need'
+            ? [
+                { dateId: 'requiredFromDate', timeId: 'requiredFromTime', valueId: 'requiredFromValue' },
+                { dateId: 'deadlineDate', timeId: 'deadlineTime', valueId: 'deadlineValue',
+                  rangeErrorId: 'needDateRangeError' }
+            ]
+            : [
+                { dateId: 'availableFromDate', timeId: 'availableFromTime', valueId: 'availableFromValue' },
+                { dateId: 'expiryDate', timeId: 'expirationTime', valueId: 'expirationValue',
+                  rangeErrorId: 'resourceDateRangeError' }
+            ]);
 
         const mapElement = document.createElement('div');
         mapElement.className = 'registration-form-map';

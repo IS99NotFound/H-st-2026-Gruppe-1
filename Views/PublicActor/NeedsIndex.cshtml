@@ -203,7 +203,7 @@
                                         <button type="submit" class="btn btn-sm btn-success">Marker som løst</button>
                                     </form>
                                 }
-                                <form class="dashboard-card-actions" asp-controller="Home" asp-action="DeleteNeed"
+                                <form class="dashboard-card-actions" asp-controller="PublicActor" asp-action="DeleteNeed"
                                       asp-route-id="@need.Id" method="post"
                                       data-confirm="Er du sikker på at du vil slette dette behovet?">
                                     @Html.AntiForgeryToken()
@@ -245,7 +245,6 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    <script src="~/js/map-reverse-geocode.js" asp-append-version="true"></script>
     <script nonce="@Context.Items["CspNonce"]">
         window.resqRegistration.initializeDateTimeFields('needForm', [
             { dateId: 'requiredFromDate', timeId: 'requiredFromTime', valueId: 'requiredFromValue' },

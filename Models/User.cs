@@ -13,6 +13,5 @@ public class User : IdentityUser<int>
 public enum IdentityUserRole
 {
     PublicActor,
-    CivilianProvider,
-    Administrator
+    CivilianProvider
 }

@@ -196,6 +196,7 @@ public class AuthControllerTests
     public async Task VerifyTwoFactor_MissingPendingId_GoesBackToLogin()
     {
         var controller = NewController(NewUserManager());
+        ControllerTestHelper.Attach(controller, null, null);
 
         var result = await controller.VerifyTwoFactor(new TwoFactorViewModel { PendingId = "", Code = "123456" });
 
@@ -234,6 +235,7 @@ public class AuthControllerTests
             await controller.VerifyTwoFactor(new TwoFactorViewModel { PendingId = start.PendingId, Code = wrong });
         }
 
+        ControllerTestHelper.Attach(controller, null, null);
         var result = await controller.VerifyTwoFactor(new TwoFactorViewModel
         {
             PendingId = start.PendingId,
@@ -242,6 +244,7 @@ public class AuthControllerTests
 
         var redirect = Assert.IsType<RedirectToActionResult>(result);
         Assert.Equal("Login", redirect.ActionName);
+        Assert.Equal("For mange feilforsøk. Logg inn på nytt.", controller.TempData["LoginError"]);
     }
 
     // ---------- VerifyTwoFactor (POST): successful login ----------
@@ -303,6 +306,7 @@ public class AuthControllerTests
         var model = new TwoFactorViewModel { PendingId = start.PendingId, Code = start.DemoCode };
 
         await controller.VerifyTwoFactor(model);
+        ControllerTestHelper.Attach(controller, null, null);
         var second = await controller.VerifyTwoFactor(model);
 
         var redirect = Assert.IsType<RedirectToActionResult>(second);

@@ -109,14 +109,14 @@ public class AuthController : Controller
     {
         if (string.IsNullOrEmpty(model.PendingId) || string.IsNullOrEmpty(model.Code))
         {
-            ModelState.AddModelError(string.Empty, "Ugyldig forespørsel.");
+            TempData["LoginError"] = "Ugyldig forespørsel.";
             return RedirectToAction(nameof(Login));
         }
 
         // Hent fra cache
         if (!_memoryCache.TryGetValue(model.PendingId, out PendingTwoFactorData? pending) || pending == null)
         {
-            ModelState.AddModelError(string.Empty, "Tofaktorkoden har utløpt. Logg inn på nytt.");
+            TempData["LoginError"] = "Tofaktorkoden har utløpt. Logg inn på nytt.";
             return RedirectToAction(nameof(Login));
         }
 
@@ -125,7 +125,7 @@ public class AuthController : Controller
         if (pending.Attempts > 3)
         {
             _memoryCache.Remove(model.PendingId);
-            ModelState.AddModelError(string.Empty, "For mange feilforsøk. Logg inn på nytt.");
+            TempData["LoginError"] = "For mange feilforsøk. Logg inn på nytt.";
             return RedirectToAction(nameof(Login));
         }
 

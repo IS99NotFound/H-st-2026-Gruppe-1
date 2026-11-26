@@ -21,6 +21,7 @@ public class ResourcesController : Controller
         _lifecycle = lifecycle;
     }
 
+    [HttpGet]
     public IActionResult Index(
         int? id,
         string? search,
@@ -88,15 +89,13 @@ public class ResourcesController : Controller
             .OrderBy(category => category.CategoryName)
             .ToList();
         ViewBag.ResourceCategories = _db.Categories
-            .AsEnumerable()
-            .Where(category => ResourceCategoryPolicy.IsAllowed(category.CategoryName))
             .OrderBy(category => category.CategoryId)
             .ToList();
 
         var resourceIds = allResources.Select(resource => resource.Id).ToList();
 
         var matchStatus = new List<ResourceMatchStatusViewModel>();
-        if (User.IsInRole("CivilianProvider") || User.IsInRole("Administrator"))
+        if (User.IsInRole("CivilianProvider"))
         {
             var today = DateTime.Now;
 
@@ -151,7 +150,7 @@ public class ResourcesController : Controller
         // If an id is in the address, open that resource for editing.
         if (id.HasValue)
         {
-            if (!User.IsInRole("Administrator") && !User.IsInRole("CivilianProvider"))
+            if (!User.IsInRole("CivilianProvider"))
             {
                 return Forbid();
             }

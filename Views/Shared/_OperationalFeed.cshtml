@@ -3,7 +3,7 @@
     var resources = (IReadOnlyList<OperationalFeedItem>)(ViewBag.FeedResources ?? new List<OperationalFeedItem>());
     var needs = (IReadOnlyList<OperationalFeedItem>)(ViewBag.FeedNeeds ?? new List<OperationalFeedItem>());
     var incidents = (IReadOnlyList<OperationalFeedItem>)(ViewBag.FeedIncidents ?? new List<OperationalFeedItem>());
-    var canViewNeeds = User.IsInRole("PublicActor") || User.IsInRole("Administrator");
+    var canViewNeeds = User.IsInRole("PublicActor");
     var visibleNeeds = canViewNeeds ? needs : Array.Empty<OperationalFeedItem>();
     var feedItems = resources.Concat(visibleNeeds).Concat(incidents).OrderByDescending(item => item.CreatedAt).ToList();
     var currentUserId = int.TryParse(
@@ -127,9 +127,6 @@ else
             <article class="feed-card feed-card--interactive feed-card--@item.ColorKey" data-feed-item data-feed-type="@item.Type"
                      data-feed-search="@($"{item.Title} {item.Description} {item.Category} {item.Status} {item.LocationName}")"
                      data-latitude="@item.Latitude" data-longitude="@item.Longitude"
-                     data-feed-category="@item.Category" data-feed-description="@item.Description"
-                     data-feed-status="@item.Status"
-                     data-feed-created-at="@item.CreatedAt.ToString("dd.MM.yyyy HH:mm")"
                      data-feed-title="@item.Title" role="button" tabindex="0"
                      aria-label="Vis @item.Title på kartet">
                 <div class="feed-card-inner">
@@ -140,15 +137,16 @@ else
                                 {
                                     "Critical" => "Akutt behov",
                                     "Planned" => "Planlagt behov",
-                                    _ when item.Type == "resource" => "Tilgjengelig ressurs",
+                                    _ when item.Type == "resource" && item.Status == "available" => "Tilgjengelig ressurs",
+                                    _ when item.Type == "resource" && item.Status == "withdrawn" => "Trukket tilbake",
+                                    _ when item.Type == "resource" => "Utilgjengelig ressurs",
                                     _ when item.Type == "incident" => "Hendelse",
                                     _ => "Offentlig aktør"
                                 })
                             </span>
                             <div class="feed-card-edit">
                                 @if (item.Type == "resource" &&
-                                    (User.IsInRole("Administrator") ||
-                                     User.IsInRole("CivilianProvider") && item.ProviderId == currentUserId))
+                                    User.IsInRole("CivilianProvider") && item.ProviderId == currentUserId)
                                 {
                                     <a asp-controller="Home" asp-action="Index" asp-route-id="@item.Id"
                                        class="feed-card-edit-button" aria-label="Rediger @item.Title" title="Rediger">
@@ -156,14 +154,16 @@ else
                                         <i class="bi bi-plus-lg feed-card-edit-mobile-icon" aria-hidden="true"></i>
                                     </a>
                                 }
-                                @if (item.Type == "need" &&
-                                    (User.IsInRole("PublicActor") || User.IsInRole("Administrator")))
+                                @if (item.Type == "need" && User.IsInRole("PublicActor"))
                                 {
-                                    <a asp-controller="PublicActor" asp-action="DashboardIndex" asp-route-id="@item.Id"
-                                       class="feed-card-edit-button" aria-label="Rediger @item.Title" title="Rediger">
-                                        <i class="bi bi-pencil" aria-hidden="true"></i>
-                                        <i class="bi bi-plus-lg feed-card-edit-mobile-icon" aria-hidden="true"></i>
-                                    </a>
+                                    if (item.CanEdit)
+                                    {
+                                        <a asp-controller="PublicActor" asp-action="DashboardIndex" asp-route-id="@item.Id"
+                                           class="feed-card-edit-button" aria-label="Rediger @item.Title" title="Rediger">
+                                            <i class="bi bi-pencil" aria-hidden="true"></i>
+                                            <i class="bi bi-plus-lg feed-card-edit-mobile-icon" aria-hidden="true"></i>
+                                        </a>
+                                    }
                                     <a asp-controller="PublicActor" asp-action="Matches" asp-route-needId="@item.Id"
                                        class="feed-match-button" aria-label="Match ressurs for @item.Title" title="Match ressurs">
                                         <i class="bi bi-puzzle" aria-hidden="true"></i>

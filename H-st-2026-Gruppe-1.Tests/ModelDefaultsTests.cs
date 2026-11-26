@@ -26,7 +26,6 @@ public class ModelDefaultsTests
     [Theory]
     [InlineData(IdentityUserRole.PublicActor, "PublicActor")]
     [InlineData(IdentityUserRole.CivilianProvider, "CivilianProvider")]
-    [InlineData(IdentityUserRole.Administrator, "Administrator")]
     public void IdentityUserRole_ToStringMatchesTheRoleNamesUsedInAuthorizeAttributes(IdentityUserRole role, string expected)
     {
         // The controllers use [Authorize(Roles = "PublicActor")] etc, so the text must be exactly the same

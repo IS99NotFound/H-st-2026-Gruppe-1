@@ -1,4 +1,5 @@
 using H_st_2026_Gruppe_1.Data;
+using H_st_2026_Gruppe_1.Helpers;
 using H_st_2026_Gruppe_1.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -64,10 +65,10 @@ public class GuestController : Controller
                 {
                     Type = "incident",
                     Id = index + 1,
-                    Title = incident.IncidentType + " i " + incident.RegionName,
+                    Title = IncidentTypeHelper.DisplayName(incident.IncidentType) + " i " + incident.RegionName,
                     Description = null,
                     Status = "active",
-                    Category = incident.IncidentType,
+                    Category = IncidentTypeHelper.DisplayName(incident.IncidentType),
                     LocationName = incident.RegionName,
                     ColorKey = "public-team",
                     Latitude = center.Latitude,

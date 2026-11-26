@@ -115,8 +115,6 @@ public class RegisterController : Controller
                     OrganizationId = model.OrganizationId
                 });
                 break;
-
-                // Administrator only needs the User row
         }
 
         await _db.SaveChangesAsync();

@@ -2,7 +2,6 @@ using System.Globalization;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Authorization;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using H_st_2026_Gruppe_1.Data;
@@ -38,14 +37,6 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     {
         options.LoginPath = "/Auth/Login";
         options.AccessDeniedPath = "/Auth/Login";
-        options.Events = new CookieAuthenticationEvents
-        {
-            OnRedirectToAccessDenied = async context =>
-            {
-                await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-                context.Response.Redirect("/Auth/Login");
-            }
-        };
         options.Cookie.HttpOnly = true;
         options.Cookie.IsEssential = true;
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
