@@ -75,24 +75,6 @@ public class MatchNeedLifecycle
         CompleteAcceptedMatches(_db.MatchRecords.Where(m => m.NeedId == needId && m.Status == "accepted"));
     }
 
-    //Removes the matches from Needs, (fremmednøkkel)
-    public void RemoveMatchesFromNeed(int needId)
-    {
-        var records = _db.MatchRecords.Where(m => m.NeedId == needId).ToList();
-        var assignedResourceIds = records
-            .Where(m => m.Status == "accepted")
-            .Select(m => m.ResourceId)
-            .ToList();
-
-        _db.MatchRecords.RemoveRange(records);
-        _db.SaveChanges();
-
-        foreach (var resourceId in assignedResourceIds)
-        {
-            ReleaseResource(resourceId);
-        }
-    }
-
     //Will close assigned needs marked as resolved/cncelled or passed deadline
     public int ReleaseFinishedAssignments()
     {

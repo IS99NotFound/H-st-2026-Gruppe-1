@@ -20,8 +20,6 @@
     const items = Array.from(document.querySelectorAll("[data-feed-item]"));
     const feed = document.querySelector(".operational-feed");
     const mapArea = document.querySelector(".map-area");
-    const mapLegendToggle = document.querySelector("[data-map-legend-toggle]");
-    const mapLegendContent = document.querySelector(".map-color-legend-content");
     const isGuestFeed = document.querySelector(".guest-map-page") !== null;
     // State: the chosen tab (all, resource, need or incident), the position of the user, and map markers.
     let activeType = "all";
@@ -46,15 +44,6 @@
     }
 
     items.forEach(item => setCardHeight(item, ".feed-card-front"));
-
-    const closeMapLegend = () => {
-        if (!mapLegendToggle || !mapLegendContent) return;
-
-        mapLegendContent.classList.add("is-collapsed");
-        mapLegendToggle.setAttribute("aria-expanded", "false");
-        mapLegendToggle.querySelector("i")?.classList.remove("bi-chevron-down");
-        mapLegendToggle.querySelector("i")?.classList.add("bi-chevron-up");
-    };
 
     if (feed && mapArea && "ResizeObserver" in window) {
         const updateMapOverlayPosition = () => {
