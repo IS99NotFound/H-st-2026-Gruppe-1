@@ -88,19 +88,6 @@ public class RegisterControllerTests : IDisposable
     // ---------- Register (POST): role rules ----------
 
     [Fact]
-    public async Task Post_Production_AdministratorCannotSelfRegister()
-    {
-        var userManager = NewUserManager();
-        var controller = NewController(userManager);
-
-        var result = await controller.Index(ValidModel(IdentityUserRole.Administrator));
-
-        Assert.IsType<ViewResult>(result);
-        Assert.NotEmpty(ErrorsFor(controller, nameof(RegisterViewModel.Role)));
-        userManager.Verify(m => m.CreateAsync(It.IsAny<User>(), It.IsAny<string>()), Times.Never());
-    }
-
-    [Fact]
     public async Task Post_Production_PublicActorCannotSelfRegister()
     {
         AddOrganization();

@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 namespace H_st_2026_Gruppe_1.Tests;
 
 // Tests for ResourcesController: the "My resources" page.
-// A resource provider may only see their own resources. Public actors and administrators see all.
+// A resource provider may only see their own resources. Public actors see all.
 public class ResourcesControllerTests : IDisposable
 {
     private readonly TestDb _db = new TestDb();

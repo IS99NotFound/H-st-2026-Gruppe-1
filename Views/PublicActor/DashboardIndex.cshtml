@@ -3,7 +3,7 @@
     ViewData["Title"] = "Oversikt for offentlig aktør";
     ViewData["FullWidth"] = true;
     ViewData["RegistrationType"] = "need";
-    var canRegisterResource = User.IsInRole("CivilianProvider") || User.IsInRole("Administrator");
+    var canRegisterResource = User.IsInRole("CivilianProvider");
     var openRegistrationModal = ViewBag.OpenRegistrationModal is bool shouldOpen
         ? shouldOpen
         : Context.Request.Query["register"] == "need" || Model.Id > 0;
@@ -79,7 +79,6 @@
               rangeErrorId: 'needDateRangeError' }
         ]);
     </script>
-    <script src="~/js/map-reverse-geocode.js" asp-append-version="true"></script>
     <script src="~/js/map-registration.js" asp-append-version="true"></script>
     <script src="~/js/map-ab.js" asp-append-version="true"></script>
     <script src="~/js/public-actor-resource-filters.js" asp-append-version="true" defer></script>

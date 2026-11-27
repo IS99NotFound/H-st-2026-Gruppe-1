@@ -17,6 +17,11 @@
                 <p class="text-success">@TempData["RegisterMessage"]</p>
             }
 
+            @if (TempData["LoginError"] != null)
+            {
+                <p class="text-danger" role="alert">@TempData["LoginError"]</p>
+            }
+
             <form asp-controller="Auth" asp-action="Login" method="post">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 

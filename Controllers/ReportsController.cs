@@ -17,7 +17,8 @@ public class ReportsController : Controller
         _db = db;
     }
 
-    [Authorize(Roles = "PublicActor, Administrator")]
+    [HttpGet]
+    [Authorize(Roles = "PublicActor")]
     public async Task<IActionResult> Index(int? regionId = null)
     {
         ViewBag.Regions = await _db.Regions.AsNoTracking().OrderBy(r => r.RegionName).ToListAsync();
@@ -27,14 +28,14 @@ public class ReportsController : Controller
     }
 
     [HttpGet]
-    [Authorize(Roles = "PublicActor, Administrator")]
+    [Authorize(Roles = "PublicActor")]
     public IActionResult ResourcesView(int? regionId = null)
     {
         return View(GetResourceReportRows(regionId));
     }
 
     [HttpGet]
-    [Authorize(Roles = "PublicActor, Administrator")]
+    [Authorize(Roles = "PublicActor")]
     public IActionResult Resources(int? regionId = null)
     {
         var resources = GetResourceReportRows(regionId);
@@ -63,7 +64,7 @@ public class ReportsController : Controller
     }
 
     [HttpGet]
-    [Authorize(Roles = "PublicActor, Administrator")]
+    [Authorize(Roles = "PublicActor")]
     public IActionResult ResourcesJson(int? regionId = null)
     {
         var resources = GetResourceReportRows(regionId);
@@ -100,14 +101,14 @@ public class ReportsController : Controller
     
     
     [HttpGet]
-    [Authorize(Roles = "PublicActor, Administrator")]
+    [Authorize(Roles = "PublicActor")]
     public IActionResult NeedsView(int? regionId = null)
     {
         return View(GetNeedsReportRows(regionId));
     }
     
     [HttpGet]
-    [Authorize(Roles = "PublicActor, Administrator")]
+    [Authorize(Roles = "PublicActor")]
     public IActionResult Needs(int? regionId = null)
     {
         var needs = GetNeedsReportRows(regionId);
@@ -137,7 +138,7 @@ public class ReportsController : Controller
     } 
     
     [HttpGet]
-    [Authorize(Roles = "PublicActor, Administrator")]
+    [Authorize(Roles = "PublicActor")]
     public IActionResult NeedsJson(int? regionId = null)
     {
         var needs = GetNeedsReportRows(regionId);
@@ -173,14 +174,14 @@ public class ReportsController : Controller
 }
 
     [HttpGet]
-    [Authorize(Roles = "PublicActor, Administrator")]
+    [Authorize(Roles = "PublicActor")]
     public IActionResult IncidentsView(int? regionId = null)
     {
         return View(GetIncidentReportRows(regionId));
     }
 
     [HttpGet]
-    [Authorize(Roles = "PublicActor, Administrator")]
+    [Authorize(Roles = "PublicActor")]
     public IActionResult Incidents(int? regionId = null)
     {
         var incidents = GetIncidentReportRows(regionId);
@@ -208,7 +209,7 @@ public class ReportsController : Controller
     }
 
     [HttpGet]
-    [Authorize(Roles = "PublicActor, Administrator")]
+    [Authorize(Roles = "PublicActor")]
     public IActionResult IncidentsJson(int? regionId = null)
     {
         var incidents = GetIncidentReportRows(regionId);

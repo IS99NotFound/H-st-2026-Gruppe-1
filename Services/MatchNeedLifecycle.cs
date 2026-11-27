@@ -75,13 +75,34 @@ public class MatchNeedLifecycle
         CompleteAcceptedMatches(_db.MatchRecords.Where(m => m.NeedId == needId && m.Status == "accepted"));
     }
 
+    //A withdrawn resource can no longer be assigned or requested
+    public void WithdrawMatches(int resourceId)
+    {
+        var records = _db.MatchRecords
+            .Where(m => m.ResourceId == resourceId
+                    && (m.Status == "accepted" || m.Status == "proposed"))
+            .ToList();
+        foreach (var record in records)
+        {
+            record.Status = "declined";
+        }
+        _db.SaveChanges();
+
+        foreach (var record in records)
+        {
+            RefreshNeedStatus(record.NeedId);
+        }
+    }
+
     //Will close assigned needs marked as resolved/cncelled or passed deadline
     public int ReleaseFinishedAssignments()
     {
         var now = DateTime.Now;
+        var today = DateTime.Today;
 
+        //A deadline without a time (00:00) lasts the whole day
         var expiredNeeds = _db.Needs
-            .Where(n => n.Deadline != null && n.Deadline < now
+            .Where(n => n.Deadline != null && n.Deadline < now && n.Deadline != today
                     && (n.Status == "new" || n.Status == "under_review" || n.Status == "assigned"))
             .ToList();
         foreach (var need in expiredNeeds)

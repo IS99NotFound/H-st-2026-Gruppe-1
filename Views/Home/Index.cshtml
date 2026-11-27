@@ -3,7 +3,7 @@
     ViewData["Title"] = "Startside";
     ViewData["FullWidth"] = true;
     ViewData["RegistrationType"] = "resource";
-    var canRegisterNeed = User.IsInRole("PublicActor") || User.IsInRole("Administrator");
+    var canRegisterNeed = User.IsInRole("PublicActor");
     var openRegistrationModal = ViewBag.OpenRegistrationModal is bool shouldOpen
         ? shouldOpen
         : Context.Request.Query["register"] == "resource" ||
@@ -65,7 +65,6 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script src="~/js/map-base.js" asp-append-version="true"></script>
-    <script src="~/js/map-reverse-geocode.js" asp-append-version="true"></script>
     <script src="~/js/map-registration.js" asp-append-version="true"></script>
     <script src="~/js/map-ab.js" asp-append-version="true"></script>
     <script src="~/js/survival-location-filters.js" asp-append-version="true" defer></script>
@@ -145,30 +144,6 @@
         mapSetup.addLocateControl();
         mapSetup.locateCurrentPosition();
 
-        document.getElementById('resourceType')?.addEventListener('change', event => {
-            const expiryDate = document.getElementById('expiryDate');
-            const renewalDate = new Date();
-            switch (event.target.value) {
-                case 'Medical':
-                    renewalDate.setMonth(renewalDate.getMonth() + 1);
-                    break;
-                case 'Heavy machinery':
-                case 'Power Supply / Generator':
-                    renewalDate.setMonth(renewalDate.getMonth() + 6);
-                    break;
-                case 'Transport/logistics':
-                case 'Evacuation / Shelter':
-                case 'Plowing & Snow Clearing':
-                case 'Manpower':
-                case 'Other':
-                    renewalDate.setFullYear(renewalDate.getFullYear() + 1);
-                    break;
-                default:
-                    expiryDate.value = '';
-                    return;
-            }
-            expiryDate.value = renewalDate.toISOString().slice(0, 10);
-        });
         document.getElementById('resourceForm')?.addEventListener('submit', event => {
             if (!latInput?.value || !lngInput?.value) {
                 event.preventDefault();

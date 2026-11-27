@@ -1,4 +1,4 @@
-// The live feed on the dashboard: search, filter, sort by distance, export, and show items on the map.
+// The live feed on the dashboard: search, filter, sort by distance, and show items on the map.
 // Everything is inside a function, so the variables do not leak into the rest of the page.
 (function () {
     const list = document.getElementById("operational-feed-list");
@@ -12,10 +12,6 @@
     const resetLocationButton = document.querySelector("[data-feed-reset-location]");
     const filterToggle = document.querySelector("[data-feed-filter-toggle]");
     const filterControls = document.getElementById("feed-filter-controls");
-    const exportToggle = document.querySelector("[data-feed-export-toggle]");
-    const exportOptions = document.getElementById("feed-export-options");
-    const exportButtons = document.querySelectorAll("[data-feed-export]");
-    const exportBackButton = document.querySelector("[data-feed-export-back]");
     const resultsToggle = document.querySelector("[data-feed-results-toggle]");
     const items = Array.from(document.querySelectorAll("[data-feed-item]"));
     const feed = document.querySelector(".operational-feed");
@@ -240,85 +236,9 @@
             fillOpacity: 0.9
         }).addTo(map);
         map.setView([lat, lng], Number(item.dataset.feedZoom) || 14);
-        focusedFeedMarker.bindPopup(item.dataset.feedTitle || "Valgt sted").openPopup();
-    }
-
-    // Puts a value in quotes for a CSV file. A quote inside the value becomes two quotes.
-    function csvValue(value) {
-        return `"${String(value ?? "").replaceAll('"', '""')}"`;
-    }
-
-    function getFilteredResources() {
-        const maxRadius = Number(radius.value);
-        return items
-            .filter(item => item.dataset.feedType === "resource")
-            .map(item => ({
-                item,
-                distance: distanceInKm(Number(item.dataset.latitude), Number(item.dataset.longitude))
-            }))
-            .filter(({ item, distance }) => {
-                const hasCoordinates = Number.isFinite(Number(item.dataset.latitude)) &&
-                    Number.isFinite(Number(item.dataset.longitude));
-                return hasCoordinates && (!maxRadius || !currentLocation || distance <= maxRadius);
-            });
-    }
-
-    function getResourceRows() {
-        return [
-            ["Navn", "Kategori", "Beskrivelse", "Status", "Breddegrad", "Lengdegrad", "Registrert dato", "Registrert klokkeslett"],
-            ...getFilteredResources().map(({ item }) => {
-                const [registeredDate = "", registeredTime = ""] =
-                    (item.dataset.feedCreatedAt || "").split(" ");
-                return [
-                    item.dataset.feedTitle,
-                    item.dataset.feedCategory,
-                    item.dataset.feedDescription,
-                    item.dataset.feedStatus,
-                    `${item.dataset.latitude}°`,
-                    `${item.dataset.longitude}°`,
-                    registeredDate,
-                    registeredTime
-                ];
-            })
-        ];
-    }
-
-    function downloadFile(content, fileName, contentType) {
-        const blob = new Blob([content], { type: contentType });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        URL.revokeObjectURL(url);
-    }
-
-    function exportResources(format) {
-        const resourceRows = getResourceRows();
-        const resources = getFilteredResources().map(({ item }) => ({
-            name: item.dataset.feedTitle,
-            category: item.dataset.feedCategory,
-            description: item.dataset.feedDescription,
-            status: item.dataset.feedStatus,
-            latitude: Number(item.dataset.latitude),
-            longitude: Number(item.dataset.longitude),
-            registered: item.dataset.feedCreatedAt
-        }));
-
-        if (format === "json") {
-            downloadFile(
-                JSON.stringify(resources, null, 2),
-                "resources.json",
-                "application/json;charset=utf-8"
-            );
-            return;
-        }
-
-        const csv = "\uFEFF" + resourceRows.map(row => row.map(csvValue).join(";")).join("\r\n");
-        // CSV: the text starts with a BOM character, so Excel shows the Norwegian letters correctly.
-        downloadFile(csv, "resources.csv", "text/csv;charset=utf-8");
+        const popupTitle = document.createElement("span");
+        popupTitle.textContent = item.dataset.feedTitle || "Valgt sted";
+        focusedFeedMarker.bindPopup(popupTitle).openPopup();
     }
 
     // Updates the list: sorts by distance and hides items that do not match the tab, the search or the radius.
@@ -384,22 +304,6 @@
     search?.addEventListener("input", render);
     radius?.addEventListener("change", render);
     radius?.addEventListener("input", render);
-    exportToggle?.addEventListener("click", () => {
-        if (!exportOptions) return;
-        exportOptions.hidden = false;
-        exportToggle.hidden = true;
-        exportToggle.setAttribute("aria-expanded", "true");
-    });
-    exportButtons.forEach(button => {
-        button.addEventListener("click", () => exportResources(button.dataset.feedExport));
-    });
-    exportBackButton?.addEventListener("click", () => {
-        if (!exportOptions || !exportToggle) return;
-        exportOptions.hidden = true;
-        exportToggle.hidden = false;
-        exportToggle.setAttribute("aria-expanded", "false");
-        exportToggle.focus();
-    });
     items.forEach(item => {
         item.addEventListener("click", event => {
             if (event.target.closest("a, button")) return;

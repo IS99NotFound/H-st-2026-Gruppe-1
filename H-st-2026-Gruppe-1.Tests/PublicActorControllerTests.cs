@@ -8,7 +8,6 @@ using Microsoft.EntityFrameworkCore;
 namespace H_st_2026_Gruppe_1.Tests;
 
 // Tests for PublicActorController: the pages for public actors (needs, map markers and matching).
-// The class is in the file HomeController.cs.
 public class PublicActorControllerTests : IDisposable
 {
     private readonly TestDb _db = new TestDb();
@@ -211,9 +210,9 @@ public class PublicActorControllerTests : IDisposable
     }
 
     [Fact]
-    public void RegisterNeed_Administrator_IsSentToHomeAndNothingIsSaved()
+    public void RegisterNeed_Provider_IsSentToHomeAndNothingIsSaved()
     {
-        var controller = NewController(99, "Administrator");
+        var controller = NewController(99, "CivilianProvider");
 
         var result = controller.RegisterNeed(FormNeed());
 
@@ -271,6 +270,55 @@ public class PublicActorControllerTests : IDisposable
 
         Assert.Equal(1, NeedCount());
         Assert.Equal("Endret tittel", ReadNeed(1).Title);
+    }
+
+    [Fact]
+    public void RegisterNeed_KeepsContactInfoAndIgnoresPostedStatus()
+    {
+        var controller = NewController(1, "PublicActor");
+        var form = FormNeed();
+        form.Status = "resolved";
+
+        controller.RegisterNeed(form);
+
+        using var context = _db.CreateContext();
+        var saved = context.Needs.Single();
+        Assert.Equal("ny@test.no", saved.Email);
+        Assert.Equal("new", saved.Status);
+    }
+
+    [Fact]
+    public void DashboardIndex_ColleaguesNeed_CannotBeOpenedForEditing()
+    {
+        AddNeed(1, publicActorId: 2);
+        var controller = NewController(1, "PublicActor");
+
+        Assert.IsType<ForbidResult>(controller.DashboardIndex(1));
+    }
+
+    [Fact]
+    public void NeedsIndex_HidesResolvedAndCancelledNeeds()
+    {
+        AddNeed(1);
+        AddNeed(2, status: "resolved");
+        AddNeed(3, status: "cancelled");
+        var controller = NewController(1, "PublicActor");
+
+        var result = controller.NeedsIndex(null, null, null, null, null);
+
+        var needs = Assert.IsAssignableFrom<IEnumerable<ResourceNeed>>(Assert.IsType<ViewResult>(result).Model);
+        Assert.Equal(new[] { 1 }, needs.Select(n => n.Id).ToArray());
+    }
+
+    [Fact]
+    public void NeedsIndex_DeadlineTodayWithoutTime_IsNotResolvedYet()
+    {
+        AddNeed(1, deadline: DateTime.Today);
+        var controller = NewController(1, "PublicActor");
+
+        controller.NeedsIndex(null, null, null, null, null);
+
+        Assert.Equal("new", ReadNeed(1).Status);
     }
 
     // ---------- UpdateResourceStatus (the Send request / Withdraw buttons) ----------
@@ -408,6 +456,23 @@ public class PublicActorControllerTests : IDisposable
         Assert.Equal("new", ReadNeed(1).Status);
     }
 
+    // ---------- DeleteNeed ----------
+
+    [Fact]
+    public async Task DeleteNeed_CancelsTheNeedKeepsTheHistoryAndFreesTheAssignedResource()
+    {
+        AddNeed(1, status: "assigned");
+        AddResource(1, status: "unavailable");
+        AddMatch(1, 1, "accepted");
+        var controller = NewController(1, "PublicActor");
+
+        await controller.DeleteNeed(1);
+
+        Assert.Equal("cancelled", ReadNeed(1).Status);
+        Assert.Equal("completed", ReadMatch(1, 1)!.Status);
+        Assert.Equal("available", ResourceStatus(1));
+    }
+
     // ---------- Matches: resources near a need ----------
 
     // Need 1 (category 1) is in Kristiansand. This adds a typical set of resources around it.
@@ -466,6 +531,25 @@ public class PublicActorControllerTests : IDisposable
         var model = MatchModelFrom(controller.Matches(1, 0));
 
         Assert.DoesNotContain(4, MatchedIds(model));
+    }
+
+    [Fact]
+    public void Matches_LeavesOutExpiredResources()
+    {
+        AddNeed(1);
+        _db.Seed(c =>
+        {
+            var expired = TestData.NewResource(1);
+            expired.ExpirationDate = DateTime.Now.AddDays(-2);
+            var lastDay = TestData.NewResource(2);
+            lastDay.ExpirationDate = DateTime.Today;
+            c.Resources.AddRange(expired, lastDay);
+        });
+        var controller = NewController(1, "PublicActor");
+
+        var model = MatchModelFrom(controller.Matches(1, 0));
+
+        Assert.Equal(new[] { 2 }, MatchedIds(model));
     }
 
     [Fact]

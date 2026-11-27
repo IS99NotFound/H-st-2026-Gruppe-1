@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 namespace H_st_2026_Gruppe_1.Tests;
 
 // Tests for HomeController: the page for resource providers (register, edit and delete resources).
-// Providers may only change their own resources. Administrators may change all.
+// Providers may only change their own resources.
 public class HomeControllerTests : IDisposable
 {
     private readonly TestDb _db = new TestDb();
@@ -133,13 +133,13 @@ public class HomeControllerTests : IDisposable
     }
 
     [Fact]
-    public void RegisterResource_NewResourceByAdministrator_IsForbidden()
+    public void RegisterResource_PublicActor_IsRedirectedAndNothingIsSaved()
     {
-        var controller = NewController(99, "Administrator");
+        var controller = NewController(1, "PublicActor");
 
         var result = controller.RegisterResource(FormResource());
 
-        Assert.IsType<ForbidResult>(result);
+        Assert.IsType<RedirectToActionResult>(result);
         Assert.Equal(0, ResourceCount());
     }
 
@@ -172,7 +172,41 @@ public class HomeControllerTests : IDisposable
         Assert.Equal("Andres ressurs", ReadResource(1)!.Name);
     }
 
+    [Fact]
+    public void RegisterResource_KeepsContactInfoAndIgnoresPostedStatus()
+    {
+        var controller = NewController(2, "CivilianProvider");
+        var form = FormResource();
+        form.Status = "withdrawn";
+
+        controller.RegisterResource(form);
+
+        using var context = _db.CreateContext();
+        var saved = context.Resources.Single();
+        Assert.Equal("ny@test.no", saved.Email);
+        Assert.Equal("available", saved.Status);
+    }
+
     // ---------- DeleteResource ----------
+
+    [Fact]
+    public async Task DeleteResource_DeclinesMatchesAndUpdatesTheNeed()
+    {
+        _db.Seed(c =>
+        {
+            c.Resources.Add(TestData.NewResource(1, providerId: 2, status: "unavailable"));
+            c.Needs.Add(TestData.NewNeed(1, status: "assigned"));
+            c.MatchRecords.Add(TestData.NewMatch(1, 1, "accepted"));
+        });
+        var controller = NewController(2, "CivilianProvider");
+
+        await controller.DeleteResource(1);
+
+        using var context = _db.CreateContext();
+        Assert.Equal("declined", context.MatchRecords.Single().Status);
+        Assert.Equal("new", context.Needs.Single().Status);
+        Assert.Equal("withdrawn", context.Resources.Single().Status);
+    }
 
     [Fact]
     public async Task DeleteResource_Owner_WithdrawsTheResourceInsteadOfRemovingIt()
@@ -200,42 +234,6 @@ public class HomeControllerTests : IDisposable
 
         Assert.IsType<ForbidResult>(result);
         Assert.NotNull(ReadResource(1));
-    }
-
-    // ---------- DeleteNeed ----------
-
-    // A need owned by public actor 1, with resource 1 assigned (accepted) to it
-    private void AddNeedWithAssignedResource()
-    {
-        _db.Seed(c =>
-        {
-            // Deleting a need is allowed for actors in the same organization as the owner
-            c.Organizations.Add(new Organization { OrganizationId = 1, OrganizationName = "Kommunen" });
-            c.PublicActors.Add(new PublicActor { PublicActorId = 1, OrganizationId = 1 });
-            c.Resources.Add(TestData.NewResource(1, status: "unavailable"));
-            c.Needs.Add(TestData.NewNeed(1, publicActorId: 1, status: "assigned"));
-            c.MatchRecords.Add(TestData.NewMatch(1, 1, "accepted"));
-        });
-    }
-
-    private ResourceNeed? ReadNeed(int id)
-    {
-        using var context = _db.CreateContext();
-        return context.Needs.AsNoTracking().SingleOrDefault(n => n.Id == id);
-    }
-
-    [Fact]
-    public async Task DeleteNeed_CancelsTheNeedKeepsTheHistoryAndFreesTheAssignedResource()
-    {
-        AddNeedWithAssignedResource();
-        var controller = NewController(1, "PublicActor");
-
-        await controller.DeleteNeed(1);
-
-        using var context = _db.CreateContext();
-        Assert.Equal("cancelled", context.Needs.Single(n => n.Id == 1).Status);
-        Assert.Equal("completed", context.MatchRecords.Single().Status);
-        Assert.Equal("available", context.Resources.Single(r => r.Id == 1).Status);
     }
 
     // ---------- Error page ----------
